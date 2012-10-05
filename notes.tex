@@ -1,0 +1,108 @@
+\documentclass[10pt, letterpaper]{article}
+
+\usepackage{amsmath} % just math
+\usepackage{amssymb} % allow blackboard bold (aka N,R,Q sets)
+\linespread{1.6}  % double spaces lines
+\usepackage[left=1in,top=1in,right=1in,bottom=1in,nohead]{geometry}
+
+\newcommand{\E}{\mathbb{E}}
+
+\begin{document}
+
+\linespread{1} % single spaces lines
+\small \normalsize %% dumb, but have to do this for the prev to work
+\begin{flushright}
+RVD2 Project Notes \\
+\today
+\end{flushright}
+
+Consider the following model
+\begin{align}
+\mu_j &\thicksim \text{Gaussian}(u_0,\sigma^2_0)\\
+\theta_{kj} &\thicksim \text{Beta}(\mu_j,M_0)\\
+r_{kj} &\thicksim \text{Bino}(\theta_{kj}, n_{kj})
+\end{align}
+
+The inferential object of interest is the joint posterior distribution over the latent variables, $p(\mu,\theta|r)$. From this we can compute the marginal posterior distribution over the site-specific error rate - the null hypothesis distribution.
+\begin{equation}
+p(\mu|r) = \int_\theta p(\mu,\theta|r)d\theta
+\end{equation}
+
+Writing out the joint posterior distribution gives
+\begin{equation}
+\begin{split}
+\log p(\mu,\theta | r)& = \log \frac{p(\mu,\theta,r;u_o,\sigma^2_0,M_0)}{p(r | u_o,\sigma^2_0,M_0)}\\
+& = \log p(\mu,\theta,r;u_o,\sigma^2_0,M_0) - \log p(r ; u_o, \sigma^2_0,M_0)\\
+& = \log \prod_{j=1}^J \prod_{k=1}^K p(\mu_j,\theta_{kj}, r_{kj}) - \log \prod_{j=1}^J \prod_{k=1}^K \int_{\theta_{kj}} \int_{\mu_j} p(\mu_j,\theta_{kj}, r_{kj})d\mu_jd\theta_{kj}
+\end{split}
+\end{equation}
+
+\begin{multline}
+\log p(\mu,\theta | r) = K\sum_{j=1}^J \log p(\mu_j;\mu_0,\sigma^2_0) + \sum_{j=1}^J \sum_{k=1}^K \log p(\theta_{kj} | \mu_j;M_0)\\ + \sum_{j=1}^J \sum_{k=1}^K\log p(r_{kj} | \theta_{kj}, n_{kj})
+- \sum_{j=1}^J \sum_{k=1}^K \log \int_{\theta_{kj}} \int_{\mu_j} p(r_{kj};\mu_0,\sigma^2_0,M_0) \end{multline}
+
+The computation of $p(r;u_0,\sigma_0^2,M_0)$ is intractable due to the coupling in the latent variables induced by the integral so we must use an approximation or sampling method.
+
+{\bf Variational approximation}
+\begin{align}
+\log p(r_{kj}; u_0, \sigma_0^2, M_0) & = \log \int_{\theta_{kj}} \int_{\mu_j} p(\mu_j, \theta_{kj}, r_{kj})d\mu_jd\theta_{kj} \\
+& = \log \int_{\theta_{kj}} \int_{\mu_j} p(\mu_j, \theta_{kj}, r_{kj}) \frac{q(\mu_j, \theta_{kj})}{q(\mu_j, \theta_{kj})}  d\mu_jd\theta_{kj}\\
+& \geq  \int_{\theta_{kj}} \int_{\mu_j} q(\mu_j, \theta_{kj}) \log p(\mu_j, \theta_{kj}, r_{kj}) -  \int_{\theta_{kj}} \int_{\mu_j} q(\mu_j, \theta_{kj}) \log q(\mu_j, \theta_{kj}) \\
+& = \E_q \left[ \log p(r_{kj}, \mu_j, \theta_{kj}) \right] - \E_q\left[ \log q(\mu_j, \theta_{kj}) \right] = \mathcal{L}
+\end{align}
+
+The bound on the log likelihood of the data, $\mathcal{L}$, is seen to be the sum of the expected complete data log-likelihood and the entropy of the variational approximating distribution.
+
+We now specify an averaging(variational) distribution
+\begin{align}
+q(\mu_j | \gamma_{1j}, \gamma_{2j}) & \thicksim \text{Gaussian}(\gamma_{1j}, \gamma_{2j})\\
+q(\theta_{kj} | \alpha, \beta ) & \thicksim \text{Beta}(\alpha, \beta)
+\end{align}
+
+We are now able to decompose $\mathcal{L}$ into its constituent parts
+\begin{equation}\label{eqn:composite}
+\mathcal{L} = \E_q\log p(\mu_j|u_0,\sigma_0^2) + \E_q \log p(\theta_{kj} | \mu_j; M_0) 
++ \E_q \log p(r_{kj} | \theta_{kj}, n_{kj}) - \E_q \log q(\mu) - \E_q \log q(\theta_{kj})
+\end{equation}
+
+Taking each term in \eqref{eqn:composite} individually we can cast the bound on the log-likelihood in terms of original and variational parameters only.
+
+\begin{align}
+\E_q \log p(\mu_j ; u_0, \sigma_0^2) & = -\frac{1}{2}\log (2\pi\sigma_0^2) -\frac{1}{2}\left[ \gamma_{2} + (\gamma_1 - u_0)^2 \right]
+\end{align}
+
+\begin{align}
+\E_q \log p(\theta | \mu ; M_0) & = \int_\mu q(\mu) \int_\theta q(\theta) \log p(\theta | \mu, M_0)\\
+\begin{split}
+& = \log \Gamma(M_0) - \E_q \log \Gamma(\mu M_0) - \E_q \log \Gamma((1-\mu)M_0) \\
+& \qquad+(u_0M_0-1)\left( \psi(\alpha) - \psi(\alpha + \beta) \right) + ((1-u_0)M_0-1)\left( \psi(\beta) - \psi(\alpha + \beta) \right)
+\end{split}
+\end{align}
+where $\E_q \log \Gamma(\mu M_0)$ is easily computed numerically. When we get to differentiating with respect to the parameters, we can move that inside the integral. The kernel changes, but it can still be computed numerically.
+
+\begin{align}
+\E_q \log p(r | \theta, n) & = \int_\theta \\
+\begin{split}
+& = \log \Gamma(n+1) - \log \Gamma(r+1) - \log \Gamma(n-r+1) \\
+& \qquad +r(\psi(\alpha)-\psi(\alpha + \beta)) +(n-r)(\psi(\beta) - \psi(\alpha+\beta))
+\end{split}
+\end{align}
+
+\begin{align}
+\E_q \log p(r | \theta, n) & = \int_\theta \\
+\begin{split}
+& = \log \Gamma(n+1) - \log \Gamma(r+1) - \log \Gamma(n-r+1) \\
+& \qquad +r(\psi(\alpha)-\psi(\alpha + \beta)) +(n-r)(\psi(\beta) - \psi(\alpha+\beta))
+\end{split}
+\end{align}
+
+\begin{equation}
+\E_q \log q(\mu)  = \text{Negative Gaussian Entropy}
+\end{equation}
+
+\begin{equation}
+\E_q \log q(\theta)  = \text{Negative Beta Entropy}
+\end{equation}
+
+Now that \eqref{eqn:composite} has been written in terms of only the variational and model parameters, we can numerically optimize the system with respect to variational and the model parameters and do coordinate ascent. Maximizing with respect to the variational parameters tightens the bound on the data log-likelihood and maximizing with respect to the model parameters maximizes the likelihood.
+\end{document}
