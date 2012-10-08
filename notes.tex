@@ -48,7 +48,7 @@ The computation of $p(r;u_0,\sigma_0^2,M_0)$ is intractable due to the coupling 
 \log p(r_{kj}; u_0, \sigma_0^2, M_0) & = \log \int_{\theta_{kj}} \int_{\mu_j} p(\mu_j, \theta_{kj}, r_{kj})d\mu_jd\theta_{kj} \\
 & = \log \int_{\theta_{kj}} \int_{\mu_j} p(\mu_j, \theta_{kj}, r_{kj}) \frac{q(\mu_j, \theta_{kj})}{q(\mu_j, \theta_{kj})}  d\mu_jd\theta_{kj}\\
 & \geq  \int_{\theta_{kj}} \int_{\mu_j} q(\mu_j, \theta_{kj}) \log p(\mu_j, \theta_{kj}, r_{kj}) -  \int_{\theta_{kj}} \int_{\mu_j} q(\mu_j, \theta_{kj}) \log q(\mu_j, \theta_{kj}) \\
-& = \E_q \left[ \log p(r_{kj}, \mu_j, \theta_{kj}) \right] - \E_q\left[ \log q(\mu_j, \theta_{kj}) \right] = \mathcal{L}
+& = \E_q \left[ \log p(r_{kj}, \mu_j, \theta_{kj}) \right] - \E_q\left[ \log q(\mu_j, \theta_{kj}) \right] = \mathcal{L_{kj}}
 \end{align}
 
 The bound on the log likelihood of the data, $\mathcal{L}$, is seen to be the sum of the expected complete data log-likelihood and the entropy of the variational approximating distribution.
@@ -56,53 +56,78 @@ The bound on the log likelihood of the data, $\mathcal{L}$, is seen to be the su
 We now specify an averaging(variational) distribution
 \begin{align}
 q(\mu_j | \gamma_{1j}, \gamma_{2j}) & \thicksim \text{Gaussian}(\gamma_{1j}, \gamma_{2j})\\
-q(\theta_{kj} | \alpha, \beta ) & \thicksim \text{Beta}(\alpha, \beta)
+q(\theta_{kj} | \alpha_{kj}, \beta_{kj} ) & \thicksim \text{Beta}(\alpha_{kj}, \beta_{kj})
 \end{align}
 
 We are now able to decompose $\mathcal{L}$ into its constituent parts
-\begin{equation}\label{eqn:composite}
-\mathcal{L} = \E_q\log p(\mu_j|u_0,\sigma_0^2) + \E_q \log p(\theta_{kj} | \mu_j; M_0) 
-+ \E_q \log p(r_{kj} | \theta_{kj}, n_{kj}) - \E_q \log q(\mu) - \E_q \log q(\theta_{kj})
-\end{equation}
+\begin{multline}\label{eqn:composite}
+\mathcal{L} = K\sum_{j=1}^J \E_q\log p(\mu_j|u_0,\sigma_0^2) + \sum_{j=1}^J\sum_{k=1}^K\E_q \log p(\theta_{kj} | \mu_j; M_0) 
++ \sum_{j=1}^J\sum_{k=1}^K\E_q \log p(r_{kj} | \theta_{kj}, n_{kj})\\
+- K\sum_{j=1}^J\E_q \log q(\mu) - \sum_{j=1}^J\sum_{k=1}^K \E_q \log q(\theta_{kj})
+\end{multline}
 
 Taking each term in \eqref{eqn:composite} individually we can cast the bound on the log-likelihood in terms of original and variational parameters only.
 
 \begin{align}
-\E_q \log p(\mu_j ; u_0, \sigma_0^2) & = -\frac{1}{2}\log (2\pi\sigma_0^2) -\frac{1}{2}\left[ \gamma_{2} + (\gamma_1 - u_0)^2 \right]
+\E_q \log p(\mu_j ; u_0, \sigma_0^2) & = -\frac{1}{2}\log (2\pi\sigma_0^2) -\frac{1}{2\sigma_0^2}\left[ \gamma_{2j} + (\gamma_{1j} - u_0)^2 \right]
 \end{align}
 
 \begin{align}
-\E_q \log p(\theta | \mu ; M_0) & = \int_\mu q(\mu) \int_\theta q(\theta) \log p(\theta | \mu, M_0)\\
+\E_q \log p(\theta_{kj} | \mu_j ; M_0) & = \int_{\mu_j} q(\mu_j) \int_{\theta_{kj}} q(\theta_{kj}) \log p(\theta_{kj} | \mu_j, M_0)\\
 \begin{split}
-& = \log \Gamma(M_0) - \E_q \log \Gamma(\mu M_0) - \E_q \log \Gamma((1-\mu)M_0) \\
-& \qquad+(u_0M_0-1)\left( \psi(\alpha) - \psi(\alpha + \beta) \right) + ((1-u_0)M_0-1)\left( \psi(\beta) - \psi(\alpha + \beta) \right)
+& = \log \Gamma(M_0) - \E_q \log \Gamma(\mu_j M_0) - \E_q \log \Gamma((1-\mu_j)M_0) \\
+& \qquad+(u_0M_0-1)\left( \psi(\alpha_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right) + ((1-u_0)M_0-1)\left( \psi(\beta_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right)
 \end{split}
 \end{align}
-where $\E_q \log \Gamma(\mu M_0)$ is easily computed numerically. When we get to differentiating with respect to the parameters, we can move that inside the integral. The kernel changes, but it can still be computed numerically.
+where $\E_q \log \Gamma(\mu_j M_0)$ is easily computed numerically. When we get to differentiating with respect to the parameters, we can move that inside the integral. The kernel changes, but it can still be computed numerically.
 
 \begin{align}
-\E_q \log p(r | \theta, n) & = \int_\theta \\
+\E_q \log p(r_{kj} | \theta_{kj}, n_{kj}) & = \int_{\theta_{kj}} \\
 \begin{split}
-& = \log \Gamma(n+1) - \log \Gamma(r+1) - \log \Gamma(n-r+1) \\
-& \qquad +r(\psi(\alpha)-\psi(\alpha + \beta)) +(n-r)(\psi(\beta) - \psi(\alpha+\beta))
-\end{split}
-\end{align}
-
-\begin{align}
-\E_q \log p(r | \theta, n) & = \int_\theta \\
-\begin{split}
-& = \log \Gamma(n+1) - \log \Gamma(r+1) - \log \Gamma(n-r+1) \\
-& \qquad +r(\psi(\alpha)-\psi(\alpha + \beta)) +(n-r)(\psi(\beta) - \psi(\alpha+\beta))
+& = \log \Gamma(n_{kj}+1) - \log \Gamma(r_{kj}+1) - \log \Gamma(n_{kj}-r_{kj}+1) \\
+& \qquad +r(\psi(\alpha_{kj})-\psi(\alpha_{kj} + \beta_{kj})) +(n_{kj}-r_{kj})(\psi(\beta_{kj}) - \psi(\alpha_{kj}+\beta_{kj}))
 \end{split}
 \end{align}
 
 \begin{equation}
-\E_q \log q(\mu)  = \text{Negative Gaussian Entropy}
+\E_q \log q(\mu_j)  = -\frac{1}{2} \log(2\pi e \gamma_{2j})
 \end{equation}
 
-\begin{equation}
-\E_q \log q(\theta)  = \text{Negative Beta Entropy}
-\end{equation}
+\begin{multline}
+\E_q \log q(\theta_{kj})  = \log \Gamma(\alpha_{kj} + \beta_{kj}) - \log \Gamma(\alpha_{kj}) - \log \Gamma(\beta_{kj}) \\+(\alpha_{kj}-1)\psi(\alpha_{kj}) +(\beta_{kj} -1)\psi(\beta_{kj}) -(\alpha_{kj}+\beta_{kj}-2)\psi(\alpha_{kj}+\beta_{kj})
+\end{multline}
 
 Now that \eqref{eqn:composite} has been written in terms of only the variational and model parameters, we can numerically optimize the system with respect to variational and the model parameters and do coordinate ascent. Maximizing with respect to the variational parameters tightens the bound on the data log-likelihood and maximizing with respect to the model parameters maximizes the likelihood.
+
+{\bf Update Equations}
+Isolating the terms of \eqref{eqn:composite} that involve $u_0$ gives
+\begin{multline}
+\mathcal{L}_{[u_0]} = K\sum_{j=1}^J\left(-\frac{1}{2}(\gamma_{1j}-u_0)^2\right) \\+ \sum_{j=1}^J \sum_{k=1}^Ku_0M_0\left( \psi(\alpha_{kj}) - \psi(\alpha_{kj}+\beta_{kj}) \right) - \sum_{j=1}^J \sum_{k=1}^Ku_0M_0\left( \psi(\beta_{kj}) - \psi(\alpha_{kj}+\beta_{kj}) \right)
+\end{multline}
+
+Taking the derivative with respect to $u_0$ gives
+\begin{equation}
+\frac{\partial \mathcal{L}}{\partial u_0} = K\sum_{j=1}^J\gamma_{1j} - KJu_0 +M_0 \sum_{j=1}^J \sum_{k=1}^K \left( \psi(\alpha_{kj}) - \psi(\beta_{kj}) \right)
+\end{equation}
+
+Solving for $u_0$ gives
+\begin{equation}
+u_0 \leftarrow \frac{1}{J}\sum_{j=1}^J \gamma_{1j} +\frac{M_0}{KJ}\sum_{j=1}^J \sum_{k=1}^K \left( \psi(\alpha_{kj}) - \psi(\beta_{kj}) \right)
+\end{equation}
+
+Isolating the terms of \eqref{eqn:composite} that involve $\sigma^2_0$ gives
+\begin{equation}
+\mathcal{L}_{[\sigma^2_0]} = -\frac{J}{2}\log(2\pi\sigma^2_0) -\frac{1}{2\sigma_0^2}\sum_{j=1}^J\left(\gamma_{2j} + (\gamma_{1j}-u_0)^2 \right)
+\end{equation}
+
+Taking the derivative with respect to $\sigma^2_0$ gives
+\begin{equation}
+\frac{\partial \mathcal{L}}{\partial \sigma^2_0} = -\frac{J}{2\sigma^2_0} +\frac{1}{\sigma^4_0}\sum_{j=1}^J\left(\gamma_{2j} + (\gamma_{1j}-u_0)^2\right)
+\end{equation}
+
+Setting the derivative equal to zero and solving for $\sigma^2_0$ gives
+\begin{equation}
+\sigma^2_0 \leftarrow \frac{1}{J}\sum_{j=1}^J\left(\gamma_{2j} + (\gamma_{1j}-u_0)^2\right)
+\end{equation}
+
 \end{document}
