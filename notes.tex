@@ -76,7 +76,7 @@ Taking each term in \eqref{eqn:composite} individually we can cast the bound on 
 \E_q \log p(\theta_{kj} | \mu_j ; M_0) & = \int_{\mu_j} q(\mu_j) \int_{\theta_{kj}} q(\theta_{kj}) \log p(\theta_{kj} | \mu_j, M_0)\\
 \begin{split}
 & = \log \Gamma(M_0) - \E_q \log \Gamma(\mu_j M_0) - \E_q \log \Gamma((1-\mu_j)M_0) \\
-& \qquad+(u_0M_0-1)\left( \psi(\alpha_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right) + ((1-u_0)M_0-1)\left( \psi(\beta_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right)
+& \qquad+(\gamma_{1j}M_0-1)\left( \psi(\alpha_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right) + ((1-\gamma_{1j})M_0-1)\left( \psi(\beta_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right)
 \end{split}
 \end{align}
 where $\E_q \log \Gamma(\mu_j M_0)$ is easily computed numerically. When we get to differentiating with respect to the parameters, we can move that inside the integral. The kernel changes, but it can still be computed numerically.
@@ -101,18 +101,16 @@ Now that \eqref{eqn:composite} has been written in terms of only the variational
 
 {\bf Update Equations}
 Isolating the terms of \eqref{eqn:composite} that involve $u_0$ gives
-\begin{multline}
-\mathcal{L}_{[u_0]} = K\sum_{j=1}^J\left(-\frac{1}{2}(\gamma_{1j}-u_0)^2\right) \\+ \sum_{j=1}^J \sum_{k=1}^Ku_0M_0\left( \psi(\alpha_{kj}) - \psi(\alpha_{kj}+\beta_{kj}) \right) - \sum_{j=1}^J \sum_{k=1}^Ku_0M_0\left( \psi(\beta_{kj}) - \psi(\alpha_{kj}+\beta_{kj}) \right)
-\end{multline}
+\begin{equation}
+\mathcal{L}_{[u_0]} = K\sum_{j=1}^J\left(-\frac{1}{2\sigma_0^2}(\gamma_{1j}-u_0)^2\right)
+\end{equation}
 
 Taking the derivative with respect to $u_0$ gives
-\begin{equation}
-\frac{\partial \mathcal{L}}{\partial u_0} = K\sum_{j=1}^J\gamma_{1j} - KJu_0 +M_0 \sum_{j=1}^J \sum_{k=1}^K \left( \psi(\alpha_{kj}) - \psi(\beta_{kj}) \right)
-\end{equation}
+
 
 Solving for $u_0$ gives
 \begin{equation}
-u_0 \leftarrow \frac{1}{J}\sum_{j=1}^J \gamma_{1j} +\frac{M_0}{KJ}\sum_{j=1}^J \sum_{k=1}^K \left( \psi(\alpha_{kj}) - \psi(\beta_{kj}) \right)
+u_0 \leftarrow \frac{1}{J}\sum_{j=1}^J \gamma_{1j} 
 \end{equation}
 
 Isolating the terms of \eqref{eqn:composite} that involve $\sigma^2_0$ gives
@@ -128,6 +126,22 @@ Taking the derivative with respect to $\sigma^2_0$ gives
 Setting the derivative equal to zero and solving for $\sigma^2_0$ gives
 \begin{equation}
 \sigma^2_0 \leftarrow \frac{1}{J}\sum_{j=1}^J\left(\gamma_{2j} + (\gamma_{1j}-u_0)^2\right)
+\end{equation}
+
+Isolating terms that involve $\alpha_{kj}$ gives
+\begin{multline}
+\mathcal{L}_{[\alpha_{kj}]} = (u_0M_0 -1)(\psi(\alpha_{kj}) - \psi(\alpha_{kj}-\beta_{kj}) -((1-u_0)M_0-1)\psi(\alpha_{kj}+\beta_{kj})\\
+ +r_{kj}*\psi(\alpha_{kj})-n_{kj}\psi(\alpha_{kj}+\beta_{kj}) -\log \Gamma (\alpha+\beta) + \log \Gamma(\alpha) -(\alpha-1)\psi(\alpha)+(\alpha+\beta-2)\psi(\alpha+\beta)
+\end{multline}
+
+Setting the derivative equal to zero and solving for $\alpha_{kj}$ gives
+\begin{equation}
+\alpha_{kj} \leftarrow \psi_1(\alpha_{kj})(u_0M_0+r-\alpha_{kj}) - \psi_1(\alpha_{kj}+\beta_{kj})(M_0+n-(\alpha_{kj}+\beta_{kj}))
+\end{equation}
+
+A similar procedure holds for $\beta_{kj}$ and the resulting update equation bears symmetry to that for $\alpha_{kj}$
+\begin{equation}
+\beta_{kj} \leftarrow \psi_1(\beta_{kj})\left[(1-u_0)M_0-1+(n-r)-\beta_{kj}\right] - \psi_1(\alpha_{kj}+\beta_{kj})\left[M_0+n-(\alpha_{kj}+\beta_{kj})\right]
 \end{equation}
 
 \end{document}
