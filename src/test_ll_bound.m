@@ -21,38 +21,35 @@ r = binornd(n,theta);
 %% Solve for log-likelihood bound
 
 % Compute the log-likelihood bound
-[ ll ] = ll_bound( r, n, u0, sigma20, M0, gam1, gam2, alpha, beta );
+% [ ll ] = ll_bound( r, n, u0, sigma20, M0, gam1, gam2, alpha, beta );
 
 
 %% Plot the LL bound varying M0
-v = logspace(-3 , 2, 50);
-ll_M0 = arrayfun(@(x)ll_bound( r, n, u0, sigma20, x, gam1, gam2, alpha, beta ), v);
-semilogx(v,ll_M0) 
+% v = logspace(-3 , 2, 50);
+% ll_M0 = arrayfun(@(x)ll_bound( r, n, u0, sigma20, x, gam1, gam2, alpha, beta ), v);
+% semilogx(v,ll_M0) 
 
 %% Plot the LL bound varying u0
-v = linspace(0 , 1, 50);
-ll_u0 = arrayfun(@(x)ll_bound( r, n, x, sigma20, M0, gam1, gam2, alpha, beta ), v);
-plot(v,ll_u0) 
+% v = linspace(0 , 1, 50);
+% ll_u0 = arrayfun(@(x)ll_bound( r, n, x, sigma20, M0, gam1, gam2, alpha, beta ), v);
+% plot(v,ll_u0) 
 
 %% Plot the LL bound varying sigma20
-v = logspace(-3 , 2, 50);
-ll_sigma20 = arrayfun(@(x)ll_bound( r, n, u0, x, M0, gam1, gam2, alpha, beta ), v);
-semilogx(v,ll_sigma20) 
+% v = logspace(-3 , 2, 50);
+% ll_sigma20 = arrayfun(@(x)ll_bound( r, n, u0, x, M0, gam1, gam2, alpha, beta ), v);
+% semilogx(v,ll_sigma20) 
 
 %% Estimate Model Parameters
-matlabpool open
+% matlabpool open
 [ u0,sigma20,M0,alpha,beta,gam1,gam2 ] ...
     = rvd2_est( r, n, u0, sigma20, M0 );
-matlabpool close
+% matlabpool close
 %%
 
-post_mu = gam1;
-plot(theta(:,1:10)','.','MarkerSize',14)
-hold on
-plot(post_mu(1:10))
-post_theta = alpha./(alpha+beta);
-plot(post_theta(:,1:10)','o','MarkerSize',14)
-hold off
-
-%%
-matlabpool close
+% post_mu = gam1;
+% plot(theta(:,1:10)','.','MarkerSize',14)
+% hold on
+% plot(post_mu(1:10))
+% post_theta = alpha./(alpha+beta);
+% plot(post_theta(:,1:10)','o','MarkerSize',14)
+% hold off

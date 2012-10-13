@@ -67,7 +67,6 @@ We are now able to decompose $\mathcal{L}$ into its constituent parts
 \end{multline}
 
 Taking each term in \eqref{eqn:composite} individually we can cast the bound on the log-likelihood in terms of original and variational parameters only.
-
 \begin{align}
 \E_q \log p(\mu_j ; u_0, \sigma_0^2) & = -\frac{1}{2}\log (2\pi\sigma_0^2) -\frac{1}{2\sigma_0^2}\left[ \gamma_{2j} + (\gamma_{1j} - u_0)^2 \right]
 \end{align}
@@ -76,13 +75,14 @@ Taking each term in \eqref{eqn:composite} individually we can cast the bound on 
 \E_q \log p(\theta_{kj} | \mu_j ; M_0) & = \int_{\mu_j} q(\mu_j) \int_{\theta_{kj}} q(\theta_{kj}) \log p(\theta_{kj} | \mu_j, M_0)\\
 \begin{split}
 & = \log \Gamma(M_0) - \E_q \log \Gamma(\mu_j M_0) - \E_q \log \Gamma((1-\mu_j)M_0) \\
-& \qquad+(\gamma_{1j}M_0-1)\left( \psi(\alpha_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right) + ((1-\gamma_{1j})M_0-1)\left( \psi(\beta_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right)
+& \qquad+(\gamma_{1j}M_0-1)\left( \psi(\alpha_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right) \\
+& \qquad + ((1-\gamma_{1j})M_0-1)\left( \psi(\beta_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right)
 \end{split}
 \end{align}
-where $\E_q \log \Gamma(\mu_j M_0)$ is easily computed numerically. When we get to differentiating with respect to the parameters, we can move that inside the integral. The kernel changes, but it can still be computed numerically.
+where $\E_q \log \Gamma(\mu_j M_0)$ is easily computed numerically. In general, we will be able to differentiate under the integral by Leibniz integral rule and the fact that the bounds are constants $\mu_j \in [0,1]$.
 
 \begin{align}
-\E_q \log p(r_{kj} | \theta_{kj}, n_{kj}) & = \int_{\theta_{kj}} \\
+\E_q \log p(r_{kj} | \theta_{kj}, n_{kj}) & = \int_{\theta_{kj}} q(\theta_{kj}) \log p(r_{kj} | \theta_{kj}, n_{kj})\\
 \begin{split}
 & = \log \Gamma(n_{kj}+1) - \log \Gamma(r_{kj}+1) - \log \Gamma(n_{kj}-r_{kj}+1) \\
 & \qquad +r(\psi(\alpha_{kj})-\psi(\alpha_{kj} + \beta_{kj})) +(n_{kj}-r_{kj})(\psi(\beta_{kj}) - \psi(\alpha_{kj}+\beta_{kj}))
@@ -149,5 +149,15 @@ Isolating terms that involve $M_0$ gives
 \mathcal{L}_{[M_0]} = \log \Gamma(M_0) -\E_q\log \Gamma(\mu_jM_0) -\E_q\log \Gamma((1-\mu_j)M_0) +\\
 +\gamma_{1j}M_0(\psi(\alpha_{kj})-\psi(\alpha_{kj}+\beta_{kj})) +(1-\gamma_{1j})M_0(\psi(\beta_{kj})-\psi(\alpha_{kj}+\beta_{kj}))
 \end{multline}
+
+{\bf Update Equation for $\gamma_{2j}$ }
+
+Isolating terms that involve $\gamma_{2j}$ gives
+\begin{equation}
+\mathcal{L}_{[\gamma_{2j}]} = -\frac{K}{2\sigma_0^2}\gamma_{2j} -\E_q\log\Gamma(\mu_jM_0) - \E_q\log\Gamma((1-\mu_j)M_0)+\frac{1}{2}\log(2\pi e \gamma_{2j})
+\end{equation}
+
+
+
 
 \end{document}
