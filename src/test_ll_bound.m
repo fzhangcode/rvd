@@ -2,9 +2,9 @@
 
 rng(1000,'twister');
 
-K = 3; J = 500;
+K = 3; J = 100;
 
-u0 = 0.2; sigma20 = 0.01^2;
+u0 = 0.5; sigma20 = 0.1^2;
 
 mu = normrnd(u0,sqrt(sigma20),[1 J]);
 sum(mu<0 |mu>1)
@@ -47,7 +47,6 @@ for i = 1:10
 % matlabpool open
 
 %% Solve for u0
-% u0 = fminbnd(@(x)-ll_bound( r, n, x, sigma20, M0, gam1, gam2, alpha, beta),0,1);
 u0 = mean(gam1);
 
 %% Solve for sigma20
@@ -57,6 +56,7 @@ sigma20 = mean(gam2 + (gam1-u0).^2);
 options = optimset('Display','iter');
 % M0 = fminbnd(@(x)-ll_bound(r, n, u0, sigma20, x, gam1, gam2, alpha, beta),0,1e10)
 M0 = fzero(@(x)dLdM0( x, u0, alpha, beta, gam1, gam2 ), M0, options);
+
 
 %% Solve for alpha & beta
 options = optimset('Display','off');
@@ -69,31 +69,40 @@ end
 options = optimset('Display','off');
 for j = 1:J
     for k = 1:K
-         beta(k,j) = fsolve(@(x)dLdbeta(alpha(k,j), x, M0,u0,r(k,j),n(k,j)), beta(k,j), options);
+         beta(k,j) = fzero(@(x)dLdbeta(alpha(k,j), x, M0,u0,r(k,j),n(k,j)), beta(k,j), options);
     end
 end
 
 %% Solve for gamma1
 
-gam1 = u0 - (sigma20*M0).*mean(psi(alpha)-psi(beta));
-% options = optimset('Display','off');
-% for j = 1:J
-%     gam1(j)= fzero(@(x)dLdgam1( x, gam2(j), alpha(:,j), beta(:,j), M0, u0, sigma20), gam1(j),...
-%         options);
-% end
-% plot(gam1)
-
-%% Solve for gamma2
-% % options = optimset('Display','iter');
-% options = optimset('Display','off');
-% for j = 1:J
-%     gam2(j)= fzero(@(x)dLdgam2( gam1(j), x, M0, sigma20, J ), gam2(j),options);
-% end
-% plot(gam2)
-disp('Done.')
+% gam1 = u0 - (sigma20*M0).*mean(psi(alpha)-psi(beta));
+options = optimset('Display','off');
+for j = 1:J
+    gam1(j)= fzero(@(x)dLdgam1( x, gam2(j), alpha(:,j), beta(:,j), M0, u0, sigma20), gam1(j),...
+        options);
+end
 plot(gam1)
 
+%% Solve for gamma2
+% options = optimset('Display','iter');
+options = optimset('Display','off');
+for j = 1:J
+    gam2(j)= fzero(@(x)dLdgam2( gam1(j), x, M0, sigma20, J ), gam2(j),options);
 end
+plot(gam2)
+disp('Done.')
+
+end
+
+%%
+
+post_mu = gam1;
+plot(theta(:,1:10)','.','MarkerSize',14)
+hold on
+plot(post_mu(1:10))
+post_theta = alpha./(alpha+beta);
+plot(post_theta(:,1:10)','o','MarkerSize',14)
+hold off
 
 %%
 matlabpool close

@@ -17,14 +17,15 @@ for j = 1:J
 end
 Eq2 = sum(Eq2);
 
-f = K*J*psi(M0) + sum(gam1.*sum(psi(alpha)-psi(beta),1)) ...
-    +sum(sum(psi(beta)-psi(alpha+beta))) -K*Eq1 - K*Eq2;
+gam1K = repmat(gam1,[K 1]);
+f = K*J*psi(M0) -K*Eq1 -K*Eq2 ...
+    +sum(sum(gam1K.*psi(alpha) +(1-gam1K).*psi(beta) -psi(alpha+beta)));
 
     function [f] = Eq1kernel(x, M0, gam1, gam2)
-        f = normpdf(gam1,sqrt(gam2)).*x.*psi(x.*M0);
+        f = normpdf(x, gam1,sqrt(gam2)).*x.*psi(x.*M0);
     end
     function [f] = Eq2kernel(x, M0, gam1, gam2)
-        f = normpdf(gam1,sqrt(gam2)).*(1-x).*psi((1-x).*M0);
+        f = normpdf(x, gam1,sqrt(gam2)).*(1-x).*psi((1-x).*M0);
     end
 end
 

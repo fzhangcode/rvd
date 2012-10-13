@@ -144,4 +144,10 @@ A similar procedure holds for $\beta_{kj}$ and the resulting update equation bea
 \beta_{kj} \leftarrow \psi_1(\beta_{kj})\left[(1-u_0)M_0-1+(n-r)-\beta_{kj}\right] - \psi_1(\alpha_{kj}+\beta_{kj})\left[M_0+n-(\alpha_{kj}+\beta_{kj})\right]
 \end{equation}
 
+Isolating terms that involve $M_0$ gives
+\begin{multline}
+\mathcal{L}_{[M_0]} = \log \Gamma(M_0) -\E_q\log \Gamma(\mu_jM_0) -\E_q\log \Gamma((1-\mu_j)M_0) +\\
++\gamma_{1j}M_0(\psi(\alpha_{kj})-\psi(\alpha_{kj}+\beta_{kj})) +(1-\gamma_{1j})M_0(\psi(\beta_{kj})-\psi(\alpha_{kj}+\beta_{kj}))
+\end{multline}
+
 \end{document}
