@@ -1,4 +1,4 @@
-function [ f ] = dLdgam2( gam1, gam2, M0, sigma20, J )
+function [ f ] = dLdgam2( gam1, gam2, M0, sigma20)
 %DLDgam2 Derivative of the bound with respect to gam2
 %   Detailed explanation goes here
 
