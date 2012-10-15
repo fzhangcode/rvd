@@ -8,12 +8,12 @@ if M0 <= 0 % if M0 is undefined, set it equal to the value of M0=0
 end
 
 for j = 1:J
-    Eq1(j) = integral(@(x)Eq1kernel(x, M0, gam1(j), gam2(j)), 0, 1);
+    Eq1(j) = integral(@(x)Eq1kernel(x, M0, gam1(j), gam2), 0, 1);
 end
 Eq1 = sum(Eq1);
 
 for j = 1:J
-    Eq2(j) = integral(@(x)Eq2kernel(x, M0, gam1(j), gam2(j)), 0, 1);
+    Eq2(j) = integral(@(x)Eq2kernel(x, M0, gam1(j), gam2), 0, 1);
 end
 Eq2 = sum(Eq2);
 
