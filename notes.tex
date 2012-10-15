@@ -59,6 +59,7 @@ q(\mu_j | \gamma_{1j}, \gamma_{2j}) & \thicksim \text{Gaussian}(\gamma_{1j}, \ga
 q(\theta_{kj} | \alpha_{kj}, \beta_{kj} ) & \thicksim \text{Beta}(\alpha_{kj}, \beta_{kj})
 \end{align}
 
+%%%			log-likelihood bound			%%%
 We are now able to decompose $\mathcal{L}$ into its constituent parts
 \begin{multline}\label{eqn:composite}
 \mathcal{L} = K\sum_{j=1}^J \E_q\log p(\mu_j|u_0,\sigma_0^2) + \sum_{j=1}^J\sum_{k=1}^K\E_q \log p(\theta_{kj} | \mu_j; M_0) 
@@ -74,7 +75,7 @@ Taking each term in \eqref{eqn:composite} individually we can cast the bound on 
 \begin{align}
 \E_q \log p(\theta_{kj} | \mu_j ; M_0) & = \int_{\mu_j} q(\mu_j) \int_{\theta_{kj}} q(\theta_{kj}) \log p(\theta_{kj} | \mu_j, M_0)\\
 \begin{split}
-& = \log \Gamma(M_0) - \E_q \log \Gamma(\mu_j M_0) - \E_q \log \Gamma((1-\mu_j)M_0) \\
+& = \log \Gamma(M_0) -\E_q \log \Gamma(\mu_j M_0) -\E_q \log \Gamma((1-\mu_j)M_0) \\
 & \qquad+(\gamma_{1j}M_0-1)\left( \psi(\alpha_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right) \\
 & \qquad + ((1-\gamma_{1j})M_0-1)\left( \psi(\beta_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right)
 \end{split}
@@ -99,6 +100,7 @@ where $\E_q \log \Gamma(\mu_j M_0)$ is easily computed numerically. In general, 
 
 Now that \eqref{eqn:composite} has been written in terms of only the variational and model parameters, we can numerically optimize the system with respect to variational and the model parameters and do coordinate ascent. Maximizing with respect to the variational parameters tightens the bound on the data log-likelihood and maximizing with respect to the model parameters maximizes the likelihood.
 
+%%%			u0 update				%%%
 {\bf Update Equation for $u_0$ }
 
 Isolating the terms of \eqref{eqn:composite} that involve $u_0$ gives
@@ -179,16 +181,17 @@ A similar procedure holds for $\beta_{kj}$ and the resulting update equation bea
 %%% 		gamma1 update 		%%%
 {\bf Update equation for $\gamma_{1j}$}\label{sec:gamma1_update}
 
-Isolating terms that involve $\gamma_{2j}$ gives
-\begin{equation*}
+Isolating terms that involve $\gamma_{1j}$ gives
+\begin{multline*}
 \mathcal{L}_{[\gamma_{1j}]} = -\frac{K}{2\sigma_0^2}(\gamma_{1j}-u_0)^2 
+-\E_q \log \Gamma(\mu_j M_0) -\E_q \log \Gamma((1-\mu_j)M_0) \\
 + \sum_{k=1}^K \gamma_{1j} M_0 ( \psi(\alpha_kj) - \psi(\alpha_{kj} + \beta_{kj}) )
 - \sum_{k=1}^K \gamma_{1j} M_0 ( \psi(\beta_kj) - \psi(\alpha_{kj} + \beta_{kj}) )
-\end{equation*}
+\end{multline*}
 
-Taking the derivative with respect to $\gamma_{1j}$, setting it equal to zero and solving for $\gamma_{1j}$ gives
+Taking the derivative with respect to $\gamma_{1j}$  gives
 \begin{equation}
-\gamma_{1j} \leftarrow u_0 + M_0 \sigma_0^2 \frac{1}{K} \sum_{k=1}^K \psi(\alpha_{kj}) - \psi(\beta_{kj})
+.
 \end{equation}
 
 %%% 		gamma2 update 		%%%
