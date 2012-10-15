@@ -25,35 +25,37 @@ while iterCount < MAXITER & llDelta > LLTOL
     M0 = fzero(@(x)dLdM0( x, u0, alpha, beta, gam1, gam2 ), M0, options);
     
     % TODO: Do we want to loop over the variational parameters inside.
-    %% Solve for alpha & beta
-    options = optimset('Display','off');
-    for j = 1:J
-        for k = 1:K
-            alpha(k,j) = fzero(@(x)dLdalpha(x, beta(k,j),M0,u0,r(k,j),n(k,j)), alpha(k,j), options);
+    for i = 1:5
+        %% Solve for alpha & beta
+        options = optimset('Display','off');
+        for j = 1:J
+            for k = 1:K
+                alpha(k,j) = fzero(@(x)dLdalpha(x, beta(k,j),M0,u0,r(k,j),n(k,j)), alpha(k,j), options);
+            end
         end
-    end
-    
-    options = optimset('Display','off');
-    for j = 1:J
-        for k = 1:K
-            beta(k,j) = fzero(@(x)dLdbeta(alpha(k,j), x, M0,u0,r(k,j),n(k,j)), beta(k,j), options);
-        end
-    end
-    
-    %% Solve for gamma1 & gamma2
-    % gam1 = u0 - (sigma20*M0).*mean(psi(alpha)-psi(beta));
-    options = optimset('Display','off');
-    for j = 1:J
-        gam1(j)= fzero(@(x)dLdgam1( x, gam2(j), alpha(:,j), beta(:,j), M0, u0, sigma20), gam1(j),...
-            options);
-    end
-    
-    % options = optimset('Display','iter');
-    options = optimset('Display','off');
-    for j = 1:J
-        gam2(j)= fzero(@(x)dLdgam2( gam1(j), x, M0, sigma20, J ), gam2(j),options);
-    end
 
+        options = optimset('Display','off');
+        for j = 1:J
+            for k = 1:K
+                beta(k,j) = fzero(@(x)dLdbeta(alpha(k,j), x, M0,u0,r(k,j),n(k,j)), beta(k,j), options);
+            end
+        end
+
+        %% Solve for gamma1 & gamma2
+        % gam1 = u0 + (sigma20*M0).*mean(psi(alpha)-psi(beta));
+        options = optimset('Display','off');
+        for j = 1:J
+            gam1(j)= fzero(@(x)dLdgam1( x, gam2(j), alpha(:,j), beta(:,j), M0, u0, sigma20), gam1(j),...
+                options);
+        end
+
+        % options = optimset('Display','iter');
+        options = optimset('Display','off');
+        for j = 1:J
+            gam2(j)= fzero(@(x)dLdgam2( gam1(j), x, M0, sigma20, J ), gam2(j),options);
+        end
+        llSub = ll_bound( r, n, u0, sigma20, M0, gam1, gam2, alpha, beta )
+    end
     %% Update the ll bound
     iterCount = iterCount+1;
     llSave(iterCount) = llCurr;
