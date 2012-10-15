@@ -102,65 +102,102 @@ Now that \eqref{eqn:composite} has been written in terms of only the variational
 {\bf Update Equation for $u_0$ }
 
 Isolating the terms of \eqref{eqn:composite} that involve $u_0$ gives
-\begin{equation}
+\begin{equation*}
 \mathcal{L}_{[u_0]} = K\sum_{j=1}^J\left(-\frac{1}{2\sigma_0^2}(\gamma_{1j}-u_0)^2\right)
-\end{equation}
+\end{equation*}
 
 Taking the derivative and solving for $u_0$ gives
 \begin{equation}
 u_0 \leftarrow \frac{1}{J}\sum_{j=1}^J \gamma_{1j} 
 \end{equation}
 
+%%%			sigma2 update			%%%
 {\bf Update Equation for $\sigma_0^2$ }
 
 Isolating the terms of \eqref{eqn:composite} that involve $\sigma^2_0$ gives
-\begin{equation}
+\begin{equation*}
 \mathcal{L}_{[\sigma^2_0]} = -\frac{J}{2}\log(2\pi\sigma^2_0) -\frac{1}{2\sigma_0^2}\sum_{j=1}^J\left(\gamma_{2j} + (\gamma_{1j}-u_0)^2 \right)
-\end{equation}
+\end{equation*}
 
 Taking the derivative with respect to $\sigma^2_0$ gives
-\begin{equation}
+\begin{equation*}
 \frac{\partial \mathcal{L}}{\partial \sigma^2_0} = -\frac{J}{2\sigma^2_0} +\frac{1}{\sigma^4_0}\sum_{j=1}^J\left(\gamma_{2j} + (\gamma_{1j}-u_0)^2\right)
-\end{equation}
+\end{equation*}
 
 Setting the derivative equal to zero and solving for $\sigma^2_0$ gives
 \begin{equation}
 \sigma^2_0 \leftarrow \frac{1}{J}\sum_{j=1}^J\left(\gamma_{2j} + (\gamma_{1j}-u_0)^2\right)
 \end{equation}
 
+%%% 		M0 update 		%%%
+{\bf Update Equation for $M_0$ }
+
+Isolating terms that involve $M_0$ gives
+\begin{multline*}
+\mathcal{L}_{[M_0]} = \log \Gamma(M_0) -\E_q\log \Gamma(\mu_jM_0) -\E_q\log \Gamma((1-\mu_j)M_0) +\\
++\gamma_{1j}M_0(\psi(\alpha_{kj})-\psi(\alpha_{kj}+\beta_{kj})) +(1-\gamma_{1j})M_0(\psi(\beta_{kj})-\psi(\alpha_{kj}+\beta_{kj}))
+\end{multline*}
+
+Taking the derivative with respect to $M_0$ gives
+\begin{multline*}
+\frac{\partial \mathcal{L}}{\partial M_0} = \psi(M_0) -\frac{\partial}{\partial M_0}\E_q\log \Gamma(\mu_jM_0)
+-\frac{\partial}{\partial M_0}\E_q\log \Gamma((1-\mu_j)M_0) \\
++\gamma_{1j}(\psi(\alpha_{kj})-\psi(\alpha_{kj}+\beta_{kj})) 
++(1-\gamma_{1j})(\psi(\beta_{kj})-\psi(\alpha_{kj}+\beta_{kj}))
+\end{multline*}
+
+The partial derivative can be taken inside of the integral which gives $\frac{\partial}{\partial M_0}\E_q\log \Gamma(\mu_jM_0) = \E_q \left[ \mu_j \psi(\mu_j M_0) \right]$ and a similar expression for the second term $\frac{\partial}{\partial M_0}\E_q\log \Gamma((1-\mu_j)M_0) = \E_q \left[(1- \mu_j) \psi((1-\mu_j) M_0) \right]$.
+
+Plugging these simplifications into the partial with respect to $M_0$ gives
+\begin{multline}
+\frac{\partial \mathcal{L}}{\partial M_0} = \psi(M_0) - \E_q \left[ \mu_j \psi(\mu_j M_0) \right]
+-\E_q \left[(1- \mu_j) \psi((1-\mu_j) M_0) \right] \\
++\gamma_{1j}(\psi(\alpha_{kj})-\psi(\alpha_{kj}+\beta_{kj})) 
++(1-\gamma_{1j})(\psi(\beta_{kj})-\psi(\alpha_{kj}+\beta_{kj}))
+\end{multline}
+
+%%%		alpha & beta update			%%%
 {\bf Update Equation for $\alpha_{kj}$ and $\beta_{kj}$ }
 
 Isolating terms that involve $\alpha_{kj}$ gives
-\begin{multline}
+\begin{multline*}
 \mathcal{L}_{[\alpha_{kj}]} = (u_0M_0 -1)(\psi(\alpha_{kj}) - \psi(\alpha_{kj}+\beta_{kj})) -((1-u_0)M_0-1)\psi(\alpha_{kj}+\beta_{kj}) \\
 + r_{kj}\psi(\alpha_{kj})-n_{kj}\psi(\alpha_{kj}+\beta_{kj}) \\
  - \log \Gamma (\alpha_{kj}+\beta_{kj}) + \log \Gamma(\alpha_{kj}) -(\alpha_{kj}-1)\psi(\alpha_{kj})+(\alpha_{kj}+\beta_{kj}-2)\psi(\alpha_{kj}+\beta_{kj})
-\end{multline}
+\end{multline*}
 
 Setting the derivative equal to zero and solving for $\alpha_{kj}$ gives
 \begin{equation}
  \frac{\partial \mathcal{L}}{\partial \alpha_{kj}} = \psi_1(\alpha_{kj})(u_0M_0+r-\alpha_{kj}) - \psi_1(\alpha_{kj}+\beta_{kj})(M_0+n-(\alpha_{kj}+\beta_{kj}))
 \end{equation}
 
-A similar procedure holds for $\beta_{kj}$ and the resulting update equation bears symmetry to that for $\alpha_{kj}$
+A similar procedure holds for $\beta_{kj}$ and the resulting update equation bears symmetry to that for $\alpha_{kj}$,
 \begin{equation}
-\beta_{kj} \leftarrow \psi_1(\beta_{kj})\left[(1-u_0)M_0-1+(n-r)-\beta_{kj}\right] - \psi_1(\alpha_{kj}+\beta_{kj})\left[M_0+n-(\alpha_{kj}+\beta_{kj})\right]
+ \frac{\partial \mathcal{L}}{\partial \beta_{kj}} = \psi_1(\beta_{kj}) \left[ (1-u_0)M_0-1+(n_{kj}-r_{kj})-\beta_{kj}\right] - \psi_1(\alpha_{kj}+\beta_{kj})(M_0+n-(\alpha_{kj}+\beta_{kj}))
 \end{equation}
 
-{\bf Update Equation for $M_0$ }
-
-Isolating terms that involve $M_0$ gives
-\begin{multline}
-\mathcal{L}_{[M_0]} = \log \Gamma(M_0) -\E_q\log \Gamma(\mu_jM_0) -\E_q\log \Gamma((1-\mu_j)M_0) +\\
-+\gamma_{1j}M_0(\psi(\alpha_{kj})-\psi(\alpha_{kj}+\beta_{kj})) +(1-\gamma_{1j})M_0(\psi(\beta_{kj})-\psi(\alpha_{kj}+\beta_{kj}))
-\end{multline}
-
-{\bf Update Equation for $\gamma_{2j}$ }
+%%% 		gamma1 update 		%%%
+{\bf Update equation for $\gamma_{1j}$}\label{sec:gamma1_update}
 
 Isolating terms that involve $\gamma_{2j}$ gives
+\begin{equation*}
+\mathcal{L}_{[\gamma_{1j}]} = -\frac{K}{2\sigma_0^2}(\gamma_{1j}-u_0)^2 
++ \sum_{k=1}^K \gamma_{1j} M_0 ( \psi(\alpha_kj) - \psi(\alpha_{kj} + \beta_{kj}) )
+- \sum_{k=1}^K \gamma_{1j} M_0 ( \psi(\beta_kj) - \psi(\alpha_{kj} + \beta_{kj}) )
+\end{equation*}
+
+Taking the derivative with respect to $\gamma_{1j}$, setting it equal to zero and solving for $\gamma_{1j}$ gives
 \begin{equation}
-\mathcal{L}_{[\gamma_{2j}]} = -\frac{K}{2\sigma_0^2}\gamma_{2j} -\E_q\log\Gamma(\mu_jM_0) - \E_q\log\Gamma((1-\mu_j)M_0)+\frac{1}{2}\log(2\pi e \gamma_{2j})
+\gamma_{1j} \leftarrow u_0 + M_0 \sigma_0^2 \frac{1}{K} \sum_{k=1}^K \psi(\alpha_{kj}) - \psi(\beta_{kj})
 \end{equation}
+
+%%% 		gamma2 update 		%%%
+{\bf Update Equation for $\gamma_{2j}$ }\label{sec:gamma2_update}
+
+Isolating terms that involve $\gamma_{2j}$ gives
+\begin{equation*}
+\mathcal{L}_{[\gamma_{2j}]} = -\frac{K}{2\sigma_0^2}\gamma_{2j} -\E_q\log\Gamma(\mu_jM_0) - \E_q\log\Gamma((1-\mu_j)M_0)+\frac{1}{2}\log(2\pi e \gamma_{2j})
+\end{equation*}
 
 Taking the derivative with respect to $\gamma_{2j}$ gives
 \begin{equation}\label{eqn:gam2_deriv}
@@ -180,5 +217,7 @@ Replacing \eqref{eqn:gam2_int1} in \eqref{eqn:gam2_deriv} gives
 - \frac{1}{2\gamma_{2j}}\left(\frac{1}{\gamma_{2j}} \E_q \left[ (\mu_j-\gamma_{1j})^2 \log\Gamma((1-\mu_j)M_0) \right] - \E_q \left[ \log\Gamma((1-\mu_j)M_0) \right] \right) +\frac{1}{2\gamma_{2j}}
 \end{multline}
 Solving for the root gives the maximizing value of $\gamma_{2j}$ and the update.
+
+
 
 \end{document}
