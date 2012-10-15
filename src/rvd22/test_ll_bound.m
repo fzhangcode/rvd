@@ -18,9 +18,9 @@ n = repmat(1000,K,J);
 r = binornd(n,theta);
 
 %% Estimate Model Parameters
-matlabpool open
+% matlabpool open
 [ u0,sigma20,M0,alpha,beta,gam1,gam2 ] ...
     = rvd2_est( r, n, u0, sigma20, M0 );
-matlabpool close
+% matlabpool close
 
 plot_profile(r,n,u0,sigma20,M0,alpha,beta,gam1,gam2)
