@@ -1,24 +1,16 @@
 %% Problem Setup
 
-rng(1000,'twister');
-
-K = 3; J = 100;
-
-u0 = 0.5; sigma20 = 0.1^2;
-
-mu = normrnd(u0,sqrt(sigma20),[1 J]);
-sum(mu<0 |mu>1)
-mu(mu<0) = 0; mu(mu>1) = 1;
-
-M0 = 50; theta = NaN(K,J);
-for k = 1:K
-    theta(k,:) = betarnd(mu.*M0,M0.*(1-mu)); 
-end
-
-n = repmat(100,K,J);
-r = binornd(n,theta);
+save_rvd2_profile('test_prof1.csv');
+M = csvread('test_prof1.csv');
+r = M(:, 1:2:size(M,2)).';
+n = M(:, 2:2:size(M,2)).';
+[K,J] = size(r);
 
 %% Estimate Model Parameters
+u0 = 0.5; sigma20 = 0.001^2; M0=5000;
+
+% plot_estimate( r, n, alpha, beta, gam1, u0, sigma20 )
+
 % matlabpool open
 [ u0,sigma20,M0,alpha,beta,gam1,gam2 ] ...
     = rvd2_est( r, n, u0, sigma20, M0 );
