@@ -16,6 +16,8 @@ RVD2 Project Notes \\
 \today
 \end{flushright}
 
+\section*{RVD2.1: Independent variational parameters}
+
 Consider the following model
 \begin{align}
 \mu_j &\thicksim \text{Gaussian}(u_0,\sigma^2_0)\\
@@ -38,8 +40,11 @@ Writing out the joint posterior distribution gives
 \end{equation}
 
 \begin{multline}
-\log p(\mu,\theta | r) = K\sum_{j=1}^J \log p(\mu_j;\mu_0,\sigma^2_0) + \sum_{j=1}^J \sum_{k=1}^K \log p(\theta_{kj} | \mu_j;M_0)\\ + \sum_{j=1}^J \sum_{k=1}^K\log p(r_{kj} | \theta_{kj}, n_{kj})
-- \sum_{j=1}^J \sum_{k=1}^K \log \int_{\theta_{kj}} \int_{\mu_j} p(r_{kj};\mu_0,\sigma^2_0,M_0) \end{multline}
+\log p(\mu,\theta | r) = K\sum_{j=1}^J \log p(\mu_j;\mu_0,\sigma^2_0) 
+	+\sum_{j=1}^J \sum_{k=1}^K \log p(\theta_{kj} | \mu_j;M_0)\\ 
+	+\sum_{j=1}^J \sum_{k=1}^K\log p(r_{kj} | \theta_{kj}, n_{kj})
+	- \sum_{j=1}^J \sum_{k=1}^K \log \int_{\theta_{kj}} \int_{\mu_j} p(r_{kj};\mu_0,\sigma^2_0,M_0) 
+\end{multline}
 
 The computation of $p(r;u_0,\sigma_0^2,M_0)$ is intractable due to the coupling in the latent variables induced by the integral so we must use an approximation or sampling method.
 
@@ -48,7 +53,7 @@ The computation of $p(r;u_0,\sigma_0^2,M_0)$ is intractable due to the coupling 
 \log p(r_{kj}; u_0, \sigma_0^2, M_0) & = \log \int_{\theta_{kj}} \int_{\mu_j} p(\mu_j, \theta_{kj}, r_{kj})d\mu_jd\theta_{kj} \\
 & = \log \int_{\theta_{kj}} \int_{\mu_j} p(\mu_j, \theta_{kj}, r_{kj}) \frac{q(\mu_j, \theta_{kj})}{q(\mu_j, \theta_{kj})}  d\mu_jd\theta_{kj}\\
 & \geq  \int_{\theta_{kj}} \int_{\mu_j} q(\mu_j, \theta_{kj}) \log p(\mu_j, \theta_{kj}, r_{kj}) -  \int_{\theta_{kj}} \int_{\mu_j} q(\mu_j, \theta_{kj}) \log q(\mu_j, \theta_{kj}) \\
-& = \E_q \left[ \log p(r_{kj}, \mu_j, \theta_{kj}) \right] - \E_q\left[ \log q(\mu_j, \theta_{kj}) \right] = \mathcal{L_{kj}}
+& = \E_q \left[ \log p(r_{kj}, \mu_j, \theta_{kj}) \right] - \E_q\left[ \log q(\mu_j, \theta_{kj}) \right] = \mathcal{L}_{kj}
 \end{align}
 
 The bound on the log likelihood of the data, $\mathcal{L}$, is seen to be the sum of the expected complete data log-likelihood and the entropy of the variational approximating distribution.
@@ -73,7 +78,7 @@ Taking each term in \eqref{eqn:composite} individually we can cast the bound on 
 \end{align}
 
 \begin{align}
-\E_q \log p(\theta_{kj} | \mu_j ; M_0) & = \int_{\mu_j} q(\mu_j) \int_{\theta_{kj}} q(\theta_{kj}) \log p(\theta_{kj} | \mu_j, M_0)\\
+\E_q \log p(\theta_{kj} | \mu_j ; M_0) & = \int_{\mu_j} q(\mu_j) \int_{\theta_{kj}} q(\theta_{kj}) \log p(\theta_{kj} | \mu_j, M_0) \nonumber\\
 \begin{split}
 & = \log \Gamma(M_0) -\E_q \log \Gamma(\mu_j M_0) -\E_q \log \Gamma((1-\mu_j)M_0) \\
 & \qquad+(\gamma_{1j}M_0-1)\left( \psi(\alpha_{kj}) - \psi(\alpha_{kj} + \beta_{kj}) \right) \\
@@ -83,7 +88,7 @@ Taking each term in \eqref{eqn:composite} individually we can cast the bound on 
 where $\E_q \log \Gamma(\mu_j M_0)$ is easily computed numerically. In general, we will be able to differentiate under the integral by Leibniz integral rule and the fact that the bounds are constants $\mu_j \in [0,1]$.
 
 \begin{align}
-\E_q \log p(r_{kj} | \theta_{kj}, n_{kj}) & = \int_{\theta_{kj}} q(\theta_{kj}) \log p(r_{kj} | \theta_{kj}, n_{kj})\\
+\E_q \log p(r_{kj} | \theta_{kj}, n_{kj}) & = \int_{\theta_{kj}} q(\theta_{kj}) \log p(r_{kj} | \theta_{kj}, n_{kj}) \nonumber \\
 \begin{split}
 & = \log \Gamma(n_{kj}+1) - \log \Gamma(r_{kj}+1) - \log \Gamma(n_{kj}-r_{kj}+1) \\
 & \qquad +r(\psi(\alpha_{kj})-\psi(\alpha_{kj} + \beta_{kj})) +(n_{kj}-r_{kj})(\psi(\beta_{kj}) - \psi(\alpha_{kj}+\beta_{kj}))
@@ -190,9 +195,12 @@ Isolating terms that involve $\gamma_{1j}$ gives
 \end{multline*}
 
 Taking the derivative with respect to $\gamma_{1j}$  gives
-\begin{equation}
-.
-\end{equation}
+\begin{multline}
+\frac{\partial \mathcal{L}}{\partial \gamma_{1j}} = -\frac{K}{\sigma_0^2}(\gamma_{1j} - u_0) 
+	+M_0 \sum_{k=1}^K \left( \psi(\alpha_{kj}) - \psi(\beta_{kj}) \right) \\
+	-K \E_q \left[ \frac{1}{\gamma_{2j}} \log \Gamma(\mu_jM_0) \right]
+	-K \E_q \left[ \frac{1}{\gamma_{2j}} \log \Gamma((1-\mu_j)M_0) \right]
+\end{multline}
 
 %%% 		gamma2 update 		%%%
 {\bf Update Equation for $\gamma_{2j}$ }\label{sec:gamma2_update}
