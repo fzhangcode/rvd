@@ -5,8 +5,9 @@
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
+import scipy.stats as ss
 from scipy.stats import gamma
-from scipy.special import gammaln
+from scipy.special import gammaln, psi, polygamma
 
 import logging
 
@@ -164,8 +165,35 @@ def metro_gibbs(r, phi, nsample=10000):
                                             nsample=1)
         alpha_s[:,:,s] = np.copy(alpha)
         theta_s[:,:,:,s] = np.copy(theta)
-
+        
     return (alpha_s, theta_s)
+
+def gamma_mle(x):
+    """ Return the maximum-likelihood estimates for shape and scale of Gamma RV.
+    This uses the method proposed by T. Minka in 
+    http://research.microsoft.com/en-us/um/people/minka/papers/minka-gamma.pdf
+    """
+    
+    # Initialize a
+    a = 0.5 / ( np.log(np.mean(x)) - np.mean(np.log(x)) )
+    
+    
+    # Generalized Newton updates for a
+    # stop when change in a is small
+    while True:
+        a_new = 1 / (1/a + (np.mean(np.log(x)) \
+                        - np.log(np.mean(x)) \
+                        + np.log(a) \
+                        - psi(a) ) \
+                        / 
+                        (np.power(a,2) \
+                         * (1/a - polygamma(1, a))))
+        if (abs(a-a_new)/abs(a)) < 1e-6: break
+        else: a = a_new
+    
+    b = np.mean(x)/a
+    
+    return (a, b)
 
 if __name__ == '__main__':
     phi = {'a':1, 'b':2}
@@ -174,13 +202,18 @@ if __name__ == '__main__':
     
     theta_hat = theta_s.mean(3)
     alpha_hat = alpha_s.mean(2)
+    phi['a'], phi['b'] = gamma_mle(alpha_hat)
+
+    # print "Estimated Alpha"
+    # print alpha_hat
     
-    print "Estimated Alpha"
-    print alpha_hat
+    print "Estimated phi"
+    print phi
 
     col = ('b', 'g', 'r', 'c')
+    base = (r'$A$', r'$C$', r'$T$', r'$G$')
     for i in xrange(0,4):
-        plt.plot(range(0,10), theta[0,:,i], marker='+', ls='', color=col[i])
-        plt.plot(range(0,10), theta_hat[0,:,i], color=col[i])
+        plt.plot(range(0,10), theta[0,:,i], color=col[i])
+        plt.plot(range(0,10), theta_hat[0,:,i], marker=base[i], ls='', color=col[i])
     plt.show()
     
