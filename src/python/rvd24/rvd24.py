@@ -190,7 +190,7 @@ def metro_gibbs(r, phi, nsample=10000):
             alpha[j,:], sc = sample_alpha_mh(alpha[j,:], 
                                              theta[:,j,:], 
                                              phi, 
-                                             scale=sc)
+                                             scale=0.5)
             for i in xrange(0, nrep):
                 theta[i,j,:] = sample_theta_gibbs(alpha[j,:], r[i,j,:])
                 # theta[i,j,:] = sample_theta_mh(alpha[j,:], theta[i,j,:], r[i,j,:], phi)
@@ -208,50 +208,49 @@ def gamma_mle(x):
     http://research.microsoft.com/en-us/um/people/minka/papers/minka-gamma.pdf
     """
     
-    npos, ncat = np.shape(x)
-    a = np.zeros(ncat)
-    b = np.zeros(ncat)
+    npos =  np.shape(x)[0]
     
-    for k in xrange(0,ncat):
-        # Initialize a
-        a[k] = 0.5 / ( np.log(np.mean(x[:,k])) - np.mean(np.log(x[:,k])) )
+    # Initialize a
+    a = 0.5 / ( np.log(np.mean(x)) - np.mean(np.log(x)) )
     
     
-        # Generalized Newton updates for "a"
-        while True:
-            a_new = 1 / (1/a[k] + (np.mean(np.log(x[:,k])) \
-                            - np.log(np.mean(x[:,k])) \
-                            + np.log(a[k]) \
-                            - psi(a[k]) ) \
-                            / 
-                            (np.power(a[k],2) \
-                             * (1/a[k] - polygamma(1, a[k]))))
-            if (abs(a[k]-a_new)/abs(a[k])) < 1e-6: break
-            else: a[k] = a_new
+    # Generalized Newton updates for "a"
+    while True:
+        a_new = 1 / (1/a + (np.mean(np.log(x)) \
+                        - np.log(np.mean(x)) \
+                        + np.log(a) \
+                        - psi(a) ) \
+                        / 
+                        (np.power(a,2) \
+                         * (1/a - polygamma(1, a))))
+        if (abs(a-a_new)/abs(a)) < 1e-6: break
+        else: a = a_new
     
-        b[k] = np.mean(x[k])/a[k]
+    b = np.mean(x)/a
     
     return (a, b)
 
 if __name__ == '__main__':
-    npos = 100
+    npos = 10
     ncat = 2
-    nrep = 3
-    nsample = 1000
-    burnin = 0.0
+    nrep = 4
+    nsample = 50000
+    burnin = 0.2
+    
+    cv = 0.01
     
     
-    phi = {'a':np.array([2.0, 10.0]), 
-           'b':np.array([0.1, 0.5]), 
+    phi = {'a':np.array([np.sqrt(1/cv), np.sqrt(1/cv)]), 
+           'b':np.array([1*np.sqrt(cv), 9*np.sqrt(cv)]), 
            'm':np.array([0.0, 0.0])}
     # r, alpha, theta = generate_sample(phi, n=1000, npos=npos, nrep=nrep)
     
     # Generate more realistic samples
-    theta = np.array([0.8, 0.2])
+    theta = np.array([0.1, 0.9])
     ncat = np.shape(theta)[0]
-    r = generate_sample2(theta, n=1000, nrep=nrep, npos=npos)
+    r = generate_sample2(theta, n=100, nrep=nrep, npos=npos)
     
-    for i in xrange(0, 3):
+    for i in xrange(0, 10):
         alpha_s, theta_s = metro_gibbs(r, phi, nsample=nsample)
     
         # Remove burn-in samples
@@ -260,18 +259,22 @@ if __name__ == '__main__':
         alpha_s = np.delete(alpha_s, range(0, nps), 2)
         theta_s = np.delete(theta_s, nps, 3)
     
-        # Estimate Gamma hyperparameters
         alpha_hat = alpha_s.mean(2)
         theta_hat = theta_s.mean(3)
         
         # Fit the gamma parameters
         for k in xrange(0, ncat):
-            # a = ss.gamma.fit(alpha_hat[:,k])
-            # print a
-            phi['a'][k], phi['m'][k], phi['b'][k] = ss.gamma.fit(alpha_hat[:,k])
+            # phi['a'][k], phi['b'][k] = gamma_mle(alpha_hat[:,k])
+            phi['a'][k], fit_loc, phi['b'][k] = ss.gamma.fit(alpha_hat[:,k])
         
-        plt.plot(np.arange(nsample), alpha_s[0,0,:], color='b')
+        for k in xrange(0,ncat):
+            rv = gamma(phi['a'][k], scale=phi['b'][k])
+            x = np.linspace(0, np.minimum(rv.dist.b, 10), num=1000)
+            plt.plot(x,rv.pdf(x))
         plt.show()
+        # plt.plot(np.arange(npos), alpha_hat[:,0], color='b')
+        # plt.show()
+        
         
         print "Estimated phi"
         print phi
@@ -281,11 +284,15 @@ if __name__ == '__main__':
     col = ('b', 'g', 'r', 'c')
     ind = np.arange(npos)
      
-    g = alpha_hat[:,0] / np.sum(alpha_hat,1)
-    plt.plot(ind, g, color=col[0], marker='x')
+    g_hat = alpha_hat[:,0] / np.sum(alpha_hat,1)
+    plt.plot(ind, g_hat, color=col[0], marker='x')
+    
+    # g = alpha[:,0] / np.sum(alpha,1)
+    # plt.plot(ind, g, color=col[0], marker='o', ls='-')
+
     for i in xrange(0,nrep):
         # plt.plot(np.arange(npos), theta[i,:,0], marker='o', ls='', color=col[i])
-        plt.plot(np.arange(npos), theta_hat[i,:,0], marker='+', ls='', color=col[i])
+        plt.plot(np.arange(npos), theta_hat[i,:,0], marker='+', ls='')
     
     plt.show()
     
