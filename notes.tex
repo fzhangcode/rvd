@@ -3,7 +3,7 @@
 \usepackage{amsmath} % just math
 \usepackage{amssymb} % allow blackboard bold (aka N,R,Q sets)
 
-\usepackage{algorithm2e}
+\usepackage[boxed]{algorithm2e}
 
 \linespread{1.6}  % double spaces lines
 \usepackage[left=1in,top=1in,right=1in,bottom=1in,nohead]{geometry}
@@ -263,9 +263,9 @@ Instead of attempting to directly compute the posterior distribution, we instead
 \KwResult{MLE estimates for hyper-parameters $\hat{a}$ and $\hat{b}$. Samples from joint posterior distribution $p(\theta_{ij}, \alpha_j | r_{ij}; \hat{a}, \hat{b})$ for $i=1,\ldots,N$ and $j=1,\ldots,M$}
 Initialize $a$ and $b$\;
 \Repeat {convergence} {
-	Sample $\alpha_j$ from $p(\alpha_j | a, b, \theta_{1j}, \ldots, \theta_{Nj})$ using M-H\;
-	Sample $\theta_{ij}$ from $p(\theta_{ij} | \alpha_j, r_{ij})$ using Gibbs\;
-	Compute MLE $\hat{a}$ and $\hat{b}$
+	Sample $\alpha_j$ from $p(\alpha_j | a, b, \theta_{1j}, \ldots, \theta_{Nj})$ using Metropolis-Hastings\;
+	Sample $\theta_{ij}$ from $p(\theta_{ij} | \alpha_j, r_{ij})$\;
+	Compute maximum-likelihood estimates $\hat{a}$ and $\hat{b}$
 }
 \caption{Metropolis-within-Gibbs Sampling for RVD2.3 Model}
 \end{algorithm}
@@ -277,7 +277,7 @@ Samples from $p(\theta_{ij} | \alpha_j, r_{ij})$ can be obtained directly becaus
 	\theta_{ij} | \alpha_j, r_{ij} \thicksim \text{Dirichlet}(\alpha_j + r_{ij}).
 \end{equation}
 
-The Gamma distribution is not conjugate to the Dirichelt, so we draw samples from $p(\alpha_j | a, b, \theta_{1j}, \ldots, \theta_{Nj})$ by Metropolis-Hastings. We use a proposal distribution,
+The Gamma distribution is not conjugate to the Dirichlet, so we draw samples from $p(\alpha_j | a, b, \theta_{1j}, \ldots, \theta_{Nj})$ by Metropolis-Hastings. We use a proposal distribution,
 \begin{equation}
 	\alpha_j^{k \text{(new)}} | \alpha_j^k \thicksim \text{Gaussian}(\alpha_j^k, 0.05),
 \end{equation}

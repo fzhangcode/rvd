@@ -11,18 +11,17 @@ from scipy.special import gammaln, psi, polygamma
 
 import logging
 
-K = 4 # Number of nucleotides
 
-def generate_sample(phi, n=1000, nrep=1, npos=1):
-    """Return a sample from the model"""
+def generate_sample(phi, n=1000, nrep=1, npos=1, ncat=4):
+    """Return n samples from the RVD2.3 model with nrep replciates, npos locations and ncat multinomial categories."""
     
     # Draw M Dirichlet parameters
-    alpha = gamma.rvs(phi['a'], scale=phi['b'], size=K*npos)
-    alpha = np.reshape(alpha, (npos, K))
+    alpha = gamma.rvs(phi['a'], scale=phi['b'], size=ncat*npos)
+    alpha = np.reshape(alpha, (npos, ncat))
     
     # Draw the sample/replicate probabilities
-    theta = np.zeros((nrep, npos, K))
-    r = np.zeros((nrep, npos, K), dtype=np.int64)
+    theta = np.zeros((nrep, npos, ncat))
+    r = np.zeros((nrep, npos, ncat), dtype=np.int64)
     for i in xrange(0, nrep):
         for j in xrange(0, npos):
             theta[i,j,:] = np.random.mtrand.dirichlet(alpha[i,:])
@@ -30,20 +29,31 @@ def generate_sample(phi, n=1000, nrep=1, npos=1):
     
     return (r, alpha, theta)
 
+def generate_sample2(theta, n=1000, nrep=1, npos=1):
+    """ Return n samples with probabilities given by theta
+    """
+    ncat = np.shape(theta)[0]
+    
+    r = np.zeros((nrep, npos, ncat), dtype=np.int64)
+    for i in xrange(0, nrep):
+        for j in xrange(0, npos):
+            r[i,j,:] = np.random.multinomial(n, theta)
+
+    return r
 def log_cond_alpha(phi, alpha, theta):
     """Return the log conditional distribution of alpha given its 
     Markov blanket.
-    alpha = K-dimensional vector
+    alpha = ncat-dimensional vector
     theta = NxK matrix with N replicates and K categories
     """
     
-    nrep, K =  np.shape(theta)
+    nrep, ncat =  np.shape(theta)
     logPtheta = 0;
     for i in xrange(0,nrep):
         logPtheta = logPtheta \
                     + gammaln(np.sum(alpha)) \
                     - np.sum(gammaln(alpha)) \
-                    + np.sum( (alpha-1) * np.log(theta[i,:]) )
+                    + np.sum( (alpha-1) * np.log(theta[i,:]+np.finfo(np.float).eps) )
 
     logPalpha = - gammaln(phi['a']) \
                 - phi['a']*np.log(phi['b']) \
@@ -72,10 +82,11 @@ def log_cond_theta(phi, alpha, theta, r):
     return (logPr + logPtheta)
 
 
-def sample_alpha_mh(alpha, theta, phi, nsample=1):
+def sample_alpha_mh(alpha, theta, phi, nsample=1, scale=0.5):
     """Return a sample from the posterior marginal distribution for alpha"""
     
-    K = np.shape(alpha)[0]
+    ncat = np.shape(alpha)[0]
+    c = 0
     
     for s in xrange(0, nsample):
         # Compute the posterior likelihood for the current alpha
@@ -83,9 +94,9 @@ def sample_alpha_mh(alpha, theta, phi, nsample=1):
 
         # Sample a non-negative value for alpha_p
         alpha_p = np.copy(alpha)
-        for k in xrange(0,K):
+        for k in xrange(0, ncat):
             while True: 
-                alpha_p[k] = np.random.normal(loc=alpha[k], scale=0.05)
+                alpha_p[k] = np.random.normal(loc=alpha[k], scale=scale)
                 if alpha_p[k] > 0: break
             
         # Compute the posterior likelihood for the proposal alpha        
@@ -97,15 +108,21 @@ def sample_alpha_mh(alpha, theta, phi, nsample=1):
         # Return the new value of alpha
         if (np.random.rand(1) < prA): 
             alpha = np.copy(alpha_p)
+            c = c + 1
 
-    return alpha
+    if (c/nsample) < 0.2: 
+        scale = scale/2
+    elif (c/nsample) > 0.8: 
+        scale = scale+1
+    
+    return (alpha, scale)
 
 def sample_theta_mh(alpha, theta, r, phi, nsample=1):
     """Generate a Metropilis-Hastings sample from the 
     marginal posterior of theta
     """
     
-    K = np.shape(alpha)[0]
+    ncat = np.shape(alpha)[0]
     
     for s in xrange(0, nsample):
         # Compute the posterior likelihood for the current theta
@@ -113,9 +130,9 @@ def sample_theta_mh(alpha, theta, r, phi, nsample=1):
             
         # Sample a non-negative value for theta_p
         theta_p = np.copy(theta)
-        for k in xrange(0,K):
+        for k in xrange(0, ncat):
             while True: 
-                theta_p[k] = np.random.normal(loc=theta[k], scale=0.05)
+                theta_p[k] = np.random.normal(loc=theta[k], scale=0.01)
                 if 0 <= theta_p[k] <= 1: break
         theta_p = theta_p/np.sum(theta_p)
                 
@@ -143,30 +160,31 @@ def metro_gibbs(r, phi, nsample=10000):
     """
     
     # Get the size of the data set from r
-    nrep, npos, K = np.shape(r)
+    nrep, npos, ncat = np.shape(r)
     
     # Initialize alpha and theta
-    alpha = gamma.rvs(1, scale=1, size=K*npos)
-    alpha = np.reshape(alpha, (npos, K))
+    alpha = gamma.rvs(1, scale=1, size=ncat*npos)
+    alpha = np.reshape(alpha, (npos, ncat))
     
-    theta = np.zeros((nrep, npos, K))
+    theta = np.zeros((nrep, npos, ncat))
     for i in xrange(0, nrep):
         for j in xrange(0, npos):
             theta[i,j,:] = np.random.mtrand.dirichlet(alpha[i,:])
 
     # Draw nsample samples from the posterior distribution using M-H
-    theta_s = np.zeros((nrep, npos, K, nsample))
-    alpha_s = np.zeros((npos, K, nsample))
+    theta_s = np.zeros((nrep, npos, ncat, nsample))
+    alpha_s = np.zeros((npos, ncat, nsample))
+    sc = 0.5
     for s in xrange(0,nsample):
         for j in xrange(0,npos):
-            alpha[j,:] = sample_alpha_mh(alpha[j,:], theta[:,j,:], phi)
+            alpha[j,:], sc = sample_alpha_mh(alpha[j,:], theta[:,j,:], phi, scale=sc)
             for i in xrange(0, nrep):
                 theta[i,j,:] = sample_theta_gibbs(alpha[j,:], r[i,j,:])
                 # theta[i,j,:] = sample_theta_mh(alpha[j,:], theta[i,j,:], r[i,j,:], phi)
         # Store the sample and update Gamma parameters by MLE
         alpha_s[:,:,s] = np.copy(alpha)
         theta_s[:,:,:,s] = np.copy(theta)
-        phi['a'], phi['b'] = gamma_mle(alpha_s[:,:,s])
+        # phi['a'], phi['b'] = gamma_mle(alpha_s[:,:,s])
         
     return (alpha_s, theta_s)
 
@@ -197,22 +215,55 @@ def gamma_mle(x):
     return (a, b)
 
 if __name__ == '__main__':
-    npos = 50
-    phi = {'a':20, 'b':0.1}
-    r, alpha, theta = generate_sample(phi, npos=npos, nrep=10)
-    alpha_s, theta_s = metro_gibbs(r, phi, nsample=500)
+    npos = 100
+    ncat = 2
+    nrep = 3
+    nsample = 2000
+    burnin = 0.2
     
-    theta_hat = theta_s.mean(3)
-    alpha_hat = alpha_s.mean(2)
-    phi['a'], phi['b'] = gamma_mle(alpha_hat)
+    
+    phi = {'a':1, 'b':20}
+    # r, alpha, theta = generate_sample(phi, n=10000, npos=npos, nrep=nrep, ncat=ncat)
+    
+    theta = np.array([0.9, 0.1])
+    ncat = np.shape(theta)
+    r = generate_sample2(theta, n=1000, nrep=nrep, npos=npos)
+    
+    for i in xrange(0, 10):
+        alpha_s, theta_s = metro_gibbs(r, phi, nsample=nsample)
+    
+        # Remove burn-in samples
+        nps = np.int(burnin*nsample) if burnin < 1 else burnin
+        nsample = nsample - nps
+        alpha_s = np.delete(alpha_s, range(0, nps), 2)
+        theta_s = np.delete(theta_s, nps, 3)
+    
+        # Estimate Gamma hyperparameters
+        alpha_hat = alpha_s.mean(2)
+        theta_hat = theta_s.mean(3)
+        
+        # Set a and b based on the reference base only
+        phi['a'], phi['b'] = gamma_mle(alpha_hat[:,0])
+        
+        # plt.plot(np.arange(nsample), alpha_s[0,0,:], color='b')
+        # plt.show()
+        
+        print "Estimated phi"
+        print phi
+    
 
-    
-    print "Estimated phi"
-    print phi
 
     col = ('b', 'g', 'r', 'c')
-    for i in xrange(0,4):
-        plt.plot(range(0,npos), theta[0,:,i], color=col[i])
-        plt.plot(range(0,npos), theta_hat[0,:,i], marker='+', ls='', color=col[i])
+    ind = np.arange(npos)
+    
+    
+
+     
+    g = alpha_hat[:,0] / np.sum(alpha_hat,1)
+    plt.plot(ind, g, color=col[0], marker='x')
+    for i in xrange(0,nrep):
+        # plt.plot(np.arange(npos), theta[i,:,0], marker='o', ls='', color=col[i])
+        plt.plot(np.arange(npos), theta_hat[i,:,0], marker='+', ls='', color=col[i])
+    
     plt.show()
     
