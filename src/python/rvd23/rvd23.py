@@ -100,7 +100,7 @@ def sample_alpha(alpha, theta, phi, nsample=1):
 
     return alpha
 
-def sample_theta(alpha, theta, r, phi, nsample=1):
+def sample_theta_mh(alpha, theta, r, phi, nsample=1):
     """Generate a Metropilis-Hastings sample from the 
     marginal posterior of theta
     """
@@ -130,7 +130,13 @@ def sample_theta(alpha, theta, r, phi, nsample=1):
             theta = np.copy(theta_p)
         
     return theta
-        
+
+def sample_theta_gibbs(alpha, r):
+    """ Return a sample from the conditional, p(theta|r, alpha),
+    """
+    
+    return np.random.mtrand.dirichlet(alpha+r)
+    
 def metro_gibbs(r, phi, nsample=10000):
     """Return samples from the posterior p(theta,alpha) 
     using Metropolis-within-Gibbs sampling.
@@ -158,13 +164,15 @@ def metro_gibbs(r, phi, nsample=10000):
                                       phi, 
                                       nsample=1)
             for i in xrange(0, nrep):
-                theta[i,j,:] = sample_theta(alpha[j,:], 
-                                            theta[i,j,:], 
-                                            r[i,j,:], 
-                                            phi,
-                                            nsample=1)
+                theta[i,j,:] = sample_theta_gibbs(alpha[j,:], r[i,j,:])
+                # theta[i,j,:] = sample_theta_mh(alpha[j,:], 
+                #                                theta[i,j,:], 
+                #                                r[i,j,:], 
+                #                                phi,
+                #                                nsample=1)
         alpha_s[:,:,s] = np.copy(alpha)
         theta_s[:,:,:,s] = np.copy(theta)
+        phi['a'], phi['b'] = gamma_mle(alpha_s[:,:,s])
         
     return (alpha_s, theta_s)
 
@@ -196,14 +204,16 @@ def gamma_mle(x):
     return (a, b)
 
 if __name__ == '__main__':
-    phi = {'a':1, 'b':2}
-    r, alpha, theta = generate_sample(phi, npos=10, nrep=3)
+    npos = 50
+    phi = {'a':20, 'b':0.1}
+    r, alpha, theta = generate_sample(phi, npos=npos, nrep=10)
     alpha_s, theta_s = metro_gibbs(r, phi, nsample=500)
     
     theta_hat = theta_s.mean(3)
     alpha_hat = alpha_s.mean(2)
     phi['a'], phi['b'] = gamma_mle(alpha_hat)
 
+    print np.shape(theta_hat)
     # print "Estimated Alpha"
     # print alpha_hat
     
@@ -211,9 +221,8 @@ if __name__ == '__main__':
     print phi
 
     col = ('b', 'g', 'r', 'c')
-    base = (r'$A$', r'$C$', r'$T$', r'$G$')
     for i in xrange(0,4):
-        plt.plot(range(0,10), theta[0,:,i], color=col[i])
-        plt.plot(range(0,10), theta_hat[0,:,i], marker=base[i], ls='', color=col[i])
+        plt.plot(range(0,npos), theta[0,:,i], color=col[i])
+        plt.plot(range(0,npos), theta_hat[0,:,i], marker='+', ls='', color=col[i])
     plt.show()
     
