@@ -2,6 +2,9 @@
 
 \usepackage{amsmath} % just math
 \usepackage{amssymb} % allow blackboard bold (aka N,R,Q sets)
+
+\usepackage{algorithm2e}
+
 \linespread{1.6}  % double spaces lines
 \usepackage[left=1in,top=1in,right=1in,bottom=1in,nohead]{geometry}
 
@@ -230,5 +233,54 @@ Replacing \eqref{eqn:gam2_int1} in \eqref{eqn:gam2_deriv} gives
 Solving for the root gives the maximizing value of $\gamma_{2j}$ and the update.
 
 
+\section{RVD 2.3: Gamma Prior}
+Consider the following model
+\begin{align}
+\alpha_j &\thicksim \text{Gamma}(a, b)\\
+\theta_{ij} &\thicksim \text{Dirichlet}(\alpha_j)\\
+r_{ij} &\thicksim \text{Multinomial}(\theta_{ij}, n_{ij})
+\end{align}
 
+For each genomic location, $j=1,\ldots,M$, $K$ random variables are independently chosen from a Gamma distribution with shape parameter $a$ and scale parameter $b$. Within each location, $N$ Dirichlet random variables, $\theta_{ij}$ are chosen with parameter $\alpha_j$ for each replicate. Finally, a read count variable $r_{ij}$ is drawn from a multinomial distribution with probability parameter $\theta_{ij}$ and total count $n_{ij}$. The count of nucleotide $k\in\{A, C, T, G\}$ at position $j$ in replicate $i$ is then $r_{ij}^k$.
+
+The inferential object of interest here is the joint posterior distribution over the latent variables $p(\theta, \alpha | r)$. From the posterior distribution we can estimate the location-specific Dirichlet parameters $\hat{\alpha}_j$ and thus the location-specific nucleotide probabilities $\frac{ \hat{\alpha}^k_{j} } { \hat{\alpha}^0_{j} }$, where $\hat{\alpha}^0_{j} = \sum_k \hat{\alpha}^k_j$.
+
+The joint posterior distribution is
+\begin{equation}
+p(\alpha, \theta | r; a, b) = \prod_{i=1}^N \prod_{j=1}^M \frac{ p(r_{ij} | \theta_{ij}) p(\theta_{ij} | \alpha_j) p(\alpha_j; a, b) } { p(r_{ij} ; a, b) }.
+\end{equation}
+But, normalization factor in the posterior distribution,
+\begin{equation}
+p(r_{ij}; a, b) = \int_{\theta_{ij}} \int_{\alpha_j} p(r_{ij} | \theta_{ij}) p(\theta_{ij} | \alpha_j) p(\alpha_j; a, b),
+\end{equation}
+is computationally intractable due to the coupling between $\theta_{ij}$ and $\alpha_j$.
+
+Instead of attempting to directly compute the posterior distribution, we instead sample it using  a Metropolis-Hastings within Gibbs scheme.
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwData{Counts $r_{ij}$ for experimental replicate $i$ at genomic location $j$}
+\KwResult{MLE estimates for hyper-parameters $\hat{a}$ and $\hat{b}$. Samples from joint posterior distribution $p(\theta_{ij}, \alpha_j | r_{ij}; \hat{a}, \hat{b})$ for $i=1,\ldots,N$ and $j=1,\ldots,M$}
+Initialize $a$ and $b$\;
+\Repeat {convergence} {
+	Sample $\alpha_j$ from $p(\alpha_j | a, b, \theta_{1j}, \ldots, \theta_{Nj})$ using M-H\;
+	Sample $\theta_{ij}$ from $p(\theta_{ij} | \alpha_j, r_{ij})$ using Gibbs\;
+	Compute MLE $\hat{a}$ and $\hat{b}$
+}
+\caption{Metropolis-within-Gibbs Sampling for RVD2.3 Model}
+\end{algorithm}
+
+The maximum-likelihood estimates $\hat{a}$ and $\hat{b}$ are computed using generalized Newton-Raphson as outlined in http://research.microsoft.com/en-us/um/people/minka/papers/minka-gamma.pdf
+
+Samples from $p(\theta_{ij} | \alpha_j, r_{ij})$ can be obtained directly because the Dirichlet is conjugate to the Multinomial. The posterior sampling distribution is
+\begin{equation}
+	\theta_{ij} | \alpha_j, r_{ij} \thicksim \text{Dirichlet}(\alpha_j + r_{ij}).
+\end{equation}
+
+The Gamma distribution is not conjugate to the Dirichelt, so we draw samples from $p(\alpha_j | a, b, \theta_{1j}, \ldots, \theta_{Nj})$ by Metropolis-Hastings. We use a proposal distribution,
+\begin{equation}
+	\alpha_j^{k \text{(new)}} | \alpha_j^k \thicksim \text{Gaussian}(\alpha_j^k, 0.05),
+\end{equation}
+which we find mixes sufficiently fast to sample from the posterior after a burn-in of length X.
+	
 \end{document}

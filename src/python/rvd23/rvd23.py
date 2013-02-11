@@ -72,7 +72,7 @@ def log_cond_theta(phi, alpha, theta, r):
     return (logPr + logPtheta)
 
 
-def sample_alpha(alpha, theta, phi, nsample=1):
+def sample_alpha_mh(alpha, theta, phi, nsample=1):
     """Return a sample from the posterior marginal distribution for alpha"""
     
     K = np.shape(alpha)[0]
@@ -159,17 +159,11 @@ def metro_gibbs(r, phi, nsample=10000):
     alpha_s = np.zeros((npos, K, nsample))
     for s in xrange(0,nsample):
         for j in xrange(0,npos):
-            alpha[j,:] = sample_alpha(alpha[j,:], 
-                                      theta[:,j,:], 
-                                      phi, 
-                                      nsample=1)
+            alpha[j,:] = sample_alpha_mh(alpha[j,:], theta[:,j,:], phi)
             for i in xrange(0, nrep):
                 theta[i,j,:] = sample_theta_gibbs(alpha[j,:], r[i,j,:])
-                # theta[i,j,:] = sample_theta_mh(alpha[j,:], 
-                #                                theta[i,j,:], 
-                #                                r[i,j,:], 
-                #                                phi,
-                #                                nsample=1)
+                # theta[i,j,:] = sample_theta_mh(alpha[j,:], theta[i,j,:], r[i,j,:], phi)
+        # Store the sample and update Gamma parameters by MLE
         alpha_s[:,:,s] = np.copy(alpha)
         theta_s[:,:,:,s] = np.copy(theta)
         phi['a'], phi['b'] = gamma_mle(alpha_s[:,:,s])
@@ -186,8 +180,7 @@ def gamma_mle(x):
     a = 0.5 / ( np.log(np.mean(x)) - np.mean(np.log(x)) )
     
     
-    # Generalized Newton updates for a
-    # stop when change in a is small
+    # Generalized Newton updates for "a"
     while True:
         a_new = 1 / (1/a + (np.mean(np.log(x)) \
                         - np.log(np.mean(x)) \
@@ -213,9 +206,6 @@ if __name__ == '__main__':
     alpha_hat = alpha_s.mean(2)
     phi['a'], phi['b'] = gamma_mle(alpha_hat)
 
-    print np.shape(theta_hat)
-    # print "Estimated Alpha"
-    # print alpha_hat
     
     print "Estimated phi"
     print phi
