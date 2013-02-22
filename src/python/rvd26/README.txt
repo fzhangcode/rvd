@@ -1,10 +1,10 @@
-RVD2.5 is an extension of RVD that includes a prior on the position-specific parameters.
+RVD2.6 is an extension of RVD that includes a prior on the position-specific parameters.
 
 The model is
 The position is j = 1,...,J. The replicate is i = 1,...,N. The model only addresses error/reference positions and does not model individual nucleotide frequencies.
 
 M_j | a, b ~ Gamma(a, b) 
-\mu_j | \mu_0, \sigma_0 ~ Gaussian(\mu_0, \sigma_0)
+\mu_j | \mu_0, M_0 ~ Beta(\mu_0, M_0)
 \theta_{ij} | \mu_j, M_j ~ Beta(\mu_j, M_j)
 r_{ij} | \theta_{ij}, n_{ij} ~ Binomial(\theta_{ij}, n_{ij})
 

@@ -79,6 +79,21 @@ def estimate_mom(r, n):
     phi = {'mu0':mu0, 'M0':M0, 'a':a, 'b':b}
     return phi, mu, theta, M
     
+def gamma_mle(x):
+    """ Return the maximum likelihood shape and scale parameters
+    """
+    
+    # Initialize using Stirling's approximation
+    a = 0.5/(np.log(np.mean(x)) - np.mean(np.log(x)))
+    b = np.mean(x)/a
+    
+    for i in xrange(0,5):
+        inva = 1/a + (np.mean(np.log(x)) - np.log(np.mean(x)) + np.log(a) - psi(a )) \
+                    / (a**2 *(1/a + polygamma(1,a)))
+        a = 1/inva
+        b = np.mean(x)/a
+    
+    return (a, b)
 def gibbs_map(r, n, tol=1e-4):
     """ Return MAP parameter and latent variable estimates obtained by 
     Metropolis-Hastings within Gibbs sampling.
@@ -90,7 +105,7 @@ def gibbs_map(r, n, tol=1e-4):
     
     # Initialize estimates using MoM
     phi, mu, theta, M = estimate_mom(r, n)
-    # phi = {'mu0':0.25, 'M0':2e3, 'a':1000, 'b':1}
+    phi = {'mu0':0.25, 'M0':20, 'a':1000, 'b':1}
     
     llCurr = complete_ll(phi, r, n, theta, mu, M)
     llDelta = np.inf
@@ -101,27 +116,14 @@ def gibbs_map(r, n, tol=1e-4):
         alpha = r + mu*M
         beta = (n - r) + (1-mu)*M
         theta = ss.beta.rvs(alpha+1e-3, beta+1e-3)
-
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_s = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu,
-                          nsample=1000)
+        mu_s = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, nsample=1000)
         mu = np.median(mu_s, 0)
-        # plt.hist(mu_s[:,0], 50, normed=1, facecolor='g', alpha=0.75)
-        # plt.xlabel('mu[0]')
-        # plt.ylabel('Posterior Probability')
-        # plt.grid(True)
-        # plt.show()
         
         # Draw samples from p(M | a, b, theta, mu)
-        M_s = sampleMMH(theta, mu, phi['a'], phi['b'], M=M,
-                          nsample=1000)
+        M_s = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=5000)
         M = np.median(M_s, 0)
-        # plt.hist(M_s[:,0], 50, normed=1, facecolor='g', alpha=0.75)
-        # plt.xlabel('M[0]')
-        # plt.ylabel('Posterior Probability')
-        # plt.grid(True)
-        # plt.show()
         
         # Compute MLE for parameters
         phi['mu0'] = np.mean(mu)
@@ -137,15 +139,29 @@ def gibbs_map(r, n, tol=1e-4):
     
         # Diagnosic Plots
         print phi
+        
         fig = plt.figure()
-        ax1 = fig.add_subplot(2,2,1)
-        x = np.linspace(0, np.max(M), num=1000)
-        ax1.plot(x, ss.gamma.pdf(x, phi['a'], phi['b']))
+        ax1 = fig.add_subplot(1,2,1)
+        ax2 = fig.add_subplot(1,2,2)
+        
+        ax1.hist(mu_s[:,50], 50, normed=1, facecolor='g', alpha=0.75)
+        ax1.set_xlabel('mu[50]')
+        ax1.set_ylabel('Posterior Probability')
+        ax1.xaxis.grid(True)
+        ax1.yaxis.grid(True)
+        
+        ax2.hist(M_s[:,50], 50, normed=1, facecolor='g', alpha=0.75)
+        ax2.set_xlabel('M[50]')
+        ax2.set_ylabel('Posterior Probability')
+        ax1.xaxis.grid(True)
+        ax1.yaxis.grid(True)
+
+        
         plt.show()
         
         
         plt.plot(range(0,J), mu, color='b')
-        plt.plot(range(0,J), np.transpose(muErr), color='b', linestyle='--')
+        # plt.plot(range(0,J), np.transpose(muErr), color='b', linestyle='--')
         plt.plot(range(0,J), np.transpose(theta), linestyle='None', marker='+', markersize=10)
         plt.plot(range(0,J), np.transpose(r/n), linestyle='None', marker='o', markersize=6)
         plt.plot(range(0,J), np.tile(phi['mu0'], J), linestyle='--', color='r')
@@ -204,13 +220,15 @@ def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.2, nsample=5000, t
     """
     N,J = np.shape(theta)    
     
+    accP = np.zeros(J) # track the acceptance probability for each position
+    Qsd = 1000*np.ones(J) # keep the std, dev of the proposal
+    
     M_s = np.zeros( (nsample, J) ) 
     for ns in xrange(0, nsample):
-        M_p = np.zeros(J)
         for j in xrange(0, J):
         
             # Sample from the proposal distribution
-            M_p = ss.norm.rvs(mu[j], 1)
+            M_p = ss.norm.rvs(M[j], Qsd[j])
             if not (0 < M_p): continue
         
             # Log-likelihood for the proposal mu
@@ -227,8 +245,18 @@ def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.2, nsample=5000, t
 
             # Accept new mu if it increases posterior pdf or by probability
             loga = logPM_p - logPM
+            # if j==0: print (M_p, M[j], logPM_p, logPM)
             if (loga > 0 or np.log(np.random.random()) < loga): 
                 M[j] = np.copy(M_p)
+                accP[j] += 1
+            
+        # if ns%100 == 0:
+        #     for j in xrange(0, J):
+        #         if accP[j] < 0.1: Qsd[j] = 0.9*Qsd[j]
+        #         elif accP[j] > 0.9: Qsd[j] = 2*Qsd[j]
+        #     print("New proposal SD")
+        #     print Qsd
+        #     accP = np.zeros(J)
         
         # Save the new sample
         M_s[ns,:] = np.copy(M)
