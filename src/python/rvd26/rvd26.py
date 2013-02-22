@@ -118,8 +118,9 @@ def gibbs_map(r, n, tol=1e-4):
         theta = ss.beta.rvs(alpha+1e-3, beta+1e-3)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_s = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, nsample=1000)
+        mu_s = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, nsample=5000)
         mu = np.median(mu_s, 0)
+        muErr = np.abs(np.percentile(mu_s, (2.5, 97.5), 0) - mu)
         
         # Draw samples from p(M | a, b, theta, mu)
         M_s = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=5000)
@@ -156,12 +157,11 @@ def gibbs_map(r, n, tol=1e-4):
         ax1.xaxis.grid(True)
         ax1.yaxis.grid(True)
 
-        
         plt.show()
         
         
-        plt.plot(range(0,J), mu, color='b')
-        # plt.plot(range(0,J), np.transpose(muErr), color='b', linestyle='--')
+        # plt.plot(range(0,J), mu, color='b')
+        plt.errorbar(range(0,J), mu, yerr=muErr, color='b', linestyle='--')
         plt.plot(range(0,J), np.transpose(theta), linestyle='None', marker='+', markersize=10)
         plt.plot(range(0,J), np.transpose(r/n), linestyle='None', marker='o', markersize=6)
         plt.plot(range(0,J), np.tile(phi['mu0'], J), linestyle='--', color='r')
@@ -221,7 +221,7 @@ def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.2, nsample=5000, t
     N,J = np.shape(theta)    
     
     accP = np.zeros(J) # track the acceptance probability for each position
-    Qsd = 1000*np.ones(J) # keep the std, dev of the proposal
+    Qsd = 10*np.ones(J) # keep the std, dev of the proposal
     
     M_s = np.zeros( (nsample, J) ) 
     for ns in xrange(0, nsample):
@@ -254,8 +254,6 @@ def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.2, nsample=5000, t
         #     for j in xrange(0, J):
         #         if accP[j] < 0.1: Qsd[j] = 0.9*Qsd[j]
         #         elif accP[j] > 0.9: Qsd[j] = 2*Qsd[j]
-        #     print("New proposal SD")
-        #     print Qsd
         #     accP = np.zeros(J)
         
         # Save the new sample

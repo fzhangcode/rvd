@@ -1,0 +1,17 @@
+[ ] Write a function that tests whether a position has a uniform distribution over non-reference bases. If not, then it is more likely to be a true mutation.
+
+[ ] Test different parameter levels and see what is a good setting for number of samples
+
+[ ] Write the log-likelihood function. Need to use sampling to integrate over latent variables. These folks did something similar. http://www.dcs.gla.ac.uk/~srogers/lpd/lpd.html
+
+[ ] Write a python script to take bam files directly into "depth chart" type files that can be evaluated by this algorithm.
+
+[ ] How do we visualize all of the interesting quatities that we get out of this. The posterior distribution over replicates at a position. The posterior distribution over the location error rate, mu.
+
+[ ] We need to compare this algorithm to other such as GATK and samtools.
+
+[ ] We need a baseline data set to test the algorithm.
+
+[ ] We need to take a sample data set and downsample it to look at the performance of the algorithm as we decrease the read depth on real data.
+
+[ ] How do we optimize the proposal distributions in the M-H sampling steps?
