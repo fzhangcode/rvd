@@ -11,10 +11,11 @@ from scipy.special import gammaln, psi, polygamma
 import logging
 
 def main():
-    n = 100
+    n = 10
+    J = 50
     phi = {'mu0':0.25, 'M0':2e3, 'a':1000, 'b':1}
-    r, theta, mu, M = generate_sample(phi, n=n, J=100)
-    r[:,50] = [50, 55, 45]
+    r, theta, mu, M = generate_sample(phi, n=n, J=J)
+    r[:,int(J/2)] = n*np.array([0.50, 0.55, 0.45])
     loglik = complete_ll(phi, r, n, theta, mu, M)
     
     # phi, mu, theta, M = estimate_mom(r, n)
@@ -53,7 +54,10 @@ def complete_ll(phi, r, n, theta, mu, M):
     alpha = M*mu + np.finfo(np.float).eps
     beta = M*(1 - mu) + np.finfo(np.float).eps
     
-    # TODO check for divide by zero in binomial logpdf when theta is close to 0 or 1
+    # Bound theta away from 0 or 1
+    theta[theta < np.finfo(np.float).eps] = np.finfo(np.float).eps
+    theta[theta > 1-np.finfo(np.float).eps] = 1 - np.finfo(np.float).eps
+    
     logPM = ss.gamma.logpdf(M, phi['a'], scale=phi['b'])
     logPmu = beta_log_pdf(mu, alpha0, beta0)
     logPtheta = beta_log_pdf(theta, alpha, beta)
@@ -66,7 +70,8 @@ def estimate_mom(r, n):
     """
     
     theta = r/n
-    mu = np.mean(theta, 0)
+    if np.ndim(r) == 1: mu = theta
+    elif np.ndim(r) > 1: mu = np.mean(theta, 0)
     
     mu0 = np.mean(mu)
     M0 = (mu0*(1-mu0))/(np.var(mu) + np.finfo(np.float).eps)
@@ -101,11 +106,18 @@ def gibbs_map(r, n, tol=1e-4):
     Stop when the change in complete data log-likelihood is less than 0.01%.
     """
     
-    N, J = np.shape(r)
+    if np.ndim(r) == 1: 
+        J = np.shape(r)[0]
+        N=1
+    elif np.ndim(r) == 2:
+        N, J = np.shape(r)
+        
+    # if n.len() == 1: n = np.tile(n, (J))
     
     # Initialize estimates using MoM
     phi, mu, theta, M = estimate_mom(r, n)
-    phi = {'mu0':0.25, 'M0':20, 'a':1000, 'b':1}
+    print phi
+    # phi = {'mu0':0.25, 'M0':20, 'a':1000, 'b':1}
     
     llCurr = complete_ll(phi, r, n, theta, mu, M)
     llDelta = np.inf
@@ -126,12 +138,12 @@ def gibbs_map(r, n, tol=1e-4):
         M_s = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=5000)
         M = np.median(M_s, 0)
         
-        # Compute MLE for parameters
+        # Update parameter estimates
         phi['mu0'] = np.mean(mu)
         phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
         
-        phi['b'] = np.var(M)/np.mean(M)
-        phi['a'] = np.mean(M)/phi['b']
+        phi['a'], phi['b'] = gamma_mle(M)
+        print phi
         
         # Check for convergence
         llPrev = np.copy(llCurr)
@@ -139,19 +151,17 @@ def gibbs_map(r, n, tol=1e-4):
         llDelta = (llCurr - llPrev)/np.abs(llPrev)
     
         # Diagnosic Plots
-        print phi
-        
         fig = plt.figure()
         ax1 = fig.add_subplot(1,2,1)
         ax2 = fig.add_subplot(1,2,2)
         
-        ax1.hist(mu_s[:,50], 50, normed=1, facecolor='g', alpha=0.75)
+        ax1.hist(mu_s[:, int(J/2)], 50, normed=1, facecolor='g', alpha=0.75)
         ax1.set_xlabel('mu[50]')
         ax1.set_ylabel('Posterior Probability')
         ax1.xaxis.grid(True)
         ax1.yaxis.grid(True)
         
-        ax2.hist(M_s[:,50], 50, normed=1, facecolor='g', alpha=0.75)
+        ax2.hist(M_s[:, int(J/2)], 50, normed=1, facecolor='g', alpha=0.75)
         ax2.set_xlabel('M[50]')
         ax2.set_ylabel('Posterior Probability')
         ax1.xaxis.grid(True)
@@ -177,7 +187,11 @@ def beta_log_pdf(x, a, b):
 def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0.2, nsample=5000, thin=2):
     """ Return a sample of mu with parameters mu0 and M0.
     """
-    N,J = np.shape(theta)
+    if np.ndim(theta) == 1:
+        N = 1
+        J = np.shape(theta)[0]
+    elif np.ndim(theta) > 1:
+        N, J = np.shape(theta)
     alpha0 = mu0*M0 + np.finfo(np.float).eps
     beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
     
@@ -194,15 +208,23 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0.2, nsample=5000
             # Log-likelihood for the proposal mu
             alpha_p = mu_p*M[j] + np.finfo(np.float).eps
             beta_p = (1-mu_p)*M[j] + np.finfo(np.float).eps
-            logPmu_p = beta_log_pdf(mu_p, alpha0, beta0) \
-                        + np.sum(beta_log_pdf(theta[:,j], alpha_p, beta_p))
+            if N == 1:
+                logPmu_p = beta_log_pdf(mu_p, alpha0, beta0) \
+                            + np.sum(beta_log_pdf(theta[j], alpha_p, beta_p))
+            elif N > 1:
+                logPmu_p = beta_log_pdf(mu_p, alpha0, beta0) \
+                            + np.sum(beta_log_pdf(theta[:,j], alpha_p, beta_p))
                     
             # Log-likelihood for the current mu
             alpha = mu[j]*M[j] + np.finfo(np.float).eps
             beta = (1-mu[j])*M[j] + np.finfo(np.float).eps
-            logPmu = beta_log_pdf(mu[j], alpha0, beta0) \
-                        + np.sum(beta_log_pdf(theta[:,j], alpha, beta))
-        
+            if N == 1:
+                logPmu = beta_log_pdf(mu[j], alpha0, beta0) \
+                            + np.sum(beta_log_pdf(theta[j], alpha, beta))
+            elif N > 1:
+                logPmu = beta_log_pdf(mu[j], alpha0, beta0) \
+                            + np.sum(beta_log_pdf(theta[:,j], alpha, beta))
+                            
             # Accept new mu if it increases posterior pdf or by probability
             loga = logPmu_p - logPmu
             if (loga > 0 or np.log(np.random.random()) < loga): 
@@ -218,18 +240,24 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0.2, nsample=5000
 def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.2, nsample=5000, thin=2):
     """ Return a sample of M with parameters a and b.
     """
-    N,J = np.shape(theta)    
+    if np.ndim(theta) == 1:
+        N = 1
+        J = np.shape(theta)[0]
+    elif np.ndim(theta) > 1:
+        N, J = np.shape(theta)
+       
     
     accP = np.zeros(J) # track the acceptance probability for each position
-    Qsd = 10*np.ones(J) # keep the std, dev of the proposal
+    Qsd = M/10 # keep the std, dev of the proposal
     
     M_s = np.zeros( (nsample, J) ) 
     for ns in xrange(0, nsample):
         for j in xrange(0, J):
         
             # Sample from the proposal distribution
-            M_p = ss.norm.rvs(M[j], Qsd[j])
-            if not (0 < M_p): continue
+            while True:
+                M_p = ss.norm.rvs(M[j], Qsd[j])
+                if M_p > 0: break;
         
             # Log-likelihood for the proposal mu
             alpha_p = mu[j]*M_p + np.finfo(np.float).eps
@@ -252,8 +280,8 @@ def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.2, nsample=5000, t
             
         # if ns%100 == 0:
         #     for j in xrange(0, J):
-        #         if accP[j] < 0.1: Qsd[j] = 0.9*Qsd[j]
-        #         elif accP[j] > 0.9: Qsd[j] = 2*Qsd[j]
+        #         if accP[j] < 0.2: Qsd[j] = 0.9*Qsd[j]
+        #         elif accP[j] > 0.8: Qsd[j] = 2*Qsd[j]
         #     accP = np.zeros(J)
         
         # Save the new sample
