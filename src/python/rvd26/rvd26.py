@@ -18,14 +18,30 @@ def main():
     r[:,int(J/2)] = n*np.array([0.50, 0.55, 0.45])
     loglik = complete_ll(phi, r, n, theta, mu, M)
     
-    # phi, mu, theta, M = estimate_mom(r, n)
-    
-    phi, theta, mu, M = gibbs_map(r, n)
+    phi, theta_s, mu_s, M_s = mh_sample(r, n, nsample=5000)
+    plot_estimate(r, n, mu_s, theta_s, phi)
 
-def generate_sample(phi, n=100, N=3, J=100):
+def plot_estimate(r, n, mu_s, theta_s, phi):
+    
+    mu = np.median(mu_s, 1)
+    theta = np.median(theta_s, 2)
+    
+    (N, J) = np.shape(theta)
+    
+    muErr = np.abs(np.percentile(mu_s, (2.5, 97.5), 1) - mu)
+    # plt.plot(range(0,J), mu, color='b')
+    plt.errorbar(np.arange(J), mu, yerr=muErr, color='b', linestyle='--')
+    plt.plot(np.arange(J), np.transpose(theta), linestyle='None', marker='+', markersize=10)
+    plt.plot(np.arange(J), np.transpose(r/n), linestyle='None', marker='o', markersize=6)
+    plt.plot(np.arange(J), np.tile(phi['mu0'], J), linestyle='--', color='r')
+    plt.show()
+
+def generate_sample(phi, n=100, N=3, J=100, seedint=None):
     """Returns a sample with n reads, N replicates, and
     J locations. The parameters of the model are in the structure phi.
     """
+    
+    if seedint is not None: np.random.seed(seedint)
     
     # Draw J location-specific error rates from a Beta
     alpha0 = phi['M0']*phi['mu0']
@@ -88,6 +104,9 @@ def gamma_mle(x):
     """ Return the maximum likelihood shape and scale parameters
     """
     
+    if x.size == 0:
+        return (np.nan, np.nan)
+    
     # Initialize using Stirling's approximation
     a = 0.5/(np.log(np.mean(x)) - np.mean(np.log(x)))
     b = np.mean(x)/a
@@ -99,111 +118,104 @@ def gamma_mle(x):
         b = np.mean(x)/a
     
     return (a, b)
-def gibbs_map(r, n, tol=1e-4):
+def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
     """ Return MAP parameter and latent variable estimates obtained by 
-    Metropolis-Hastings within Gibbs sampling.
+    Metropolis-Hastings sampling.
     By default, sample 10000 M-H with a 20% burn-in. 
     Stop when the change in complete data log-likelihood is less than 0.01%.
     """
     
-    if np.ndim(r) == 1: 
-        J = np.shape(r)[0]
-        N=1
-    elif np.ndim(r) == 2:
-        N, J = np.shape(r)
-        
-    # if n.len() == 1: n = np.tile(n, (J))
+    if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
+    elif np.ndim(r) == 2: N, J = np.shape(r)
     
     # Initialize estimates using MoM
     phi, mu, theta, M = estimate_mom(r, n)
-    print phi
-    # phi = {'mu0':0.25, 'M0':20, 'a':1000, 'b':1}
-    
-    llCurr = complete_ll(phi, r, n, theta, mu, M)
-    llDelta = np.inf
-    # while (llDelta > tol):
-    for i in xrange(0,20):
-    
+    logging.debug("MoM Parameter Estimate")
+    logging.debug(phi)
+
+    theta_s = np.zeros( (N, J, nsample) )
+    mu_s = np.zeros( (J, nsample) )
+    M_s = np.zeros( (J, nsample) )
+    for i in xrange(0, nsample):
         # Draw samples from p(theta | r, mu, M) by Gibbs
         alpha = r + mu*M
         beta = (n - r) + (1-mu)*M
-        theta = ss.beta.rvs(alpha+1e-3, beta+1e-3)
+        theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_s = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, nsample=5000)
-        mu = np.median(mu_s, 0)
-        muErr = np.abs(np.percentile(mu_s, (2.5, 97.5), 0) - mu)
+        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, burnin=0.2, nsample=50)
+        mu = np.median(mu_mh, 0)
+        # muErr = np.abs(np.percentile(mu_s, (2.5, 97.5), 0) - mu)
         
         # Draw samples from p(M | a, b, theta, mu)
-        M_s = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=5000)
-        M = np.median(M_s, 0)
-        
+        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, burnin=0.2, nsample=50)
+        M = np.median(M_mh, 0)
         # Update parameter estimates
-        phi['mu0'] = np.mean(mu)
-        phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
+        # phi['mu0'] = np.mean(mu)
+        # phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
+        # phi['a'], phi['b'] = gamma_mle(M)
+        # print phi
+    
+        # Store the sample
+        theta_s[:,:,i] = np.copy(theta)
+        mu_s[:,i] = np.copy(mu)
+        M_s[:,i] = np.copy(M)
         
-        phi['a'], phi['b'] = gamma_mle(M)
-        print phi
-        
-        # Check for convergence
-        llPrev = np.copy(llCurr)
-        llCurr = complete_ll(phi, r, n, theta, mu, M)
-        llDelta = (llCurr - llPrev)/np.abs(llPrev)
     
         # Diagnosic Plots
-        fig = plt.figure()
-        ax1 = fig.add_subplot(1,2,1)
-        ax2 = fig.add_subplot(1,2,2)
+        # fig = plt.figure()
+        # ax1 = fig.add_subplot(1,2,1)
+        # ax2 = fig.add_subplot(1,2,2)
+        # 
+        # ax1.hist(mu_s[:, int(J/2)], 50, normed=1, facecolor='g', alpha=0.75)
+        # ax1.set_xlabel('mu[50]')
+        # ax1.set_ylabel('Posterior Probability')
+        # ax1.xaxis.grid(True)
+        # ax1.yaxis.grid(True)
+        # 
+        # ax2.hist(M_s[:, int(J/2)], 50, normed=1, facecolor='g', alpha=0.75)
+        # ax2.set_xlabel('M[50]')
+        # ax2.set_ylabel('Posterior Probability')
+        # ax1.xaxis.grid(True)
+        # ax1.yaxis.grid(True)
+        # plt.show()
         
-        ax1.hist(mu_s[:, int(J/2)], 50, normed=1, facecolor='g', alpha=0.75)
-        ax1.set_xlabel('mu[50]')
-        ax1.set_ylabel('Posterior Probability')
-        ax1.xaxis.grid(True)
-        ax1.yaxis.grid(True)
         
-        ax2.hist(M_s[:, int(J/2)], 50, normed=1, facecolor='g', alpha=0.75)
-        ax2.set_xlabel('M[50]')
-        ax2.set_ylabel('Posterior Probability')
-        ax1.xaxis.grid(True)
-        ax1.yaxis.grid(True)
 
-        plt.show()
+    
+    # Apply the burn-in and thinning
+    M_s = np.delete(M_s, np.s_[0:np.int(burnin*nsample):], 1)
+    M_s = np.delete(M_s, np.s_[::thin], 1)    
+    mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 1)
+    mu_s = np.delete(mu_s, np.s_[::thin], 1)
+    theta_s = np.delete(theta_s, np.s_[0:np.int(burnin*nsample):], 2)
+    theta_s = np.delete(theta_s, np.s_[::thin], 2)
         
-        
-        # plt.plot(range(0,J), mu, color='b')
-        plt.errorbar(range(0,J), mu, yerr=muErr, color='b', linestyle='--')
-        plt.plot(range(0,J), np.transpose(theta), linestyle='None', marker='+', markersize=10)
-        plt.plot(range(0,J), np.transpose(r/n), linestyle='None', marker='o', markersize=6)
-        plt.plot(range(0,J), np.tile(phi['mu0'], J), linestyle='--', color='r')
-        plt.show()
-        
-    return (phi, theta, mu, M)
+    return (phi, theta_s, mu_s, M_s)
 
 def beta_log_pdf(x, a, b):
     return gammaln(a+b) - gammaln(a) - gammaln(b) \
             + (a-1)*np.log(x+np.finfo(np.float).eps) \
             + (b-1)*np.log(1-x)
 
-def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0.2, nsample=5000, thin=2):
+def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thin=0):
     """ Return a sample of mu with parameters mu0 and M0.
     """
-    if np.ndim(theta) == 1:
-        N = 1
-        J = np.shape(theta)[0]
-    elif np.ndim(theta) > 1:
-        N, J = np.shape(theta)
+    if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
+    elif np.ndim(theta) > 1: (N, J) = np.shape(theta)
+        
     alpha0 = mu0*M0 + np.finfo(np.float).eps
     beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
     
-    
+    Qsd = mu/10
     mu_s = np.zeros( (nsample, J) ) 
     for ns in xrange(0, nsample):
-        mu_p = np.zeros(J)
         for j in xrange(0, J):
-        
+
             # Sample from the proposal distribution
-            mu_p = ss.norm.rvs(mu[j], 1e-2)
-            if not (0 < mu_p < 1): continue
+            while True:
+                mu_p = ss.norm.rvs(mu[j], Qsd[j])
+                if (0 < mu_p < 1): break
         
             # Log-likelihood for the proposal mu
             alpha_p = mu_p*M[j] + np.finfo(np.float).eps
@@ -231,23 +243,21 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0.2, nsample=5000
                 mu[j] = np.copy(mu_p)
         
         # Save the new sample
-        mu_s[ns,:] = np.copy(mu)
+        mu_s[ns, :] = np.copy(mu)
     
-    mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 0)
-    mu_s = np.delete(mu_s, np.s_[::thin], 0)
+    if burnin > 0.0:
+        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 0)
+    if thin > 0:
+        mu_s = np.delete(mu_s, np.s_[::thin], 0)
+    
     return mu_s
   
-def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.2, nsample=5000, thin=2):
+def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.0, nsample=1, thin=0):
     """ Return a sample of M with parameters a and b.
     """
-    if np.ndim(theta) == 1:
-        N = 1
-        J = np.shape(theta)[0]
-    elif np.ndim(theta) > 1:
-        N, J = np.shape(theta)
+    if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
+    elif np.ndim(theta) > 1: (N, J) = np.shape(theta)
        
-    
-    accP = np.zeros(J) # track the acceptance probability for each position
     Qsd = M/10 # keep the std, dev of the proposal
     
     M_s = np.zeros( (nsample, J) ) 
@@ -257,7 +267,7 @@ def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.2, nsample=5000, t
             # Sample from the proposal distribution
             while True:
                 M_p = ss.norm.rvs(M[j], Qsd[j])
-                if M_p > 0: break;
+                if M_p > 0: break
         
             # Log-likelihood for the proposal mu
             alpha_p = mu[j]*M_p + np.finfo(np.float).eps
@@ -276,19 +286,14 @@ def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.2, nsample=5000, t
             # if j==0: print (M_p, M[j], logPM_p, logPM)
             if (loga > 0 or np.log(np.random.random()) < loga): 
                 M[j] = np.copy(M_p)
-                accP[j] += 1
             
-        # if ns%100 == 0:
-        #     for j in xrange(0, J):
-        #         if accP[j] < 0.2: Qsd[j] = 0.9*Qsd[j]
-        #         elif accP[j] > 0.8: Qsd[j] = 2*Qsd[j]
-        #     accP = np.zeros(J)
-        
         # Save the new sample
         M_s[ns,:] = np.copy(M)
     
-    M_s = np.delete(M_s, np.s_[0:np.int(burnin*nsample):], 0)
-    M_s = np.delete(M_s, np.s_[::thin], 0)
+    if burnin > 0.0:
+        M_s = np.delete(M_s, np.s_[0:np.int(burnin*nsample):], 0)
+    if thin > 0:
+        M_s = np.delete(M_s, np.s_[::thin], 0)
     return M_s
    
 def ll(phi, r):
@@ -297,6 +302,8 @@ def ll(phi, r):
     pass
 
 
+def oddsratio():
+    pass
 if __name__ == '__main__':
     main()
     
