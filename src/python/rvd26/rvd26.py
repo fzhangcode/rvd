@@ -12,7 +12,7 @@ import logging
 
 def main():
     n = 10
-    J = 50
+    J = 10
     phi = {'mu0':0.25, 'M0':2e3, 'a':1000, 'b':1}
     r, theta, mu, M = generate_sample(phi, n=n, J=J)
     r[:,int(J/2)] = n*np.array([0.50, 0.55, 0.45])
@@ -30,10 +30,16 @@ def plot_estimate(r, n, mu_s, theta_s, phi):
     
     muErr = np.abs(np.percentile(mu_s, (2.5, 97.5), 1) - mu)
     # plt.plot(range(0,J), mu, color='b')
-    plt.errorbar(np.arange(J), mu, yerr=muErr, color='b', linestyle='--')
-    plt.plot(np.arange(J), np.transpose(theta), linestyle='None', marker='+', markersize=10)
-    plt.plot(np.arange(J), np.transpose(r/n), linestyle='None', marker='o', markersize=6)
-    plt.plot(np.arange(J), np.tile(phi['mu0'], J), linestyle='--', color='r')
+
+    plt.errorbar(np.arange(J)+1, mu, yerr=muErr, color='b', linestyle='--')
+    plt.plot(np.arange(J)+1, np.transpose(theta), linestyle='None', marker='+', markersize=10)
+    plt.plot(np.arange(J)+1, np.transpose(r/n), linestyle='None', marker='o', markersize=6, alpha=0.5)
+    plt.plot(np.arange(J)+1, np.tile(phi['mu0'], J), linestyle='--', color='r')
+    
+    plt.title("Error Rate Estimate using RVD2.6")
+    plt.xlim((0, J+1))
+    plt.xlabel('Location')
+    plt.ylabel('Error Rate Estimate')
     plt.show()
 
 def generate_sample(phi, n=100, N=3, J=100, seedint=None):
@@ -137,24 +143,25 @@ def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
     mu_s = np.zeros( (J, nsample) )
     M_s = np.zeros( (J, nsample) )
     for i in xrange(0, nsample):
+	if i % 100 == 0: print "Sampling epoch: %d" % i
+
         # Draw samples from p(theta | r, mu, M) by Gibbs
         alpha = r + mu*M
         beta = (n - r) + (1-mu)*M
         theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, burnin=0.2, nsample=50)
+        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, burnin=0.2, nsample=500)
         mu = np.median(mu_mh, 0)
         # muErr = np.abs(np.percentile(mu_s, (2.5, 97.5), 0) - mu)
         
         # Draw samples from p(M | a, b, theta, mu)
-        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, burnin=0.2, nsample=50)
+        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, burnin=0.2, nsample=500)
         M = np.median(M_mh, 0)
         # Update parameter estimates
-        # phi['mu0'] = np.mean(mu)
-        # phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
-        # phi['a'], phi['b'] = gamma_mle(M)
-        # print phi
+        phi['mu0'] = np.mean(mu)
+        phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
+        phi['a'], phi['b'] = gamma_mle(M)
     
         # Store the sample
         theta_s[:,:,i] = np.copy(theta)
