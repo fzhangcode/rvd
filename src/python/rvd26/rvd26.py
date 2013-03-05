@@ -10,15 +10,18 @@ from scipy.special import gammaln, psi, polygamma
 
 import logging
 
+import multiprocessing as mp
+
 def main():
+    pool = mp.Pool(processes=4) # start 4 worker processes
     n = 10
-    J = 10
+    J = 5
     phi = {'mu0':0.25, 'M0':2e3, 'a':1000, 'b':1}
     r, theta, mu, M = generate_sample(phi, n=n, J=J)
     r[:,int(J/2)] = n*np.array([0.50, 0.55, 0.45])
     loglik = complete_ll(phi, r, n, theta, mu, M)
     
-    phi, theta_s, mu_s, M_s = mh_sample(r, n, nsample=5000)
+    phi, theta_s, mu_s, M_s = mh_sample(r, n, nsample=5)
     plot_estimate(r, n, mu_s, theta_s, phi)
 
 def plot_estimate(r, n, mu_s, theta_s, phi):
@@ -131,6 +134,107 @@ def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
     Stop when the change in complete data log-likelihood is less than 0.01%.
     """
     
+    def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thin=0):
+        """ Return a sample of mu with parameters mu0 and M0.
+        """
+        def sampleLocMuMH(mu, Qsd, theta, M, alpha0, beta0, out_q=None):
+            # Sample from the proposal distribution at a particular location
+            while True:
+                mu_p = ss.norm.rvs(mu, Qsd)
+                if (0 < mu_p < 1): break
+        
+            # Log-likelihood for the proposal mu
+            alpha_p = mu_p*M + np.finfo(np.float).eps
+            beta_p = (1-mu_p)*M + np.finfo(np.float).eps
+            logPmu_p = beta_log_pdf(mu_p, alpha0, beta0) \
+                        + np.sum(beta_log_pdf(theta, alpha_p, beta_p))
+                    
+            # Log-likelihood for the current mu
+            alpha = mu*M + np.finfo(np.float).eps
+            beta = (1-mu)*M + np.finfo(np.float).eps
+            logPmu = beta_log_pdf(mu, alpha0, beta0) \
+                        + np.sum(beta_log_pdf(theta, alpha, beta))
+                            
+            # Accept new mu if it increases posterior pdf or by probability
+            loga = logPmu_p - logPmu
+            if (loga > 0 or np.log(np.random.random()) < loga): 
+                mu = mu_p
+        
+            if out_q is None: return mu
+            else: out_q.put(mu)
+    
+        if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
+        elif np.ndim(theta) > 1: (N, J) = np.shape(theta)
+        
+        alpha0 = mu0*M0 + np.finfo(np.float).eps
+        beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
+    
+        Qsd = mu/10
+        mu_s = np.zeros( (nsample, J) ) 
+        for ns in xrange(0, nsample):
+            pool = mp.Pool(processes=4)
+            for j in xrange(0, 1):
+                # mu[j] = sampleLocMuMH(mu[j], Qsd[j], theta[:,j], M[j], alpha0, beta0)
+                result = pool.apply_async(sampleLocMuMH, (mu[j], Qsd[j], theta[:,j], M[j], alpha0, beta0))
+            # Save the new sample
+            mu_s[ns, :] = np.copy(mu)
+    
+        if burnin > 0.0:
+            mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 0)
+        if thin > 0:
+            mu_s = np.delete(mu_s, np.s_[::thin], 0)
+    
+        return mu_s
+
+
+
+    def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.0, nsample=1, thin=0):
+        """ Return a sample of M with parameters a and b.
+        """
+        def sampleLocMMH(M, Qsd, theta, mu, a, b, out_q=None):
+            # Sample from the proposal distribution
+            while True:
+                M_p = ss.norm.rvs(M, Qsd)
+                if M_p > 0: break
+        
+            # Log-likelihood for the proposal mu
+            alpha_p = mu*M_p + np.finfo(np.float).eps
+            beta_p = (1-mu)*M_p + np.finfo(np.float).eps
+            logPM_p = np.sum(beta_log_pdf(mu, alpha_p, beta_p)) \
+                        + ss.gamma.logpdf(M_p, a, scale=b)
+                    
+            # Log-likelihood for the current mu
+            alpha = mu*M + np.finfo(np.float).eps
+            beta = (1-mu)*M + np.finfo(np.float).eps
+            logPM = np.sum(beta_log_pdf(mu, alpha, beta)) \
+                        + ss.gamma.logpdf(M, a, scale=b)
+
+            # Accept new mu if it increases posterior pdf or by probability
+            loga = logPM_p - logPM
+            # if j==0: print (M_p, M[j], logPM_p, logPM)
+            if (loga > 0 or np.log(np.random.random()) < loga): 
+                M = np.copy(M_p)
+            if out_q is None: return M
+            else: out_q.put(M)
+        
+        if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
+        elif np.ndim(theta) > 1: (N, J) = np.shape(theta)
+       
+        Qsd = M/10 # keep the std, dev of the proposal
+    
+        M_s = np.zeros( (nsample, J) ) 
+        for ns in xrange(0, nsample):
+            for j in xrange(0, J):
+                M[j] = sampleLocMMH(M[j], Qsd[j], theta[:,j], mu[j], a, b)
+            M_s[ns,:] = np.copy(M)
+    
+        if burnin > 0.0:
+            M_s = np.delete(M_s, np.s_[0:np.int(burnin*nsample):], 0)
+        if thin > 0:
+            M_s = np.delete(M_s, np.s_[::thin], 0)
+        return M_s
+    
+    
     if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
     elif np.ndim(r) == 2: N, J = np.shape(r)
     
@@ -143,7 +247,7 @@ def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
     mu_s = np.zeros( (J, nsample) )
     M_s = np.zeros( (J, nsample) )
     for i in xrange(0, nsample):
-	if i % 100 == 0: print "Sampling epoch: %d" % i
+        if i % 100 == 0: print "Sampling epoch: %d" % i
 
         # Draw samples from p(theta | r, mu, M) by Gibbs
         alpha = r + mu*M
@@ -151,13 +255,13 @@ def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
         theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, burnin=0.2, nsample=500)
+        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, burnin=0.2, nsample=50)
         mu = np.median(mu_mh, 0)
-        # muErr = np.abs(np.percentile(mu_s, (2.5, 97.5), 0) - mu)
         
         # Draw samples from p(M | a, b, theta, mu)
-        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, burnin=0.2, nsample=500)
+        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, burnin=0.2, nsample=50)
         M = np.median(M_mh, 0)
+        
         # Update parameter estimates
         phi['mu0'] = np.mean(mu)
         phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
@@ -167,28 +271,6 @@ def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
         theta_s[:,:,i] = np.copy(theta)
         mu_s[:,i] = np.copy(mu)
         M_s[:,i] = np.copy(M)
-        
-    
-        # Diagnosic Plots
-        # fig = plt.figure()
-        # ax1 = fig.add_subplot(1,2,1)
-        # ax2 = fig.add_subplot(1,2,2)
-        # 
-        # ax1.hist(mu_s[:, int(J/2)], 50, normed=1, facecolor='g', alpha=0.75)
-        # ax1.set_xlabel('mu[50]')
-        # ax1.set_ylabel('Posterior Probability')
-        # ax1.xaxis.grid(True)
-        # ax1.yaxis.grid(True)
-        # 
-        # ax2.hist(M_s[:, int(J/2)], 50, normed=1, facecolor='g', alpha=0.75)
-        # ax2.set_xlabel('M[50]')
-        # ax2.set_ylabel('Posterior Probability')
-        # ax1.xaxis.grid(True)
-        # ax1.yaxis.grid(True)
-        # plt.show()
-        
-        
-
     
     # Apply the burn-in and thinning
     M_s = np.delete(M_s, np.s_[0:np.int(burnin*nsample):], 1)
@@ -205,104 +287,7 @@ def beta_log_pdf(x, a, b):
             + (a-1)*np.log(x+np.finfo(np.float).eps) \
             + (b-1)*np.log(1-x)
 
-def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thin=0):
-    """ Return a sample of mu with parameters mu0 and M0.
-    """
-    if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
-    elif np.ndim(theta) > 1: (N, J) = np.shape(theta)
-        
-    alpha0 = mu0*M0 + np.finfo(np.float).eps
-    beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
-    
-    Qsd = mu/10
-    mu_s = np.zeros( (nsample, J) ) 
-    for ns in xrange(0, nsample):
-        for j in xrange(0, J):
 
-            # Sample from the proposal distribution
-            while True:
-                mu_p = ss.norm.rvs(mu[j], Qsd[j])
-                if (0 < mu_p < 1): break
-        
-            # Log-likelihood for the proposal mu
-            alpha_p = mu_p*M[j] + np.finfo(np.float).eps
-            beta_p = (1-mu_p)*M[j] + np.finfo(np.float).eps
-            if N == 1:
-                logPmu_p = beta_log_pdf(mu_p, alpha0, beta0) \
-                            + np.sum(beta_log_pdf(theta[j], alpha_p, beta_p))
-            elif N > 1:
-                logPmu_p = beta_log_pdf(mu_p, alpha0, beta0) \
-                            + np.sum(beta_log_pdf(theta[:,j], alpha_p, beta_p))
-                    
-            # Log-likelihood for the current mu
-            alpha = mu[j]*M[j] + np.finfo(np.float).eps
-            beta = (1-mu[j])*M[j] + np.finfo(np.float).eps
-            if N == 1:
-                logPmu = beta_log_pdf(mu[j], alpha0, beta0) \
-                            + np.sum(beta_log_pdf(theta[j], alpha, beta))
-            elif N > 1:
-                logPmu = beta_log_pdf(mu[j], alpha0, beta0) \
-                            + np.sum(beta_log_pdf(theta[:,j], alpha, beta))
-                            
-            # Accept new mu if it increases posterior pdf or by probability
-            loga = logPmu_p - logPmu
-            if (loga > 0 or np.log(np.random.random()) < loga): 
-                mu[j] = np.copy(mu_p)
-        
-        # Save the new sample
-        mu_s[ns, :] = np.copy(mu)
-    
-    if burnin > 0.0:
-        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 0)
-    if thin > 0:
-        mu_s = np.delete(mu_s, np.s_[::thin], 0)
-    
-    return mu_s
-  
-def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.0, nsample=1, thin=0):
-    """ Return a sample of M with parameters a and b.
-    """
-    if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
-    elif np.ndim(theta) > 1: (N, J) = np.shape(theta)
-       
-    Qsd = M/10 # keep the std, dev of the proposal
-    
-    M_s = np.zeros( (nsample, J) ) 
-    for ns in xrange(0, nsample):
-        for j in xrange(0, J):
-        
-            # Sample from the proposal distribution
-            while True:
-                M_p = ss.norm.rvs(M[j], Qsd[j])
-                if M_p > 0: break
-        
-            # Log-likelihood for the proposal mu
-            alpha_p = mu[j]*M_p + np.finfo(np.float).eps
-            beta_p = (1-mu[j])*M_p + np.finfo(np.float).eps
-            logPM_p = np.sum(beta_log_pdf(mu[j], alpha_p, beta_p)) \
-                        + ss.gamma.logpdf(M_p, a, scale=b)
-                    
-            # Log-likelihood for the current mu
-            alpha = mu[j]*M[j] + np.finfo(np.float).eps
-            beta = (1-mu[j])*M[j] + np.finfo(np.float).eps
-            logPM = np.sum(beta_log_pdf(mu[j], alpha, beta)) \
-                        + ss.gamma.logpdf(M[j], a, scale=b)
-
-            # Accept new mu if it increases posterior pdf or by probability
-            loga = logPM_p - logPM
-            # if j==0: print (M_p, M[j], logPM_p, logPM)
-            if (loga > 0 or np.log(np.random.random()) < loga): 
-                M[j] = np.copy(M_p)
-            
-        # Save the new sample
-        M_s[ns,:] = np.copy(M)
-    
-    if burnin > 0.0:
-        M_s = np.delete(M_s, np.s_[0:np.int(burnin*nsample):], 0)
-    if thin > 0:
-        M_s = np.delete(M_s, np.s_[::thin], 0)
-    return M_s
-   
 def ll(phi, r):
     """ Return the log-likelihood of the data, r, under the model, phi.
     """
