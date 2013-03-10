@@ -22,12 +22,17 @@ def main():
     r[:,int(J/2)] = n*np.array([0.50, 0.55, 0.45])
     loglik = complete_ll(phi, r, n, theta, mu, M)
     
+    poolsize = 16
+    pool = mp.Pool(processes=poolsize)
+
     logging.info("CPU Count is %d" % mp.cpu_count())
+    logging.info("Using %d workers for pool." % poolsize)
+
     phi, theta_s, mu_s, M_s = mh_sample(r, n, 
                                         nsample=100, 
                                         thin=0, 
                                         burnin=0,
-                                        poolsize=mp.cpu_count())
+                                        pool=pool)
     plot_estimate(r, n, mu_s, theta_s, phi)
     
 
@@ -160,7 +165,7 @@ def sampleLocMuMH(args):
         mu = mu_p
     return mu
     
-def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thin=0, poolsize=None):
+def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thin=0, pool=None):
     """ Return a sample of mu with parameters mu0 and M0.
     """
     if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
@@ -169,22 +174,20 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thi
     alpha0 = mu0*M0 + np.finfo(np.float).eps
     beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
     
-    if poolsize is not None: pool = mp.Pool(processes=poolsize)
-    
     Qsd = mu/10
     mu_s = np.zeros( (nsample, J) ) 
     for ns in xrange(0, nsample):
-        if poolsize is not None:
+        if pool is not None:
             args = zip(mu, Qsd, theta.T, M, repeat(alpha0, J), repeat(beta0, J))
             mu = pool.map(sampleLocMuMH, args)
         else:
             for j in xrange(0, J):
                 args = (mu[j], Qsd[j], theta[:,j], M[j], alpha0, beta0)
                 mu[j] = sampleLocMuMH(args)
-
+	
         # Save the new sample
         mu_s[ns, :] = np.copy(mu)
-    
+
     if burnin > 0.0:
         mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 0)
     if thin > 0:
@@ -217,18 +220,16 @@ def sampleLocMMH(args):
         M = np.copy(M_p)
     return M
         
-def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0, nsample=1, thin=0, poolsize=None):
+def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0, nsample=1, thin=0, pool=None):
     """ Return a sample of M with parameters a and b.
     """
     if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
     elif np.ndim(theta) > 1: (N, J) = np.shape(theta)
     
-    if poolsize is not None: pool = mp.Pool(processes=poolsize)
-    
     Qsd = M/10 # keep the std, dev of the proposal
     M_s = np.zeros( (nsample, J) ) 
     for ns in xrange(0, nsample):
-        if poolsize is not None:
+        if pool is not None:
             args = zip(M, Qsd, theta.T, mu, repeat(a, J), repeat(b, J))
             M = pool.map(sampleLocMMH, args)
         else:
@@ -244,7 +245,7 @@ def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0, nsample=1, thin=0
     return M_s
     
     
-def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, poolsize=None):
+def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
     """ Return MAP parameter and latent variable estimates obtained by 
 
     Metropolis-Hastings sampling.
@@ -276,11 +277,11 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, poolsize=None):
         theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, nsample=500, poolsize=poolsize)
+        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, nsample=500, pool=pool)
         mu = np.median(mu_mh, axis=0)
         
         # Draw samples from p(M | a, b, theta, mu)
-        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=500, poolsize=poolsize)
+        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=500, pool=pool)
         M = np.median(M_mh, axis=0)
         
         # Store the sample
