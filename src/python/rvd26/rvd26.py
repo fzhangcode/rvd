@@ -9,19 +9,22 @@ import scipy.stats as ss
 from scipy.special import gammaln, psi, polygamma
 
 import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(levelname)s:%(module)s:%(message)s')
 
-import multiprocessing as mp
+import time
 
 def main():
-    pool = mp.Pool(processes=4) # start 4 worker processes
-    n = 10
-    J = 5
-    phi = {'mu0':0.25, 'M0':2e3, 'a':1000, 'b':1}
-    r, theta, mu, M = generate_sample(phi, n=n, J=J)
+    n = 1000
+    J = 10
+    phi = {'mu0':0.20, 'M0':2e3, 'a':1e6, 'b':1}
+    r, theta, mu, M = generate_sample(phi, n=n, J=J, seedint=10)
     r[:,int(J/2)] = n*np.array([0.50, 0.55, 0.45])
     loglik = complete_ll(phi, r, n, theta, mu, M)
     
-    phi, theta_s, mu_s, M_s = mh_sample(r, n, nsample=5)
+    phi, theta_s, mu_s, M_s = mh_sample(r, n, nsample=50000, thin=0, burnin=0)
+    plt.plot(mu_s[4,:])
+    plt.show()
     plot_estimate(r, n, mu_s, theta_s, phi)
 
 def plot_estimate(r, n, mu_s, theta_s, phi):
@@ -127,7 +130,7 @@ def gamma_mle(x):
         b = np.mean(x)/a
     
     return (a, b)
-def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
+def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2):
     """ Return MAP parameter and latent variable estimates obtained by 
     Metropolis-Hastings sampling.
     By default, sample 10000 M-H with a 20% burn-in. 
@@ -170,12 +173,11 @@ def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
         beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
     
         Qsd = mu/10
+        # Qsd = np.repeat(0.01, J)
         mu_s = np.zeros( (nsample, J) ) 
         for ns in xrange(0, nsample):
-            pool = mp.Pool(processes=4)
-            for j in xrange(0, 1):
-                # mu[j] = sampleLocMuMH(mu[j], Qsd[j], theta[:,j], M[j], alpha0, beta0)
-                result = pool.apply_async(sampleLocMuMH, (mu[j], Qsd[j], theta[:,j], M[j], alpha0, beta0))
+            for j in xrange(0, J):
+                mu[j] = sampleLocMuMH(mu[j], Qsd[j], theta[:,j], M[j], alpha0, beta0)
             # Save the new sample
             mu_s[ns, :] = np.copy(mu)
     
@@ -188,7 +190,7 @@ def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
 
 
 
-    def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0.0, nsample=1, thin=0):
+    def sampleMMH(theta, mu, a, b, M=ss.gamma.rvs(1, 1), burnin=0, nsample=1, thin=0):
         """ Return a sample of M with parameters a and b.
         """
         def sampleLocMMH(M, Qsd, theta, mu, a, b, out_q=None):
@@ -247,39 +249,45 @@ def mh_sample(r, n, tol=1e-4, nsample=5000, burnin=0.2, thin=2):
     mu_s = np.zeros( (J, nsample) )
     M_s = np.zeros( (J, nsample) )
     for i in xrange(0, nsample):
-        if i % 100 == 0: print "Sampling epoch: %d" % i
-
+        if i % 100 == 0 and i > 0:
+            logging.debug("Iteration %d Parameter Estimate:" % i)
+            logging.debug(phi)
+            plot_estimate(r, n, mu_s[:,0:i-1], theta_s[:,0:i-1], phi)
+            
         # Draw samples from p(theta | r, mu, M) by Gibbs
         alpha = r + mu*M
         beta = (n - r) + (1-mu)*M
         theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, burnin=0.2, nsample=50)
-        mu = np.median(mu_mh, 0)
+        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, nsample=500)
+        mu = np.median(mu_mh, axis=0)
         
         # Draw samples from p(M | a, b, theta, mu)
-        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, burnin=0.2, nsample=50)
-        M = np.median(M_mh, 0)
+        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=500)
+        M = np.median(M_mh, axis=0)
+        
+        # Store the sample
+        theta_s[:,:,i] = np.copy(theta)
+        mu_s[:,i] = np.copy(mu)
+        M_s[:,i] = np.copy(M)
         
         # Update parameter estimates
         phi['mu0'] = np.mean(mu)
         phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
         phi['a'], phi['b'] = gamma_mle(M)
-    
-        # Store the sample
-        theta_s[:,:,i] = np.copy(theta)
-        mu_s[:,i] = np.copy(mu)
-        M_s[:,i] = np.copy(M)
+        
     
     # Apply the burn-in and thinning
-    M_s = np.delete(M_s, np.s_[0:np.int(burnin*nsample):], 1)
-    M_s = np.delete(M_s, np.s_[::thin], 1)    
-    mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 1)
-    mu_s = np.delete(mu_s, np.s_[::thin], 1)
-    theta_s = np.delete(theta_s, np.s_[0:np.int(burnin*nsample):], 2)
-    theta_s = np.delete(theta_s, np.s_[::thin], 2)
-        
+    if burnin > 0.0:
+        M_s = np.delete(M_s, np.s_[0:np.int(burnin*nsample):], 1)
+        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 1)
+        theta_s = np.delete(theta_s, np.s_[0:np.int(burnin*nsample):], 2)
+    if thin > 1:
+        M_s = np.delete(M_s, np.s_[::thin], 1)
+        mu_s = np.delete(mu_s, np.s_[::thin], 1)
+        theta_s = np.delete(theta_s, np.s_[::thin], 2)
+    
     return (phi, theta_s, mu_s, M_s)
 
 def beta_log_pdf(x, a, b):
