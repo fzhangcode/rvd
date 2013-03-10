@@ -3,39 +3,60 @@
 """rvd26.py: Compute MAP estimates for RVD2.6 model."""
 
 import numpy as np
+
 import scipy as sp
-import matplotlib.pyplot as plt
 import scipy.stats as ss
 from scipy.special import gammaln, psi, polygamma
+
+import matplotlib.pyplot as plt
 import logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(levelname)s:%(module)s:%(message)s')
 import time
 import multiprocessing as mp
 from itertools import repeat
+import h5py
+import tempfile
 
 def main():
+    import argparse
+    
+    # Populate our options, -h/--help is already there.
+    argp = argparse.ArgumentParser(prog='rvd2', description="RVD is a hierarchical bayesian network to identify rare variants from short-read sequence data")
+    argp.add_argument('--version', action='version', version='%(prog)s 2.6')
+    argp.add_argument('-v', '--verbose', dest='verbose', action='count',
+                    help="increase verbosity (specify multiple times for more)")
+    argp.add_argument('cmd', action='store', choices=['gen', 'gibbs'])
+    
+    # Parse the arguments (defaults to parsing sys.argv)
+    args = argp.parse_args()
+    
+    # TODO check what came in ton the command line and call optp.error("Useful message") to exit if all is not well
+
+    log_level=logging.WARNING #default
+    if args.verbose == 1:
+        log_level = logging.INFO
+    elif args.verbose >=2:
+        log_level = logging.DEBUG
+    
+    # Set up basic configuration, out to stderr with a reasonable default format
+    logging.basicConfig(level=log_level,
+                        format='%(levelname)s:%(module)s:%(message)s')
+                        
+    # Do actual work here
+    sample_run()
+    
+def sample_run():
     n = 1000
     J = 10
     phi = {'mu0':0.20, 'M0':2e3, 'a':1e6, 'b':1}
     r, theta, mu, M = generate_sample(phi, n=n, J=J, seedint=10)
     r[:,int(J/2)] = n*np.array([0.50, 0.55, 0.45])
-    loglik = complete_ll(phi, r, n, theta, mu, M)
-    
-    poolsize = 16
-    pool = mp.Pool(processes=poolsize)
-
-    logging.info("CPU Count is %d" % mp.cpu_count())
-    logging.info("Using %d workers for pool." % poolsize)
 
     phi, theta_s, mu_s, M_s = mh_sample(r, n, 
                                         nsample=100, 
                                         thin=0, 
-                                        burnin=0,
-                                        pool=pool)
-    plot_estimate(r, n, mu_s, theta_s, phi)
+                                        burnin=0)
+    # plot_estimate(r, n, mu_s, theta_s, phi)
     
-
 def plot_estimate(r, n, mu_s, theta_s, phi):
     
     mu = np.median(mu_s, 1)
@@ -256,20 +277,37 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
     if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
     elif np.ndim(r) == 2: N, J = np.shape(r)
     
+    # Initialize a hdf5 file for logging model progress
+    h5Filename = tempfile.mkstemp(dir='.', suffix='.hdf5')[1]
+    logging.debug("Storing temp data in %s" % h5Filename)
+    h5file = h5py.File(h5Filename, 'w')
+    h5file.create_group('phi')
+    h5file['phi'].create_dataset('a', (1,), dtype='f')
+    h5file['phi'].create_dataset('b', (1,), 'f')
+    h5file['phi'].create_dataset('mu0', (1,), 'f')
+    h5file['phi'].create_dataset('M0', (1,), 'f')
+    h5file.create_dataset('theta_s', (N, J, nsample), 'f')
+    h5file.create_dataset('mu_s', (J, nsample), 'f')
+    h5file.create_dataset('M_s', (J, nsample), 'f')
+    
     # Initialize estimates using MoM
     phi, mu, theta, M = estimate_mom(r, n)
     logging.debug("MoM Parameter Estimate")
     logging.debug(phi)
-
+    h5file['phi']['a'][0] = phi['a']
+    h5file['phi']['b'][0] = phi['b']
+    h5file['phi']['mu0'][0] = phi['mu0']
+    h5file['phi']['M0'][0] = phi['M0']
+    
+    
     # Sample theta, mu, M and update parameter estiamtes
     theta_s = np.zeros( (N, J, nsample) )
     mu_s = np.zeros( (J, nsample) )
     M_s = np.zeros( (J, nsample) )
     for i in xrange(0, nsample):
         if i % 10 == 0 and i > 0:
-            logging.debug("Iteration %d Parameter Estimate:" % i)
-            logging.debug(phi)
-            # plot_estimate(r, n, mu_s[:,0:i-1], theta_s[:,0:i-1], phi)
+            logging.debug("Gibbs Iteration %d" % i)
+            
             
         # Draw samples from p(theta | r, mu, M) by Gibbs
         alpha = r + mu*M
@@ -294,6 +332,15 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
         phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
         phi['a'], phi['b'] = gamma_mle(M)
         
+        # Store the current model
+        h5file['phi']['a'][0] = phi['a']
+        h5file['phi']['b'][0] = phi['b']
+        h5file['phi']['mu0'][0] = phi['mu0']
+        h5file['phi']['M0'][0] = phi['M0']
+        h5file['theta_s'][:,:,i] = theta
+        h5file['mu_s'][:,i] = mu
+        h5file['M_s'][:,i] = M
+        h5file.flush()
     
     # Apply the burn-in and thinning
     if burnin > 0.0:
@@ -305,6 +352,7 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
         mu_s = np.delete(mu_s, np.s_[::thin], 1)
         theta_s = np.delete(theta_s, np.s_[::thin], 2)
     
+    h5file.close()
     return (phi, theta_s, mu_s, M_s)
 
 def beta_log_pdf(x, a, b):
