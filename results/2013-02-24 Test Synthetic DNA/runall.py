@@ -9,6 +9,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import h5py
+import multiprocessing as mp
+
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(levelname)s:%(module)s:%(message)s')
 
 # Insert the src/python/rvd26 directory at front of the path
 rvddir = os.path.join('../../src/python/rvd26')
@@ -41,16 +46,19 @@ def load_depth(dcFileNameList):
         n.append(n1)
     r = np.array(r)
     n = np.array(n)
+    return (r,n)
 
 # <codecell>
 
-tocfilename = "../../data/synthetic_toc.txt"
+pool = mp.Pool(processes=32)
+tocfilename = "synthetic_toc.txt"
 toc = pd.read_table(tocfilename)
 
 # <codecell>
 
 # Estimate the model for the cases
 logging.debug("Processing control data.")
+
 h5FileName = "control.hdf5"
 try:
     with h5py.File(h5FileName, 'r') as f:
@@ -61,7 +69,6 @@ except IOError as e:
     phi, theta_s, mu_s, M_s = rvd26.mh_sample(r, n, nsample=500, burnin=0.2, pool=pool)
     logging.debug("Saving model in %s" % h5FileName)
     rvd26.save_model(h5FileName, r, n, phi, theta_s, mu_s, M_s)
-    #TODO: add attributes to HDF5 file.
 
 # <codecell>
 
@@ -80,9 +87,4 @@ for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
         phi, theta_s, mu_s, M_s = rvd26.mh_sample(r, n, nsample=500, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
         rvd26.save_model(h5FileName, r, n, phi, theta_s, mu_s, M_s)
-        
-
-
-(rControl,nControl) = process_toc(controlFileList)
-
 
