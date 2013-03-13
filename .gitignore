@@ -4,3 +4,7 @@ notes.log
 notes.pdf
 workspace.xml
 tmp*
+*.hdf5
+*.ipynb
+*.pyc
+data
