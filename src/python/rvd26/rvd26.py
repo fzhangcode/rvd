@@ -57,6 +57,25 @@ def sample_run():
                                         burnin=0)
     # plot_estimate(r, n, mu_s, theta_s, phi)
     
+def save_model(h5Filename, r, n, phi, theta_s, mu_s, M_s):
+    """ Save the RVD2.6 model samples and parameters """
+    (N, J, nsample) = np.shape(theta_s)
+    
+    h5file = h5py.File(h5Filename, 'w')
+    h5file.create_group('phi')
+    h5file['phi'].create_dataset('a', (1,), dtype='f')
+    h5file['phi'].create_dataset('b', (1,), 'f')
+    h5file['phi'].create_dataset('mu0', (1,), 'f')
+    h5file['phi'].create_dataset('M0', (1,), 'f')
+    h5file.create_dataset('theta_s', (N, J, nsample), 'f')
+    h5file.create_dataset('mu_s', (J, nsample), 'f')
+    h5file.create_dataset('M_s', (J, nsample), 'f')
+
+    h5file['phi']['a'][0] = phi['a']
+    h5file['phi']['b'][0] = phi['b']
+    h5file['phi']['mu0'][0] = phi['mu0']
+    h5file['phi']['M0'][0] = phi['M0']   
+     
 def plot_estimate(r, n, mu_s, theta_s, phi):
     
     mu = np.median(mu_s, 1)
@@ -305,7 +324,7 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
     mu_s = np.zeros( (J, nsample) )
     M_s = np.zeros( (J, nsample) )
     for i in xrange(0, nsample):
-        if i % 10 == 0 and i > 0:
+        if i % 100 == 0 and i > 0:
             logging.debug("Gibbs Iteration %d" % i)
             
             
