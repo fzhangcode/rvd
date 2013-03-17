@@ -293,7 +293,7 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
     elif np.ndim(r) == 2: N, J = np.shape(r)
     
     # Initialize a hdf5 file for logging model progress
-    h5Filename = tempfile.mkstemp(dir='.', suffix='.hdf5')[1]
+    h5Filename = tempfile.NamedTemporaryFile(suffix='.hdf5').name
     logging.debug("Storing temp data in %s" % h5Filename)
     h5file = h5py.File(h5Filename, 'w')
     h5file.create_group('phi')
