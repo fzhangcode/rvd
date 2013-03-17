@@ -63,18 +63,14 @@ def save_model(h5Filename, r, n, phi, theta_s, mu_s, M_s):
     
     h5file = h5py.File(h5Filename, 'w')
     h5file.create_group('phi')
-    h5file['phi'].create_dataset('a', (1,), dtype='f')
-    h5file['phi'].create_dataset('b', (1,), 'f')
-    h5file['phi'].create_dataset('mu0', (1,), 'f')
-    h5file['phi'].create_dataset('M0', (1,), 'f')
-    h5file.create_dataset('theta_s', (N, J, nsample), 'f')
-    h5file.create_dataset('mu_s', (J, nsample), 'f')
-    h5file.create_dataset('M_s', (J, nsample), 'f')
-
-    h5file['phi']['a'][0] = phi['a']
-    h5file['phi']['b'][0] = phi['b']
-    h5file['phi']['mu0'][0] = phi['mu0']
-    h5file['phi']['M0'][0] = phi['M0']   
+    h5file['phi'].create_dataset('a', data=phi['a'])
+    h5file['phi'].create_dataset('b', data=phi['b'])
+    h5file['phi'].create_dataset('mu0', data=phi['mu0'])
+    h5file['phi'].create_dataset('M0', data=phi['M0'])
+    h5file.create_dataset('theta_s', data=theta_s, chunks=True, fletcher32=True, compression='gzip')
+    h5file.create_dataset('mu_s', data=mu_s, chunks=True, fletcher32=True, compression='gzip')
+    h5file.create_dataset('M_s', data=M_s, chunks=True, fletcher32=True, compression='gzip')
+    h5file.close()
      
 def plot_estimate(r, n, mu_s, theta_s, phi):
     
