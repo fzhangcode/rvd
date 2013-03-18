@@ -56,6 +56,24 @@ def sample_run():
                                         thin=0, 
                                         burnin=0)
     # plot_estimate(r, n, mu_s, theta_s, phi)
+
+def load_model(h5Filename):
+    """ Returns the RVD2.6 model samples and parameters.
+    Takes an hdf5 filename and returns (phi, theta_s, mu_s, M_s), where _s 
+    indicates a matrix of samples where the samples are in the last dim.
+    """
+
+    h5file = h5py.File(h5Filename, 'r')
+    phi = {'a': h5file['phi/a'][...],
+           'b': h5file['phi/b'][...],
+           'mu0': h5file['phi/mu0'][...],
+           'M0': h5file['phi/M0'][...]}
+    theta_s = h5file['theta_s'][...]
+    mu_s = h5file['mu_s'][...]
+    M_s = h5file['M_s'][...]
+    h5file.close()
+    
+    return (phi, theta_s, mu_s, M_s)
     
 def save_model(h5Filename, r, n, phi, theta_s, mu_s, M_s):
     """ Save the RVD2.6 model samples and parameters """

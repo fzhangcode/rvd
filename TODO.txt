@@ -22,3 +22,5 @@
 direct. But pytables has potential to be much faster access in parallel
 
 [ ] We should port this algorithm to map-reduce /  hadoop
+
+[ ] Add test case for load_model and save_model.
