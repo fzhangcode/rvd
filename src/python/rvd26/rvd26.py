@@ -309,10 +309,6 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
     phi, mu, theta, M = estimate_mom(r, n)
     logging.debug("MoM Parameter Estimate")
     logging.debug(phi)
-    h5file['phi']['a'][0] = phi['a']
-    h5file['phi']['b'][0] = phi['b']
-    h5file['phi']['mu0'][0] = phi['mu0']
-    h5file['phi']['M0'][0] = phi['M0']
     
     
     # Sample theta, mu, M and update parameter estiamtes

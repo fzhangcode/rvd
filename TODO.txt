@@ -10,8 +10,15 @@
 
 [ ] We need to compare this algorithm to other such as GATK and samtools.
 
-[ ] We need a baseline data set to test the algorithm.
+[x] We need a baseline data set to test the algorithm.
 
 [ ] We need to take a sample data set and downsample it to look at the performance of the algorithm as we decrease the read depth on real data.
 
-[ ] How do we optimize the proposal distributions in the M-H sampling steps?
+[x] How do we optimize the proposal distributions in the M-H sampling steps?
+
+[ ] Add attributes to HDF5 file output.
+
+[ ] Should we use pytables instead of h5py? h5py is more compatible and
+direct. But pytables has potential to be much faster access in parallel
+
+[ ] We should port this algorithm to map-reduce /  hadoop

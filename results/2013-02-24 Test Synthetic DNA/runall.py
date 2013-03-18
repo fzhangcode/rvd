@@ -50,7 +50,7 @@ def load_depth(dcFileNameList):
 
 # <codecell>
 
-pool = mp.Pool(processes=2)
+pool = mp.Pool(processes=60)
 tocfilename = "synthetic_toc.txt"
 toc = pd.read_table(tocfilename)
 
@@ -66,7 +66,7 @@ try:
 except IOError as e:
     controlFileList = ["../../data/synthetic_dcs/%s" % filename for filename in toc.Filename[toc.isRef=='Y']]
     (r, n) = load_depth(controlFileList)
-    phi, theta_s, mu_s, M_s = rvd26.mh_sample(r, n, nsample=0, burnin=0.2, pool=pool)
+    phi, theta_s, mu_s, M_s = rvd26.mh_sample(r, n, nsample=400, burnin=0.2, pool=pool)
     logging.debug("Saving model in %s" % h5FileName)
     rvd26.save_model(h5FileName, r, n, phi, theta_s, mu_s, M_s)
 
