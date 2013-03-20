@@ -75,7 +75,7 @@ except IOError as e:
 for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
     logging.debug("Processing dilution: %0.1f" % dilution)
     
-    h5FileName = "case%0.1f.hdf5" % toc.Dilution[3]
+    h5FileName = "case%0.1f.hdf5" % dilution
     h5FileName = h5FileName.replace(".", "_", 1)
     try:
         with h5py.File(h5FileName, 'r') as f:
