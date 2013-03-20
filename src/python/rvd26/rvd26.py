@@ -334,13 +334,13 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
     mu_s = np.zeros( (J, nsample) )
     M_s = np.zeros( (J, nsample) )
     for i in xrange(0, nsample):
-        if i % 100 == 0 and i > 0:
+        if i % 10 == 0 and i > 0:
             logging.debug("Gibbs Iteration %d" % i)
             
             
         # Draw samples from p(theta | r, mu, M) by Gibbs
-        alpha = r + mu*M
-        beta = (n - r) + (1-mu)*M
+        alpha = r + mu*M +  + np.finfo(np.float).eps
+        beta = (n - r) + (1-mu)*M + np.finfo(np.float).eps
         theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings

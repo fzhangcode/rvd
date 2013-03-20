@@ -58,7 +58,6 @@ toc = pd.read_table(tocfilename)
 
 # Estimate the model for the cases
 logging.debug("Processing control data.")
-
 h5FileName = "control.hdf5"
 try:
     with h5py.File(h5FileName, 'r') as f:

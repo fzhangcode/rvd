@@ -1,0 +1,19 @@
+    n = 1000
+    J = 10
+    phi = {'mu0':0.20, 'M0':2e3, 'a':1e6, 'b':1}
+    r, theta, mu, M = generate_sample(phi, n=n, J=J, seedint=10)
+    r[:,int(J/2)] = n*np.array([0.50, 0.55, 0.45])
+    loglik = complete_ll(phi, r, n, theta, mu, M)
+    
+    poolsize = 16
+    pool = mp.Pool(processes=poolsize)
+
+    logging.info("CPU Count is %d" % mp.cpu_count())
+    logging.info("Using %d workers for pool." % poolsize)
+
+    phi, theta_s, mu_s, M_s = mh_sample(r, n, 
+                                        nsample=100, 
+                                        thin=0, 
+                                        burnin=0,
+                                        pool=pool)
+    plot_estimate(r, n, mu_s, theta_s, phi)

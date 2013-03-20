@@ -8,3 +8,5 @@ tmp*
 *.ipynb
 *.pyc
 data
+results/2013-03-19 Test MS High Burden/depth_chart
+results/2013-03-19 Test MS High Burden/pileup
