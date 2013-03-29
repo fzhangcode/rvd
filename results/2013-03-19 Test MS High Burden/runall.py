@@ -23,12 +23,13 @@ sys.path.insert(0, rvddir)
 import rvd26
 
 def main():
-    # bamFileNameList = [ r'../../data/ms/2012-09-12 Aligned Data/lane1_NoIndex_L001_R1.fastq.gz.prefix.bam',
-    #                     r'../../data/ms/2012-09-12 Aligned Data/lane2_NoIndex_L002_R1.fastq.gz.prefix.bam',
-    #                     r'../../data/ms/2012-09-12 Aligned Data/lane3_NoIndex_L003_R1.fastq.gz.prefix.bam']
+    #bamFileNameList = [ r'../../data/ms/2012-09-12 Aligned Data/lane1_NoIndex_L001_R1.fastq.gz.prefix.bam',
+    #                    r'../../data/ms/2012-09-12 Aligned Data/lane2_NoIndex_L002_R1.fastq.gz.prefix.bam',
+    #                    r'../../data/ms/2012-09-12 Aligned Data/lane3_NoIndex_L003_R1.fastq.gz.prefix.bam']
+    bamFileNameList = [ r'../../data/ms/2012-09-12 Aligned Data/lane5_NoIndex_L005_R1.fastq.gz.prefix.bam',
+                        r'../../data/ms/2012-09-12 Aligned Data/lane6_NoIndex_L006_R1.fastq.gz.prefix.bam',
+                        r'../../data/ms/2012-09-12 Aligned Data/lane7_NoIndex_L007_R1.fastq.gz.prefix.bam']
 
-    bamFileNameList = [ r'../../data/ms/2012-09-12 Aligned Data/lane1_NoIndex_L001_R1.fastq.gz.prefix.bam']
-    
     logging.info("Converting BAM files to PILEUP.")
     pileupFileNameList = [ make_pileup(bamFileName,
                                  r'../../data/hg19/hg19.fa.masked',
@@ -40,23 +41,26 @@ def main():
                        for pileupFileName in pileupFileNameList]
     
     logging.info("Loading depth charts.")
-    (r, n) = load_depth(dcFileNameList)
+    (r, n, loc, refb) = load_depth(dcFileNameList)
     
     # Apply a minimum depth threshold
-    depthInd = np.sum(n > 10, axis=0)
+    L=10
+    depthInd = np.sum(n, axis=0) > L
+    logging.debug("Number of positions before depth filter at L=%d: %d. After: %d." % ( L, np.shape(n)[1], np.sum(depthInd) ) )
     r = r[:,depthInd]
     n = n[:,depthInd]
 
-    pool = mp.Pool(processes=2)
-    
-    h5FileName = "control.hdf5"
+    pool = mp.Pool(processes=62)
+    #pool = None    
+
+    h5FileName = "case.hdf5"
     try:
         with h5py.File(h5FileName, 'r') as f:
             pass
     except IOError as e:
-        phi, theta_s, mu_s, M_s = rvd26.mh_sample(r, n, nsample=50, burnin=0.2, pool=pool)
+        phi, theta_s, mu_s, M_s = rvd26.mh_sample(r, n, nsample=1000, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
-        rvd26.save_model(h5FileName, r, n, phi, theta_s, mu_s, M_s)
+        rvd26.save_model(h5FileName, loc, refb, r, n, phi, theta_s, mu_s, M_s)
     
 def load_depth(dcFileNameList):
     """ Return (r,n) for a list of depth charts.
@@ -96,7 +100,8 @@ def load_depth(dcFileNameList):
             n.append(n1)
     r = np.array(r)
     n = np.array(n)
-    return (r,n)
+
+    return (r,n,loc, refb)
 
 
 
@@ -110,7 +115,8 @@ def make_depth(pileupFileName):
     dcFileName = os.path.join("depth_chart", 
                                   "%s.dc" % dcFileName.split(".", 1)[0])
     try:
-        with open('dcFileName', 'r'): pass
+        with open(dcFileName, 'r'):
+		logging.debug("Depth chart file exists: %s" % dcFileName) 
     except IOError:
         logging.debug("Converting %s to depth chart." % pileupFileName)
         with open(dcFileName, 'w') as fout:

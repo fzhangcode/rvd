@@ -75,7 +75,7 @@ def load_model(h5Filename):
     
     return (phi, theta_s, mu_s, M_s)
     
-def save_model(h5Filename, r, n, phi, theta_s, mu_s, M_s):
+def save_model(h5Filename, loc, refb, r, n, phi, theta_s, mu_s, M_s):
     """ Save the RVD2.6 model samples and parameters """
     (N, J, nsample) = np.shape(theta_s)
     
@@ -88,6 +88,13 @@ def save_model(h5Filename, r, n, phi, theta_s, mu_s, M_s):
     h5file.create_dataset('theta_s', data=theta_s, chunks=True, fletcher32=True, compression='gzip')
     h5file.create_dataset('mu_s', data=mu_s, chunks=True, fletcher32=True, compression='gzip')
     h5file.create_dataset('M_s', data=M_s, chunks=True, fletcher32=True, compression='gzip')
+
+    h5file.create_dataset('r', data=r, chunks=True, fletcher32=True, compression='gzip')
+    h5file.create_dataset('n', data=n, chunks=True, fletcher32=True, compression='gzip')
+
+    h5file.create_dataset('loc', data=loc, chunks=True, fletcher32=True, compression='gzip')
+    h5file.create_dataset('refb', data=refb)
+
     h5file.close()
      
 def plot_estimate(r, n, mu_s, theta_s, phi):
@@ -168,10 +175,11 @@ def estimate_mom(r, n):
     M0 = (mu0*(1-mu0))/(np.var(mu) + np.finfo(np.float).eps)
     
     M = (mu*(1-mu))/(np.var(theta, 0) + np.finfo(np.float).eps )
-    
+
     b = np.var(M)/np.mean(M)
     a = np.mean(M)/b
-    
+    #a, b = gamma_mle(M)    
+
     phi = {'mu0':mu0, 'M0':M0, 'a':a, 'b':b}
     return phi, mu, theta, M
     
@@ -327,14 +335,18 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
     phi, mu, theta, M = estimate_mom(r, n)
     logging.debug("MoM Parameter Estimate")
     logging.debug(phi)
-    
+
+    # Correct MoM estimates to be non-trivial
+    mu[mu < np.finfo(np.float).eps*1e4] = phi['mu0']
+    theta[theta < np.finfo(np.float).eps*1e4] = phi['mu0']
+    M[M < np.finfo(np.float).eps *1e4] = 1
     
     # Sample theta, mu, M and update parameter estiamtes
     theta_s = np.zeros( (N, J, nsample) )
     mu_s = np.zeros( (J, nsample) )
     M_s = np.zeros( (J, nsample) )
     for i in xrange(0, nsample):
-        if i % 10 == 0 and i > 0:
+        if i % 100 == 0 and i > 0:
             logging.debug("Gibbs Iteration %d" % i)
             
             
@@ -348,19 +360,18 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
         mu = np.median(mu_mh, axis=0)
         
         # Draw samples from p(M | a, b, theta, mu)
-        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=50, pool=pool)
-        M = np.median(M_mh, axis=0)
+        #M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=50, pool=pool)
+        #M = np.median(M_mh, axis=0)
         
         # Store the sample
         theta_s[:,:,i] = np.copy(theta)
         mu_s[:,i] = np.copy(mu)
         M_s[:,i] = np.copy(M)
         
-        # Update parameter estimates when beyond burnin period
-        if i > burnin*nsample:
-            phi['mu0'] = np.mean(mu)
-            phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
-            phi['a'], phi['b'] = gamma_mle(M)
+        # Update parameter estimates
+        # phi['mu0'] = np.mean(mu)
+        # phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
+        # phi['a'], phi['b'] = gamma_mle(M)
         
         # Store the current model
         h5file['phi']['a'][0] = phi['a']
