@@ -178,7 +178,6 @@ def estimate_mom(r, n):
 
     b = np.var(M)/np.mean(M)
     a = np.mean(M)/b
-    #a, b = gamma_mle(M)    
 
     phi = {'mu0':mu0, 'M0':M0, 'a':a, 'b':b}
     return phi, mu, theta, M
@@ -360,8 +359,8 @@ def mh_sample(r, n, nsample=5000, burnin=0.2, thin=2, pool=None):
         mu = np.median(mu_mh, axis=0)
         
         # Draw samples from p(M | a, b, theta, mu)
-        #M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=50, pool=pool)
-        #M = np.median(M_mh, axis=0)
+        M_mh = sampleMMH(theta, mu, phi['a'], phi['b'], M=M, nsample=50, pool=pool)
+        M = np.median(M_mh, axis=0)
         
         # Store the sample
         theta_s[:,:,i] = np.copy(theta)
