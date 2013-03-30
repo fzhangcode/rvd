@@ -74,6 +74,8 @@ def main():
     except IOError as e:
         r = np.array(df[rcol].T)
         n = np.array(df[ncol].T)
+        refb = [r for r in df['refb']]
+        loc = [lo for lo in df['loc']]
         phi, theta_s, mu_s = rvd.mh_sample(r, n, nsample=1000, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
         rvd.save_model(h5FileName, loc, refb, r, n, phi, theta_s, mu_s)
