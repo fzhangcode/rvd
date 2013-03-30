@@ -43,15 +43,19 @@ def main():
     logging.info("Loading depth charts.")
     (r, n, loc, refb) = load_depth(dcFileNameList)
 
-    # Store the data in a dataframe
+    # Store the depth chart in a DataFrame
     idx = ["chr18:%d" % lo for lo in loc]
     ncol = ['n1', 'n2', 'n3']
     rcol = ['r1', 'r2', 'r3']
     
-    refb = pd.DataFrame(refb, index=idx, columns=['refb'], dtype='str')
-    r = pd.DataFrame(r.transpose(), index=idx, columns=rcol)
-    n = pd.DataFrame(n.transpose(), index=idx, columns=ncol)
-    df = pd.merge(refb, r, left_index=True, right_index=True, how='inner')
+    refb = pd.Series(refb, index=idx)
+    loc = pd.Series(loc, index=idx, dtype='int64')
+    r = pd.DataFrame(r.transpose(), index=idx, columns=rcol, dtype='int64')
+    n = pd.DataFrame(n.transpose(), index=idx, columns=ncol, dtype='int64')
+    
+    df = pd.DataFrame({'loc': loc, 'refb': refb})
+    df.insert(0, 'chr', 'chr18')
+    df = pd.merge(df, r, left_index=True, right_index=True, how='inner')
     df = pd.merge(df, n, left_index=True, right_index=True, how='inner')
 
     # Apply a minimum depth threshold
@@ -72,7 +76,7 @@ def main():
         n = np.array(df[ncol].T)
         phi, theta_s, mu_s = rvd.mh_sample(r, n, nsample=1000, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
-        rvd.save_model(h5FileName, idx, df['refb'], r, n, phi, theta_s, mu_s)
+        rvd.save_model(h5FileName, loc, refb, r, n, phi, theta_s, mu_s)
     
 def load_depth(dcFileNameList):
     """ Return (r,n) for a list of depth charts.

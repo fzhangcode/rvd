@@ -55,11 +55,10 @@ def sample_run():
                                         nsample=100, 
                                         thin=0, 
                                         burnin=0)
-    # plot_estimate(r, n, mu_s, theta_s, phi)
 
 def load_model(h5Filename):
-    """ Returns the RVD2.6 model samples and parameters.
-    Takes an hdf5 filename and returns (phi, theta_s, mu_s, M_s), where _s 
+    """ Returns the RVD2.7 model samples and parameters.
+    Takes an hdf5 filename and returns (phi, theta_s, mu_s), where _s 
     indicates a matrix of samples where the samples are in the last dim.
     """
 
@@ -71,7 +70,7 @@ def load_model(h5Filename):
     mu_s = h5file['mu_s'][...]
     h5file.close()
     
-    return (phi, theta_s, mu_s, M)
+    return (phi, theta_s, mu_s)
     
 def save_model(h5Filename, loc, refb, r, n, phi, theta_s, mu_s):
     """ Save the RVD2.7 model samples and parameters """
@@ -95,27 +94,6 @@ def save_model(h5Filename, loc, refb, r, n, phi, theta_s, mu_s):
     h5file.create_dataset('refb', data=refb)
 
     h5file.close()
-     
-def plot_estimate(r, n, mu_s, theta_s, phi):
-    
-    mu = np.median(mu_s, 1)
-    theta = np.median(theta_s, 2)
-    
-    (N, J) = np.shape(theta)
-    
-    muErr = np.abs(np.percentile(mu_s, (2.5, 97.5), 1) - mu)
-    # plt.plot(range(0,J), mu, color='b')
-
-    plt.errorbar(np.arange(J)+1, mu, yerr=muErr, color='b', linestyle='--')
-    plt.plot(np.arange(J)+1, np.transpose(theta), linestyle='None', marker='+', markersize=10)
-    plt.plot(np.arange(J)+1, np.transpose(r/n), linestyle='None', marker='o', markersize=6, alpha=0.5)
-    plt.plot(np.arange(J)+1, np.tile(phi['mu0'], J), linestyle='--', color='r')
-    
-    plt.title("Error Rate Estimate using RVD2.6")
-    plt.xlim((0, J+1))
-    plt.xlabel('Location')
-    plt.ylabel('Error Rate Estimate')
-    plt.show()
 
 def generate_sample(phi, n=100, N=3, J=100, seedint=None):
     """Returns a sample with n reads, N replicates, and
