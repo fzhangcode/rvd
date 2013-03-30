@@ -42,13 +42,23 @@ def main():
     
     logging.info("Loading depth charts.")
     (r, n, loc, refb) = load_depth(dcFileNameList)
+
+    # Store the data in a dataframe
+    idx = ["chr18:%d" % lo for lo in loc]
+    ncol = ['n1', 'n2', 'n3']
+    rcol = ['r1', 'r2', 'r3']
     
+    refb = pd.DataFrame(refb, index=idx, columns=['refb'], dtype='str')
+    r = pd.DataFrame(r.transpose(), index=idx, columns=rcol)
+    n = pd.DataFrame(n.transpose(), index=idx, columns=ncol)
+    df = pd.merge(refb, r, left_index=True, right_index=True, how='inner')
+    df = pd.merge(df, n, left_index=True, right_index=True, how='inner')
+
     # Apply a minimum depth threshold
     L=10
-    depthInd = np.sum(n, axis=0) > L
-    logging.debug("Number of positions before depth filter at L=%d: %d. After: %d." % ( L, np.shape(n)[1], np.sum(depthInd) ) )
-    r = r[:,depthInd]
-    n = n[:,depthInd]
+    depthInd = df[ ncol ].sum(1) > L
+    logging.debug("Number of positions before depth filter at L=%d: %d. After: %d." % ( L, df.shape[0], np.sum(depthInd) ) )
+    df = df[depthInd]
 
     # pool = mp.Pool(processes=62)
     pool = None    
@@ -58,9 +68,11 @@ def main():
         with h5py.File(h5FileName, 'r') as f:
             pass
     except IOError as e:
+        r = np.array(df[rcol].T)
+        n = np.array(df[ncol].T)
         phi, theta_s, mu_s = rvd.mh_sample(r, n, nsample=1000, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
-        rvd.save_model(h5FileName, loc, refb, r, n, phi, theta_s, mu_s)
+        rvd.save_model(h5FileName, idx, df['refb'], r, n, phi, theta_s, mu_s)
     
 def load_depth(dcFileNameList):
     """ Return (r,n) for a list of depth charts.
@@ -85,6 +97,7 @@ def load_depth(dcFileNameList):
             cd.append( dict(zip(loc1, [map(int, x[5:9]) for x in dc if x[4] in acgt.keys()])) )
             
     loc = list(reduce(set.intersection, map(set, loc)))
+    loc.sort()
     refb = [refb[k] for k in loc]
     
     J = len(loc)

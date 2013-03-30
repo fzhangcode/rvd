@@ -83,7 +83,7 @@ def save_model(h5Filename, loc, refb, r, n, phi, theta_s, mu_s):
     h5file.create_group('phi')
     h5file['phi'].create_dataset('mu0', data=phi['mu0'])
     h5file['phi'].create_dataset('M0', data=phi['M0'])
-    h5file['phi'].create_dataset('M', data=M, chunks=True, fletcher32=True, compression='gzip')
+    h5file['phi'].create_dataset('M', data=phi['M'], chunks=True, fletcher32=True, compression='gzip')
     
     h5file.create_dataset('theta_s', data=theta_s, chunks=True, fletcher32=True, compression='gzip')
     h5file.create_dataset('mu_s', data=mu_s, chunks=True, fletcher32=True, compression='gzip')
@@ -303,7 +303,7 @@ def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
         theta_s = np.delete(theta_s, np.s_[::thin], 2)
     
     h5file.close()
-    return (phi, theta_s, mu_s, M_s)
+    return (phi, theta_s, mu_s)
 
 def beta_log_pdf(x, a, b):
     return gammaln(a+b) - gammaln(a) - gammaln(b) \
