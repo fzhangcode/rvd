@@ -16,6 +16,8 @@ from itertools import repeat
 import h5py
 import tempfile
 
+# from __future__ import division
+
 def main():
     import argparse
     
@@ -139,15 +141,16 @@ def complete_ll(phi, r, n, theta, mu):
 def estimate_mom(r, n):
     """ Return model parameter estimates using method-of-moments.
     """
-    
-    theta = r/n
+
+    theta = r/(n + 0.0) # make sure this is non-truncating division
     if np.ndim(r) == 1: mu = theta
     elif np.ndim(r) > 1: mu = np.mean(theta, 0)
+    
+    M = (mu*(1-mu))/(np.var(theta, 0) + np.finfo(np.float).eps )    
     
     mu0 = np.mean(mu)
     M0 = (mu0*(1-mu0))/(np.var(mu) + np.finfo(np.float).eps)
     
-    M = (mu*(1-mu))/(np.var(theta, 0) + np.finfo(np.float).eps )
 
     phi = {'mu0':mu0, 'M0':M0, 'M':M}
     return phi, mu, theta
@@ -216,7 +219,6 @@ def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
     By default, sample 10000 M-H with a 20% burn-in and thinning factor of 2. 
     Stop when the change in complete data log-likelihood is less than 0.01%.
     """
-    
     if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
     elif np.ndim(r) == 2: N, J = np.shape(r)
     

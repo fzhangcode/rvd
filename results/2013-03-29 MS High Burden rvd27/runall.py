@@ -53,8 +53,8 @@ def main():
     r = pd.DataFrame(r.transpose(), index=idx, columns=rcol, dtype='int64')
     n = pd.DataFrame(n.transpose(), index=idx, columns=ncol, dtype='int64')
     
-    df = pd.DataFrame({'loc': loc, 'refb': refb})
-    df.insert(0, 'chr', 'chr18')
+    df = pd.DataFrame({'POS': loc, 'REF': refb})
+    df.insert(0, 'CHROM', '18')
     df = pd.merge(df, r, left_index=True, right_index=True, how='inner')
     df = pd.merge(df, n, left_index=True, right_index=True, how='inner')
 
@@ -64,6 +64,7 @@ def main():
     logging.debug("Number of positions before depth filter at L=%d: %d. After: %d." % ( L, df.shape[0], np.sum(depthInd) ) )
     df = df[depthInd]
 
+    print df.head()
     # pool = mp.Pool(processes=62)
     pool = None    
 
@@ -74,8 +75,8 @@ def main():
     except IOError as e:
         r = np.array(df[rcol].T)
         n = np.array(df[ncol].T)
-        refb = [r for r in df['refb']]
-        loc = [lo for lo in df['loc']]
+        refb = [rb for rb in df['REF']]
+        loc = [lo for lo in df['POS']]
         phi, theta_s, mu_s = rvd.mh_sample(r, n, nsample=1000, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
         rvd.save_model(h5FileName, loc, refb, r, n, phi, theta_s, mu_s)
