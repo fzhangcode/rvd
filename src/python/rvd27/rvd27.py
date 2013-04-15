@@ -18,91 +18,166 @@ import tempfile
 
 # from __future__ import division
 
+
 def main():
     import argparse
-    
+
     # Populate our options, -h/--help is already there.
-    argp = argparse.ArgumentParser(prog='rvd2', description="RVD is a hierarchical bayesian network to identify rare variants from short-read sequence data")
-    argp.add_argument('--version', action='version', version='%(prog)s 2.6')
+    description = """
+                    RVD is a hierarchical bayesian model for identifying
+                    rare variants from short-read sequence data. """
+                    
+    # create the top-level parser
+    argp = argparse.ArgumentParser(prog='rvd', description=description)
+    argp.add_argument('--version', action='version', version='%(prog)s 2.7')
     argp.add_argument('-v', '--verbose', dest='verbose', action='count',
-                    help="increase verbosity (specify multiple times for more)")
-    argp.add_argument('cmd', action='store', choices=['gen', 'gibbs'])
+                help="increase verbosity (specify multiple times for more)")
     
+    # argp.add_argument('cmd', action='store', nargs='*',
+    #             choices=['gen', 'gibbs'])
+    subparsers = argp.add_subparsers(help='sub-command help')
+    
+    # create subparser for gibbs fitting
+    argpGibbs = subparsers.add_parser('gibbs', 
+                        help='fit the RVD model using Gibbs sampling')
+    argpGibbs.add_argument('dcfile', nargs='+',
+                        help='depth chart file name')
+    argpGibbs.add_argument('-o', dest='outputFile', 
+                default='output.hdf5',
+                help='output HDF5 file name')
+    argpGibbs.add_argument('-p', '--pool', type=int, default=None,
+                help='number of workers in multithread pool')
+    argpGibbs.set_defaults(func=gibbs)
+                
+    # create subparser to sample the model
+    argpGen = subparsers.add_parser('gen', 
+                        help='sample data from the RVD model')
+    argpGen.add_argument('input', nargs='+')
+    argpGen.add_argument('-o', '--output', dest='outputFile', nargs='?', 
+                default='output.hdf5')
+                
     # Parse the arguments (defaults to parsing sys.argv)
     args = argp.parse_args()
-    
-    # TODO check what came in ton the command line and call optp.error("Useful message") to exit if all is not well
 
-    log_level=logging.WARNING #default
+    # TODO check what came in on the command line and call optp.error("Useful message") to exit if all is not well
+
+    log_level = logging.WARNING  # default
     if args.verbose == 1:
         log_level = logging.INFO
-    elif args.verbose >=2:
+    elif args.verbose >= 2:
         log_level = logging.DEBUG
     
-    # Set up basic configuration, out to stderr with a reasonable default format
+    # Set up basic configuration, out to stderr with a reasonable format
     logging.basicConfig(level=log_level,
                         format='%(levelname)s:%(module)s:%(message)s')
                         
     # Do actual work here
-    sample_run()
+    args.func(args)
     
+    
+def gibbs(args):
+    """ Top-level function to use gibbs sampling on a set of depth chart files
+    """
+    (r, n, loc, refb) = load_depth(args.dcfile)
+    (phi, theta_s, mu_s) = mh_sample(r, n)
+    save_model(args.outputfile, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
+               refb=refb)
+
+
 def sample_run():
     n = 1000
     J = 10
-    phi = {'mu0':0.20, 'M0':2e3, 'a':1e6, 'b':1}
+    phi = {'mu0': 0.20, 'M0': 2e3, 'a': 1e6, 'b': 1}
     r, theta, mu, M = generate_sample(phi, n=n, J=J, seedint=10)
-    r[:,int(J/2)] = n*np.array([0.50, 0.55, 0.45])
+    r[:, int(J / 2)] = n * np.array([0.50, 0.55, 0.45])
 
     phi, theta_s, mu_s = mh_sample(r, n, 
                                         nsample=100, 
                                         thin=0, 
                                         burnin=0)
 
+
 def load_model(h5Filename):
     """ Returns the RVD2.7 model samples and parameters.
-    Takes an hdf5 filename and returns (phi, theta_s, mu_s), where _s 
-    indicates a matrix of samples where the samples are in the last dim.
+    Takes an hdf5 filename and returns phi and other parameters
     """
 
-    h5file = h5py.File(h5Filename, 'r')
-    phi = {'mu0': h5file['phi/mu0'][...],
-           'M0': h5file['phi/M0'][...],
-           'M': h5file['phi/M'][...]}
-    theta_s = h5file['theta_s'][...]
-    mu_s = h5file['mu_s'][...]
-    h5file.close()
+    out = []
+
+    with h5py.File(h5Filename, 'r') as h5file:
+        # Load phi - it always exists
+        phi = {'mu0': h5file['phi/mu0'][()],
+               'M0': h5file['phi/M0'][()],
+               'M': h5file['phi/M'][...]}
+        out.append(phi)
+        
+        # Load theta if it exists
+        if u"theta_s" in h5file.keys():
+            theta = h5file['theta_s'][...]
+            out.append(theta)
+            
+        # Load mu if it exists
+        if u"mu_s" in h5file.keys():
+            mu = h5file['mu_s'][...]
+            out.append(mu)
+            
+        # Load loc if it exists
+        if u"loc" in h5file.keys():
+            loc = h5file['loc'][...]
+            out.append(loc)
+            
+    return tuple(out)
     
-    return (phi, theta_s, mu_s)
     
-def save_model(h5Filename, loc, refb, r, n, phi, theta_s, mu_s):
+
+def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, refb=None):
     """ Save the RVD2.7 model samples and parameters """
-    (N, J, nsample) = np.shape(theta_s)
     
     # TODO add attributes to hdf5 file
     h5file = h5py.File(h5Filename, 'w')
     
+    # Save the model parameters (phi)
     h5file.create_group('phi')
     h5file['phi'].create_dataset('mu0', data=phi['mu0'])
     h5file['phi'].create_dataset('M0', data=phi['M0'])
-    h5file['phi'].create_dataset('M', data=phi['M'], chunks=True, fletcher32=True, compression='gzip')
+    h5file['phi'].create_dataset('M', data=phi['M'], 
+                                      chunks=True, 
+                                      fletcher32=True, 
+                                      compression='gzip')
     
-    h5file.create_dataset('theta_s', data=theta_s, chunks=True, fletcher32=True, compression='gzip')
-    h5file.create_dataset('mu_s', data=mu_s, chunks=True, fletcher32=True, compression='gzip')
+    # Save the latent variables if available.
+    if mu is not None:
+        h5file.create_dataset('mu', data=mu, 
+                              chunks=True, fletcher32=True, compression='gzip')
+    if theta is not None:
+        h5file.create_dataset('theta', data=theta, 
+                              chunks=True, fletcher32=True, compression='gzip')
+    
+    # Save the data used for fitting the model if available
+    if r is not None:
+        h5file.create_dataset('r', data=r, 
+                              chunks=True, fletcher32=True, compression='gzip')
+    if n is not None:
+        h5file.create_dataset('n', data=n, 
+                              chunks=True, fletcher32=True, compression='gzip')
 
-    h5file.create_dataset('r', data=r, chunks=True, fletcher32=True, compression='gzip')
-    h5file.create_dataset('n', data=n, chunks=True, fletcher32=True, compression='gzip')
-
-    h5file.create_dataset('loc', data=loc, chunks=True, fletcher32=True, compression='gzip')
-    h5file.create_dataset('refb', data=refb)
+    # Save the reference data
+    if loc is not None:
+        h5file.create_dataset('loc', data=loc, 
+                              chunks=True, fletcher32=True, compression='gzip')
+    if refb is not None:
+        h5file.create_dataset('refb', data=refb)
 
     h5file.close()
+
 
 def generate_sample(phi, n=100, N=3, J=100, seedint=None):
     """Returns a sample with n reads, N replicates, and
     J locations. The parameters of the model are in the structure phi.
     """
     
-    if seedint is not None: np.random.seed(seedint)
+    if seedint is not None: 
+        np.random.seed(seedint)
     
     # Draw J location-specific error rates from a Beta
     alpha0 = phi['M0']*phi['mu0']
@@ -142,7 +217,7 @@ def estimate_mom(r, n):
     """ Return model parameter estimates using method-of-moments.
     """
 
-    theta = r/(n + 0.0) # make sure this is non-truncating division
+    theta = r/(n + np.finfo(np.float).eps) # make sure this is non-truncating division
     if np.ndim(r) == 1: mu = theta
     elif np.ndim(r) > 1: mu = np.mean(theta, 0)
     
@@ -297,6 +372,106 @@ def ll(phi, r):
     pass
 
 
+
+
+
+def make_pileup(bamFileName, fastaFileName, region):
+    """ Creates a pileup file using samtools mpileup in /pileup directory.
+    """
+    
+    # Check that BAM file exists
+    assert os.path.isfile(bamFileName), "BAM file does not exist: %s" % bamFileName
+    
+    # Check that FASTA reference file exists
+    assert os.path.isfile(fastaFileName), "FASTA file does not exist: %s" % fastaFileName
+    
+    # Create pileup directory if it doesn't exist
+    if not os.path.isdir("pileup"):
+        os.makedirs("pileup")
+    
+    # Format the samtools call
+    callString = ["samtools", "mpileup", "-d", "1000000", "-r", "%s" % region,
+                  "-f", "%s" % fastaFileName, "%s" % bamFileName]
+                  
+    # Remove the extension from the bam filename and replace with .pileup
+    pileupFileName = bamFileName.split("/")[-1]
+    pileupFileName = os.path.join("pileup", 
+                                  "%s.pileup" % pileupFileName.split(".", 1)[0])
+    
+    # Run samtools pileup only if the file doesn't already exist.
+    try:
+        with open(pileupFileName, 'r'):
+            logging.debug("Pileup file exists: %s" % pileupFileName)
+    except IOError:
+        logging.debug("[call] %s", " ".join(callString))
+        with open(pileupFileName, 'w') as fout:
+            subprocess.call(callString, stdout=fout)
+    return pileupFileName
+
+def make_depth(pileupFileName):
+    """ Generates a depth chart file for each pileup file and stores it in the
+        /depth_chart directory. The folder will be created if it doesn't exist.
+    """
+    
+    if not os.path.isdir("depth_chart"):
+        os.makedirs("depth_chart")
+    
+    # TODO replace this with a python version.
+    callString = ["../../bin/pileup2dc", "%s" % pileupFileName]
+
+    dcFileName = pileupFileName.split("/")[-1]
+    dcFileName = os.path.join("depth_chart", 
+                                  "%s.dc" % dcFileName.split(".", 1)[0])
+    try:
+        with open(dcFileName, 'r'):
+		logging.debug("Depth chart file exists: %s" % dcFileName) 
+    except IOError:
+        logging.debug("Converting %s to depth chart." % pileupFileName)
+        with open(dcFileName, 'w') as fout:
+            subprocess.call(callString, stdout=fout)
+    return dcFileName
+def load_depth(dcFileNameList):
+    """ Return (r, n, location, reference base) for a list of depth charts. The
+        variable r is the error read depth and n is the total read depth.
+    """
+    r=[]; n=[]
+    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+    
+    loc = []
+    refb = {}
+    cd = []
+    for dcFileName in dcFileNameList:
+        with open(dcFileName, 'r') as dcFile:
+            header = dcFile.readline().strip()
+            dc = dcFile.readlines()
+            dc = [x.strip().split("\t") for x in dc]
+    
+            loc1 = map(int, [x[2] for x in dc if x[4] in acgt.keys()])
+            loc.append( loc1 )
+            
+            refb1 = dict(zip(loc1, [x[4] for x in dc if x[4] in acgt.keys()]))
+            refb.update(refb1)
+            cd.append( dict(zip(loc1, [map(int, x[5:9]) for x in dc if x[4] in acgt.keys()])) )
+            
+    loc = list(reduce(set.intersection, map(set, loc)))
+    loc.sort()
+    refb = [refb[k] for k in loc]
+    
+    J = len(loc)
+    N = len(dcFileNameList)
+    c = np.zeros( (J, 4, N) )
+    for i in xrange(0, N):
+            c = np.array( [cd[i][k] for k in loc] )
+            n1 = np.sum(c, 1)
+            r1 = np.zeros(J)
+            for j in xrange(0,J):
+                r1[j] = n1[j] - c[j, acgt[refb[j]]]
+            r.append(r1)
+            n.append(n1)
+    r = np.array(r)
+    n = np.array(n)
+
+    return (r,n,loc, refb)
 if __name__ == '__main__':
     main()
     
