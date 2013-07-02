@@ -1,14 +1,5 @@
-notes.aux
-notes.synctex.gz
-notes.log
-notes.pdf
-workspace.xml
+data
 tmp*
 *.hdf5
-*.ipynb
+*.mat
 *.pyc
-data
-results/2013-03-19 Test MS High Burden/depth_chart
-results/2013-03-19 Test MS High Burden/pileup
-results/2013-03-29 MS High Burden rvd27/depth_chart
-results/2013-03-29 MS High Burden rvd27/pileup

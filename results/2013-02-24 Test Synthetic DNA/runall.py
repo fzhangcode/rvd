@@ -15,10 +15,10 @@ import logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(module)s:%(message)s')
 
-# Insert the src/python/rvd26 directory at front of the path
-rvddir = os.path.join('../../src/python/rvd26')
+# Insert the src/python/rvd27 directory at front of the path
+rvddir = os.path.join('../../src/python/rvd27')
 sys.path.insert(0, rvddir)
-import rvd26
+import rvd27
 
 # <codecell>
 
@@ -65,9 +65,9 @@ try:
 except IOError as e:
     controlFileList = ["../../data/synthetic_dcs/%s" % filename for filename in toc.Filename[toc.isRef=='Y']]
     (r, n) = load_depth(controlFileList)
-    phi, theta_s, mu_s, M_s = rvd26.mh_sample(r, n, nsample=400, burnin=0.2, pool=pool)
+    phi, theta_s, mu_s = rvd27.mh_sample(r, n, nsample=400, burnin=0.2, pool=pool)
     logging.debug("Saving model in %s" % h5FileName)
-    rvd26.save_model(h5FileName, r, n, phi, theta_s, mu_s, M_s)
+    rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n)
 
 # <codecell>
 
@@ -83,7 +83,7 @@ for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
     except IOError as e:
         caseFileList = ["../../data/synthetic_dcs/%s" % filename for filename in toc.Filename[toc.Dilution==dilution]]
         (r, n) = load_depth(caseFileList)
-        phi, theta_s, mu_s, M_s = rvd26.mh_sample(r, n, nsample=500, burnin=0.2, pool=pool)
+        phi, theta_s, mu_s = rvd27.mh_sample(r, n, nsample=500, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
-        rvd26.save_model(h5FileName, r, n, phi, theta_s, mu_s, M_s)
+        rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n)
 
