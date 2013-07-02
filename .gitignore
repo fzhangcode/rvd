@@ -3,6 +3,3 @@ tmp*
 *.hdf5
 *.mat
 *.pyc
-*.pdf
-*.pileup
-*.dc
