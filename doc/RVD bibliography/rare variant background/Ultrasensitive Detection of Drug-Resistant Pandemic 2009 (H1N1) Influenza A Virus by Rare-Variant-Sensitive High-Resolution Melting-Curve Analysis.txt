@@ -1,0 +1,35 @@
+﻿Reference Type:  Journal Article
+Record Number: 820
+Author: Chen, N., Pinsky, B. A., Lee, B. P., Lin, M. and Schrijver, I.
+Year: 2011
+Title: Ultrasensitive Detection of Drug-Resistant Pandemic 2009 (H1N1) Influenza A Virus by Rare-Variant-Sensitive High-Resolution Melting-Curve Analysis
+Journal: Journal of Clinical Microbiology
+Volume: 49
+Issue: 7
+Pages: 2602-2609
+Date: Jul
+Short Title: Ultrasensitive Detection of Drug-Resistant Pandemic 2009 (H1N1) Influenza A Virus by Rare-Variant-Sensitive High-Resolution Melting-Curve Analysis
+Alternate Journal: J Clin Microbiol
+ISSN: 0095-1137
+DOI: Doi 10.1128/Jcm.00277-11
+Accession Number: WOS:000292276200035
+Keywords: oseltamivir resistance
+mutation
+Abstract: Oseltamivir (Tamiflu), an oral neuraminidase inhibitor, has been widely used to treat pandemic 2009 (H1N1) influenza A. Although a majority of 2009 (H1N1) influenza A virus remains oseltamivir susceptible, the threat of resistance due to the His275Tyr mutation is highlighted by the limitations of alternative therapies and the potential for rapid, global fixation of this mutation in the circulating influenza A virus population. In order to better understand the emergence of resistance, we developed a rare-variant-sensitive high-resolution melting-curve analysis method (RVS-HRM) that is able to detect the His275Tyr oseltamivir resistance mutation to 0.5% in a background of susceptible virus. We applied RVS-HRM to clinical specimens from patients who developed oseltamivir resistance and demonstrated the ultrasensitive detection of influenza A virus N1 neuraminidase quasispecies. Interestingly, we were unable to detect the oseltamivir resistance mutation in pretreatment samples, suggesting that resistant virus does not reach even this very low detection threshold until exposed to selective drug pressure. Thus, patients naive to oseltamivir are most likely to be susceptible when this drug is used as a first-line treatment modality.
+Notes: 786BC
+Times Cited:4
+Cited References Count:18
+URL: <Go to ISI>://WOS:000292276200035
+http://jcm.asm.org/content/49/7/2602.full.pdf
+'File' Attachments: internal-pdf://0367439065/Chen-2011-Ultrasensitive Detec.pdf
+Author Address: Schrijver, I
+Stanford Univ, Dept Pathol, Sch Med, L235,300 Pasteur Dr, Stanford, CA 94305 USA
+Stanford Univ, Dept Pathol, Sch Med, L235,300 Pasteur Dr, Stanford, CA 94305 USA
+Stanford Univ, Dept Pathol, Sch Med, Stanford, CA 94305 USA
+Stanford Univ, Div Infect Dis, Sch Med, Dept Med, Stanford, CA 94305 USA
+Lucile Packard Childrens Hosp, Dept Pharm, Palo Alto, CA USA
+Stanford Univ, Dept Pediat, Sch Med, Stanford, CA 94305 USA
+Fluidigm Corp, San Francisco, CA USA
+Language: English
+
+Comments: This paper developed a rare-variant-sensitive high-resolution melting-curve analysis method (RVS-HRM) that is able to detect the His275Tyr oseltamivir resistance mutation to 0.5% in a background of susceptible virus. Even though this paper developed a method not from bioinformations approach, this paper can serve as a good reference of the rare variant in 2009 H!N! influenza A. 

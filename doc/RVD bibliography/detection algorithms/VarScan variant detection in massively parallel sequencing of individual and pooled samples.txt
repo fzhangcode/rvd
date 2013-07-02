@@ -1,0 +1,31 @@
+﻿Reference Type:  Journal Article
+Record Number: 708
+Author: Koboldt, D. C., Chen, K., Wylie, T., Larson, D. E., McLellan, M. D., Mardis, E. R., Weinstock, G. M., Wilson, R. K. and Ding, L.
+Year: 2009
+Title: VarScan: variant detection in massively parallel sequencing of individual and pooled samples
+Journal: Bioinformatics
+Volume: 25
+Issue: 17
+Pages: 2283-2285
+Date: Sep 1
+Short Title: VarScan: variant detection in massively parallel sequencing of individual and pooled samples
+Alternate Journal: Bioinformatics
+ISSN: 1367-4803
+DOI: DOI 10.1093/bioinformatics/btp373
+Accession Number: WOS:000269196000022
+Keywords: human genome
+Abstract: Summary: Massively parallel sequencing technologies hold incredible promise for the study of DNA sequence variation, particularly the identification of variants affecting human disease. The unprecedented throughput and relatively short read lenghts of Roche/454, Illumina/Solexa, and other platforms have spurred development of a new generation of sequence alignment algorithms. Yet detection of sequence variants based on short read alignments remains challenging, and most currently available tools are limited to a single platform or aligner type. We present VarScan, an open source tool for variant detection that is compatible with several short read aligners. We demonstrate VarScan's ability to detect SNPs and indels with high sensitivity and specificity, in both Roche/454 sequencing of individuals and deep Illumina/Solexa sequencing of pooled samples.
+Notes: 486KX
+Times Cited:127
+Cited References Count:11
+URL: <Go to ISI>://WOS:000269196000022
+http://bioinformatics.oxfordjournals.org/content/25/17/2283.full.pdf
+'File' Attachments: internal-pdf://Koboldt-2009-VarScan_ variant det-4168420240/Koboldt-2009-VarScan_ variant det.pdf
+Author Address: Koboldt, DC
+Washington Univ, Sch Med, Genome Ctr, St Louis, MO 63108 USA
+Washington Univ, Sch Med, Genome Ctr, St Louis, MO 63108 USA
+Washington Univ, Sch Med, Genome Ctr, St Louis, MO 63108 USA
+Language: English
+
+
+Comments: This paper presented VarScan, an open source tool for variant detection that is compatible with several short read aligners. This method can detect SNPs and indels with high sensitivity and specificity. With deep resequencing, this method can slso detect variants at low(1%) frequencies, which can be count as a plus for this method. 

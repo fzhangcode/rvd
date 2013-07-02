@@ -1,0 +1,25 @@
+﻿Reference Type:  Journal Article
+Record Number: 869
+Author: Cressie, N. and Read, T. R. C.
+Year: 1984
+Title: Multinomial Goodness-of-Fit Tests
+Journal: Journal of the Royal Statistical Society Series B-Methodological
+Volume: 46
+Issue: 3
+Pages: 440-464
+Short Title: Multinomial Goodness-of-Fit Tests
+Alternate Journal: J Roy Stat Soc B Met
+ISSN: 0035-9246
+Accession Number: WOS:A1984AFP6300010
+Notes: Afp63
+Times Cited:485
+Cited References Count:53
+URL: <Go to ISI>://WOS:A1984AFP6300010
+http://www.jstor.org/stable/pdfplus/2345686.pdf?acceptTC=true
+'File' Attachments: internal-pdf://Cressie-1984-Multinomial Goodness-0500399524/Cressie-1984-Multinomial Goodness.pdf
+internal-pdf://Chi-square-table-2242851842/Chi-square-table.pdf
+Author Address: Flinders Univ S Australia,Bedford Pk,Sa 5042,Australia
+Csiro,Sydney,Nsw,Australia
+Colorado State Univ,Ft Collins,Co 80523
+Language: English
+

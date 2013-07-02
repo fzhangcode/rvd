@@ -1,0 +1,37 @@
+﻿Reference Type:  Journal Article
+Record Number: 1032
+Author: Kruglyak, L.
+Year: 1999
+Title: Prospects for whole-genome linkage disequilibrium mapping of common disease genes
+Journal: Nat Genet
+Volume: 22
+Issue: 2
+Pages: 139-44
+Date: Jun
+Short Title: Prospects for whole-genome linkage disequilibrium mapping of common disease genes
+Alternate Journal: Nature genetics
+ISSN: 1061-4036 (Print)
+1061-4036 (Linking)
+DOI: 10.1038/9642
+Accession Number: 10369254
+Keywords: *Chromosome Mapping
+Gene Frequency
+Genetic Diseases, Inborn/*genetics
+Genetic Markers
+Genetic Variation
+*Genome, Human
+Humans
+*Linkage Disequilibrium
+Models, Genetic
+Polymorphism, Genetic
+Abstract: Recently, attention has focused on the use of whole-genome linkage disequilibrium (LD) studies to map common disease genes. Such studies would employ a dense map of single nucleotide polymorphisms (SNPs) to detect association between a marker and disease. Construction of SNP maps is currently underway. An essential issue yet to be settled is the required marker density of such maps. Here, I use population simulations to estimate the extent of LD surrounding common gene variants in the general human population as well as in isolated populations. Two main conclusions emerge from these investigations. First, a useful level of LD is unlikely to extend beyond an average distance of roughly 3 kb in the general population, which implies that approximately 500,000 SNPs will be required for whole-genome studies. Second, the extent of LD is similar in isolated populations unless the founding bottleneck is very narrow or the frequency of the variant is low (<5%).
+Notes: Kruglyak, L
+eng
+Research Support, Non-U.S. Gov't
+Research Support, U.S. Gov't, P.H.S.
+1999/06/16 10:00
+Nat Genet. 1999 Jun;22(2):139-44.
+URL: http://www.ncbi.nlm.nih.gov/pubmed/10369254
+Author Address: Fred Hutchinson Cancer Research Center, Seattle, Washington 98109, USA. leonid@fhcrc.org
+
+Comments:Didn't find access to the full text but should be a good reference for the background. 

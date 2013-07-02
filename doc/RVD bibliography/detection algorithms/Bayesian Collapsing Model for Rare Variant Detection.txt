@@ -1,0 +1,25 @@
+﻿Reference Type:  Journal Article
+Record Number: 817
+Author: He, L., Ripatti, S. and Pitkaniemi, J.
+Year: 2012
+Title: Bayesian Collapsing Model for Rare Variant Detection
+Journal: Genetic Epidemiology
+Volume: 36
+Issue: 7
+Pages: 763-763
+Date: Nov
+Short Title: Bayesian Collapsing Model for Rare Variant Detection
+Alternate Journal: Genet Epidemiol
+ISSN: 0741-0395
+Accession Number: WOS:000309913200156
+Notes: 021VJ
+151
+Times Cited:0
+Cited References Count:0
+URL: <Go to ISI>://WOS:000309913200156
+Author Address: Univ Helsinki, Hjelt Inst, Dept Publ Hlth, FIN-00014 Helsinki, Finland
+Univ Helsinki, Inst Mol Med Finland FIMM, FIN-00014 Helsinki, Finland
+Univ Helsinki, Hjelt Inst, Dept Publ Hlth, FIN-00014 Helsinki, Finland
+Language: English
+
+Comments: cant find the fulltext for this paper.

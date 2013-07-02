@@ -1,0 +1,34 @@
+﻿Reference Type:  Journal Article
+Record Number: 1008
+Author: Pritchard, J. K. and Cox, N. J.
+Year: 2002
+Title: The allelic architecture of human disease genes: common disease-common variant...or not?
+Journal: Hum Mol Genet
+Volume: 11
+Issue: 20
+Pages: 2417-23
+Date: Oct 1
+Short Title: The allelic architecture of human disease genes: common disease-common variant...or not?
+Alternate Journal: Human molecular genetics
+ISSN: 0964-6906 (Print)
+0964-6906 (Linking)
+Accession Number: 12351577
+Keywords: *Alleles
+Humans
+Linkage Disequilibrium
+Models, Theoretical
+Abstract: Linkage disequilibrium (LD) plays a central role in current and proposed methods for mapping complex disease genes. LD-based methods work best when there is a single susceptibility allele at any given disease locus, and generally perform very poorly if there is substantial allelic heterogeneity. The extent of allelic heterogeneity at typical complex disease loci is not yet known, but predictions about allelic heterogeneity have important implications for the design of future mapping studies, including the proposed genome-wide association studies. In this article, we review the available data and models relating to the number and frequencies of susceptibility alleles at complex disease loci-the 'allelic architecture' of human disease genes. We also show that the predicted frequency spectrum of disease variants at a gene depends crucially on the method of ascertainment, for example from prior linkage scans or from surveys of functional candidate loci.
+Notes: Pritchard, Jonathan K
+Cox, Nancy J
+eng
+Research Support, Non-U.S. Gov't
+Review
+England
+2002/09/28 04:00
+Hum Mol Genet. 2002 Oct 1;11(20):2417-23.
+URL: http://www.ncbi.nlm.nih.gov/pubmed/12351577
+http://hmg.oxfordjournals.org/content/11/20/2417.full.pdf
+'File' Attachments: internal-pdf://3651143736/Pritchard-2002-The allelic architec.pdf
+Author Address: Department of Human Genetics, University of Chicago, 920 E 58th St-CLSC 507, Chicago IL 60637, USA. pritch@uchicago.edu
+
+Comments: This paper reviewed the available data and models on number and frequencies of susceptibility alleles at complex disease loci but mainly talked about its model built on Linkage disequilibrium.Along with the same author's paper in 2001, this paper demonstrated that for complex diseases, allelic heterogeneity might be extensive, with multiple susceptibility alleles of independent origin.

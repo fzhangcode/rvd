@@ -1,0 +1,37 @@
+﻿Reference Type:  Journal Article
+Record Number: 827
+Author: Bansal, V.
+Year: 2010
+Title: A statistical method for the detection of variants from next-generation resequencing of DNA pools
+Journal: Bioinformatics
+Volume: 26
+Issue: 12
+Pages: i318-i324
+Date: Jun 15
+Short Title: A statistical method for the detection of variants from next-generation resequencing of DNA pools
+Alternate Journal: Bioinformatics
+ISSN: 1367-4803
+DOI: DOI 10.1093/bioinformatics/btq214
+Accession Number: WOS:000278689000039
+Keywords: short read alignment
+missing heritability
+genome sequence
+ultrafast
+tool
+Abstract: Motivation: Next-generation sequencing technologies have enabled the sequencing of several human genomes in their entirety. However, the routine resequencing of complete genomes remains infeasible. The massive capacity of next-generation sequencers can be harnessed for sequencing specific genomic regions in hundreds to thousands of individuals. Sequencing-based association studies are currently limited by the low level of multiplexing offered by sequencing platforms. Pooled sequencing represents a cost-effective approach for studying rare variants in large populations. To utilize the power of DNA pooling, it is important to accurately identify sequence variants from pooled sequencing data. Detection of rare variants from pooled sequencing represents a different challenge than detection of variants from individual sequencing.
+Results: We describe a novel statistical approach, CRISP [Comprehensive Read analysis for Identification of Single Nucleotide Polymorphisms (SNPs) from Pooled sequencing] that is able to identify both rare and common variants by using two approaches: (i) comparing the distribution of allele counts across multiple pools using contingency tables and (ii) evaluating the probability of observing multiple non-reference base calls due to sequencing errors alone. Information about the distribution of reads between the forward and reverse strands and the size of the pools is also incorporated within this framework to filter out false variants. Validation of CRISP on two separate pooled sequencing datasets generated using the Illumina Genome Analyzer demonstrates that it can detect 80-85% of SNPs identified using individual sequencing while achieving a low false discovery rate (3-5%). Comparison with previous methods for pooled SNP detection demonstrates the significantly lower false positive and false negative rates for CRISP.
+Availability: Implementation of this method is available at http://polymorphism.scripps.edu/similar to vbansal/software/CRISP/
+Contact: vbansal@scripps.edu
+Notes: 609WN
+Times Cited:28
+Cited References Count:26
+URL: <Go to ISI>://WOS:000278689000039
+http://bioinformatics.oxfordjournals.org/content/26/12/i318.full.pdf
+'File' Attachments: internal-pdf://Bansal-2010-A statistical method-4096323237/Bansal-2010-A statistical method.pdf
+Author Address: Bansal, V
+Scripps Translat Sci Inst, Scripps Genom Med, La Jolla, CA 92037 USA
+Scripps Translat Sci Inst, Scripps Genom Med, La Jolla, CA 92037 USA
+Scripps Translat Sci Inst, Scripps Genom Med, La Jolla, CA 92037 USA
+Language: English
+
+Comments:This papers proposed a statistical approach, CRISP for both rare and common variants from pooled sequencing data by using two approaches: (i) comparing the distribution of allele counts across multiple pools using contingency tables and (ii) evaluating the probability of observing multiple non-reference base calls due to sequencing errors alone. This method was said to outperform other methods including SNPSeeker, VarScan, MAQ both in sensitivity and specificity. However, this paper didn't compare  specific rare variant detection performance with other methods. 

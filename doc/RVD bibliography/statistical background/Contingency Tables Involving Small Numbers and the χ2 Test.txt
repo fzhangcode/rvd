@@ -1,0 +1,17 @@
+﻿Reference Type:  Journal Article
+Record Number: 953
+Author: Yates, F.
+Year: 1934
+Title: Contingency Tables Involving Small Numbers and the χ2 Test
+Journal: Supplement to the Journal of the Royal Statistical Society
+Volume: 1
+Issue: 2
+Pages: 217-235
+Short Title: Contingency Tables Involving Small Numbers and the χ2 Test
+ISSN: 14666162
+DOI: 10.2307/2983604
+URL: http://www.jstor.org/stable/2983604
+http://www.jstor.org/stable/pdfplus/2983604.pdf?acceptTC=true
+'File' Attachments: internal-pdf://Yates-1934-Contingency Tables I-0265071874/Yates-1934-Contingency Tables I.pdf
+
+

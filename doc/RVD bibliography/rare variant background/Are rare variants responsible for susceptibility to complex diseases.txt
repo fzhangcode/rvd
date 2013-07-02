@@ -1,0 +1,51 @@
+﻿Reference Type:  Journal Article
+Record Number: 1007
+Author: Pritchard, J. K.
+Year: 2001
+Title: Are rare variants responsible for susceptibility to complex diseases?
+Journal: Am J Hum Genet
+Volume: 69
+Issue: 1
+Pages: 124-37
+Date: Jul
+Short Title: Are rare variants responsible for susceptibility to complex diseases?
+Alternate Journal: American journal of human genetics
+ISSN: 0002-9297 (Print)
+0002-9297 (Linking)
+DOI: 10.1086/321272
+PMCID: 1226027
+Accession Number: 11404818
+Keywords: Alleles
+Chromosome Mapping
+Computer Simulation
+Female
+Gene Frequency/*genetics
+Genetic Diseases, Inborn/*genetics
+Genetic Heterogeneity
+Genetic Linkage/genetics
+Genetic Predisposition to Disease/*genetics
+Genetic Variation/genetics
+Humans
+Male
+*Models, Genetic
+Mutagenesis/genetics
+Mutation/*genetics
+Pedigree
+Phenotype
+Polymorphism, Genetic/genetics
+Probability
+*Selection, Genetic
+Software
+Abstract: Little is known about the nature of genetic variation underlying complex diseases in humans. One popular view proposes that mapping efforts should focus on identification of susceptibility mutations that are relatively old and at high frequency. It is generally assumed-at least for modeling purposes-that selection against complex disease mutations is so weak that it can be ignored. In this article, I propose an explicit model for the evolution of complex disease loci, incorporating mutation, random genetic drift, and the possibility of purifying selection against susceptibility mutations. I show that, for the most plausible range of mutation rates, neutral susceptibility alleles are unlikely to be at intermediate frequencies and contribute little to the overall genetic variance for the disease. Instead, it seems likely that the bulk of genetic variance underlying diseases is due to loci where susceptibility mutations are mildly deleterious and where there is a high overall mutation rate to the susceptible class. At such loci, the total frequency of susceptibility mutations may be quite high, but there is likely to be extensive allelic heterogeneity at many of these loci. I discuss some practical implications of these results for gene mapping efforts.
+Notes: Pritchard, J K
+eng
+Research Support, Non-U.S. Gov't
+2001/06/19 10:00
+Am J Hum Genet. 2001 Jul;69(1):124-37. Epub 2001 Jun 12.
+URL: http://www.ncbi.nlm.nih.gov/pubmed/11404818
+http://ac.els-cdn.com/S0002929707614529/1-s2.0-S0002929707614529-main.pdf?_tid=9cb343da-e2ca-11e2-a6cf-00000aab0f6b&acdnat=1372737241_c8d1b78c15703bab1ca5f75ff0a28c3b
+'File' Attachments: internal-pdf://3385121846/Pritchard-2001-Are rare variants re.pdf
+Author Address: Department of Statistics, University of Oxford, 1 South Parks Road, Oxford OX1-3TG, United Kingdom. pritch@stats.ox.ac.uk
+
+Comments: In this paper, the author proposed a modle for the evolution of genetic variation underlying a complex disease. The author studied the overall frequency of susceptibility alleles (1) at a single complex disease locus and (2) assuming a specific (multiplicative) model of interactions among loci and (3) examine the properties of independent mutations that combine to make up the class of susceptibility alleles at a locus. This paper demonstrated that for complex diseases, allelic heterogeneity might be extensive, with multiple susceptibility alleles of independent origin. This paper can be very helpful for the background and motivation for research on rare mutation detection.
+
