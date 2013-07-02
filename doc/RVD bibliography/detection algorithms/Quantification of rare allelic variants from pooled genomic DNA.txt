@@ -1,0 +1,25 @@
+Reference Type:  Journal Article
+Record Number: 873
+Author: Druley, T. E., Cole, F. S., Fay, J. C., Mitra, R. D., Vallania, F. L. M., Wegner, D. J., Varley, K. E., Knowles, O. L., Bonds, J. A., Robison, S. W., Doniger, S. W. and Hamvas, A.
+Year: 2009
+Title: Quantification of rare allelic variants from pooled genomic DNA
+Journal: NATURE METHODS
+Volume: 6
+Issue: 4
+Pages: 263-265
+Short Title: Quantification of rare allelic variants from pooled genomic DNA
+ISSN: 1548-7091 U6 - ctx_ver=Z39.88-2004&ctx_enc=info%3Aofi%2Fenc%3AUTF-8&rfr_id=info:sid/summon.serialssolutions.com&rft_val_fmt=info:ofi/fmt:kev:mtx:journal&rft.genre=article&rft.atitle=Quantification+of+rare+allelic+variants+from+pooled+genomic+DNA&rft.jtitle=NATURE+METHODS&rft.au=Druley%2C+TE&rft.au=Vallania%2C+FLM&rft.au=Wegner%2C+DJ&rft.au=Varley%2C+KE&rft.date=2009-04-01&rft.pub=NATURE+PUBLISHING+GROUP&rft.issn=1548-7091&rft.eissn=1548-7105&rft.volume=6&rft.issue=4&rft.spage=263&rft.epage=265&rft_id=info:doi/10.1038%2FNMETH.1307&rft.externalDBID=n%2Fa&rft.externalDocID=000264738800013&paramdict=en-US U7 - Journal Article U8 - FETCH-webofscience_primary_0002647388000131
+DOI: 10.1038/NMETH.1307
+Keywords: SNP DISCOVERY
+AMPLIFICATION
+CONTRIBUTE
+MUTATIONS
+BIOCHEMICAL RESEARCH METHODS
+Abstract: We report a targeted, cost-effective method to quantify rare single-nucleotide polymorphisms from pooled human genomic DNA using second-generation sequencing. We pooled DNA from 1,111 individuals and targeted four genes to identify rare germline variants. Our base-calling algorithm, SNPSeeker, derived from large deviation theory, detected single-nucleotide polymorphisms present at frequencies below the raw error rate of the sequencing platform.
+Notes: http://gateway.webofknowledge.com/gateway/Gateway.cgi?GWVersion=2&SrcAuth=SerialsSolutions&SrcApp=Summon&KeyUT=000264738800013&DestLinkType=FullRecord&DestApp=WOS
+[]
+URL: http://wpi.summon.serialssolutions.com/link/0/eLvHCXMwY2BQSDVITE0xSUxKMUkzSDZLMzQDVgmmJskpFinJyclJZqkoN0QgleZuQgxMqXmiDNpuriHOHrrI9UB8AeTsBdBcKbAKNwcdYQI-KkaMgTcRtBQ8rwS8ZSxFnIE1DRhvqeKgslQcaK44A0eEpbNPpH8QlCsE4-oVg_c16RWWiAOLbnC06xrqGQAAXm0w_w
+'File' Attachments: internal-pdf://RangeFetch=contentSet=UBER1=prefix=PI-2IHR-2009-APR00-IDSI-=startPage=19=suffix==npages=3-3264609189/RangeFetch=contentSet=UBER1=prefix=PI-2IHR-2009-APR00-IDSI-=startPage=19=suffix==npages=3.pdf
+internal-pdf://nmeth.1307-S1-0441237505/nmeth.1307-S1.pdf
+
+Comments: This paper developed a rare allelic variant quantification algorithm which is derived from large deviation theory. The algorithm, SNPSeeker,can detect and quantify rare variants in large pooled samples using second-generation sequencing. This method greatly improved the specificity of SNP calling,while there were not enough data to determine the sensitivity of the method for detection of very rare SNPs(MAF=0.045%).Other discoveries were made in this paper, and detailed algorithm is available in the supplementary information. 

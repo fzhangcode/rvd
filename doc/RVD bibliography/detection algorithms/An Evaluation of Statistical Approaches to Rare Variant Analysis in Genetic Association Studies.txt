@@ -1,0 +1,40 @@
+﻿Reference Type:  Journal Article
+Record Number: 890
+Author: Morris, A. P. and Zeggini, E.
+Year: 2010
+Title: An Evaluation of Statistical Approaches to Rare Variant Analysis in Genetic Association Studies
+Journal: Genetic Epidemiology
+Volume: 34
+Issue: 2
+Pages: 188-193
+Date: Feb
+Short Title: An Evaluation of Statistical Approaches to Rare Variant Analysis in Genetic Association Studies
+Alternate Journal: Genet Epidemiol
+ISSN: 0741-0395
+DOI: Doi 10.1002/Gepi.20450
+Accession Number: WOS:000274376800010
+Keywords: rare variant association
+re-sequencing data
+genome-wide association data
+genome-wide association
+susceptibility loci
+common diseases
+metaanalysis
+population
+alleles
+samples
+risk
+Abstract: Genome-wide association (GWA) studies have proved to be extremely Successful in identifying novel common polymorphisms contributing effects to the genetic component underlying complex traits. Nevertheless, one source of, as yet, undiscovered genetic determinants of complex traits are those mediated through the effects of rare variants. With the increasing availability of large-scale re-sequencing data for rare variant discovery, we have developed a novel statistical method for the detection of complex trait associations with these loci, based on searching for accumulations of minor alleles within the same functional unit. We have undertaken simulations to evaluate strategies for the identification of rare variant associations in population-based genetic studies when data are available from re-sequencing discovery efforts or from commercially available GWA chips. Our results demonstrate that methods based on accumulations of rare variants discovered through re-sequencing offer substantially greater power than conventional analysis of GWA data, and thus provide an exciting opportunity for future discovery of genetic determinants of complex traits. Genet. Epidemiol. 34: 188-193, 2010. (C) 2009 Wiley-Liss, Inc.
+Notes: 553ON
+Times Cited:89
+Cited References Count:19
+URL: <Go to ISI>://WOS:000274376800010
+http://onlinelibrary.wiley.com/store/10.1002/gepi.20450/asset/20450_ftp.pdf?v=1&t=hi4s6iub&s=6b0fe6381870b45d3608f0bc7988723822c2f00b
+'File' Attachments: internal-pdf://Morris-2010-An Evaluation of Sta-2766352297/Morris-2010-An Evaluation of Sta.pdf
+Author Address: Morris, AP
+Univ Oxford, Genet & Genom Epidemiol Unit, Wellcome Trust Ctr Human Genet, Henry Wellcome Bldg,Roosevelt Dr, Oxford OX3 7BN, England
+Univ Oxford, Genet & Genom Epidemiol Unit, Wellcome Trust Ctr Human Genet, Henry Wellcome Bldg,Roosevelt Dr, Oxford OX3 7BN, England
+Univ Oxford, Genet & Genom Epidemiol Unit, Wellcome Trust Ctr Human Genet, Oxford OX3 7BN, England
+Wellcome Trust Sanger Inst, Cambridge, England
+Language: English
+

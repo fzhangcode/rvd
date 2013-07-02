@@ -1,0 +1,47 @@
+﻿Reference Type:  Journal Article
+Record Number: 891
+Author: Neale, B. M., Rivas, M. A., Voight, B. F., Altshuler, D., Devlin, B., Orho-Melander, M., Kathiresan, S., Purcell, S. M., Roeder, K. and Daly, M. J.
+Year: 2011
+Title: Testing for an Unusual Distribution of Rare Variants
+Journal: Plos Genetics
+Volume: 7
+Issue: 3
+Date: Mar
+Short Title: Testing for an Unusual Distribution of Rare Variants
+Alternate Journal: Plos Genet
+ISSN: 1553-7390
+DOI: ARTN e1001322
+DOI 10.1371/journal.pgen.1001322
+Accession Number: WOS:000288996600004
+Keywords: amino-acid substitutions
+genome-wide association
+common diseases
+plasma-levels
+cholesterol
+alleles
+pcsk9
+polymorphisms
+mutations
+genes
+Abstract: Technological advances make it possible to use high-throughput sequencing as a primary discovery tool of medical genetics, specifically for assaying rare variation. Still this approach faces the analytic challenge that the influence of very rare variants can only be evaluated effectively as a group. A further complication is that any given rare variant could have no effect, could increase risk, or could be protective. We propose here the C-alpha test statistic as a novel approach for testing for the presence of this mixture of effects across a set of rare variants. Unlike existing burden tests, C-alpha, by testing the variance rather than the mean, maintains consistent power when the target set contains both risk and protective variants. Through simulations and analysis of case/control data, we demonstrate good power relative to existing methods that assess the burden of rare variants in individuals.
+Notes: 743DD
+Times Cited:74
+Cited References Count:29
+URL: <Go to ISI>://WOS:000288996600004
+http://www.plosgenetics.org/article/fetchObject.action?uri=info%3Adoi%2F10.1371%2Fjournal.pgen.1001322&representation=PDF
+'File' Attachments: internal-pdf://Neale-2011-Testing for an Unusu-3789820585/Neale-2011-Testing for an Unusu.pdf
+Author Address: Neale, BM
+Massachusetts Gen Hosp, Ctr Human Genet Res, Boston, MA 02114 USA
+Massachusetts Gen Hosp, Ctr Human Genet Res, Boston, MA 02114 USA
+Massachusetts Gen Hosp, Ctr Human Genet Res, Boston, MA 02114 USA
+Broad Inst Harvard & MIT, Cambridge, MA USA
+Harvard Univ, Sch Med, Dept Genet, Boston, MA USA
+Massachusetts Gen Hosp, Dept Mol Biol, Boston, MA 02114 USA
+Univ Pittsburgh Sch Med, Dept Psychiat, Pittsburgh, PA USA
+Malmo Univ Hosp, Dept Clin Sci Malmo Diabet & Cardiovasc Dis, Genet Epidemiol CRC, Malmo, Sweden
+Massachusetts Gen Hosp, Cardiovasc Res Ctr, Boston, MA 02114 USA
+Harvard Univ, Sch Med, Dept Med, Boston, MA USA
+Massachusetts Gen Hosp, Psychiat & Neurodev Genet Unit, Boston, MA 02114 USA
+Carnegie Mellon Univ, Dept Stat, Pittsburgh, PA 15213 USA
+Language: English
+

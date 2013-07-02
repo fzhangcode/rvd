@@ -1,0 +1,41 @@
+﻿Reference Type:  Journal Article
+Record Number: 1210
+Author: Madsen, B. E. and Browning, S. R.
+Year: 2009
+Title: A groupwise association test for rare mutations using a weighted sum statistic
+Journal: PLoS Genet
+Volume: 5
+Issue: 2
+Pages: e1000384
+Date: Feb
+Short Title: A groupwise association test for rare mutations using a weighted sum statistic
+Alternate Journal: PLoS genetics
+ISSN: 1553-7404 (Electronic)
+1553-7390 (Linking)
+DOI: 10.1371/journal.pgen.1000384
+PMCID: 2633048
+Accession Number: 19214210
+Keywords: DNA Mutational Analysis
+Genetic Predisposition to Disease
+Genetic Testing/*methods
+Genetic Variation
+Genetics, Population/*methods
+Humans
+Models, Statistical
+*Mutation
+Abstract: Resequencing is an emerging tool for identification of rare disease-associated mutations. Rare mutations are difficult to tag with SNP genotyping, as genotyping studies are designed to detect common variants. However, studies have shown that genetic heterogeneity is a probable scenario for common diseases, in which multiple rare mutations together explain a large proportion of the genetic basis for the disease. Thus, we propose a weighted-sum method to jointly analyse a group of mutations in order to test for groupwise association with disease status. For example, such a group of mutations may result from resequencing a gene. We compare the proposed weighted-sum method to alternative methods and show that it is powerful for identifying disease-associated genes, both on simulated and Encode data. Using the weighted-sum method, a resequencing study can identify a disease-associated gene with an overall population attributable risk (PAR) of 2%, even when each individual mutation has much lower PAR, using 1,000 to 7,000 affected and unaffected individuals, depending on the underlying genetic model. This study thus demonstrates that resequencing studies can identify important genetic associations, provided that specialised analysis methods, such as the weighted-sum method, are used.
+Notes: Madsen, Bo Eskerod
+Browning, Sharon R
+eng
+3R01GM075091-02S1/GM/NIGMS NIH HHS/
+Evaluation Studies
+Research Support, N.I.H., Extramural
+Research Support, Non-U.S. Gov't
+2009/02/14 09:00
+PLoS Genet. 2009 Feb;5(2):e1000384. doi: 10.1371/journal.pgen.1000384. Epub 2009 Feb 13.
+URL: http://www.ncbi.nlm.nih.gov/pubmed/19214210
+http://www.plosgenetics.org/article/fetchObject.action?uri=info%3Adoi%2F10.1371%2Fjournal.pgen.1000384&representation=PDF
+'File' Attachments: internal-pdf://1817263040/Madsen-2009-A groupwise associat.pdf
+Author Address: Bioinformatics Research Center, University of Aarhus, Aarhus C, Denmark.
+
+

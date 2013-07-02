@@ -1,0 +1,39 @@
+﻿Reference Type:  Journal Article
+Record Number: 888
+Author: Li, B. S. and Leal, S. M.
+Year: 2008
+Title: Methods for detecting associations with rare variants for common diseases: Application to analysis of sequence data
+Journal: American Journal of Human Genetics
+Volume: 83
+Issue: 3
+Pages: 311-321
+Date: Sep 12
+Short Title: Methods for detecting associations with rare variants for common diseases: Application to analysis of sequence data
+Alternate Journal: Am J Hum Genet
+ISSN: 0002-9297
+DOI: DOI 10.1016/j.ajhg.2008.06.024
+Accession Number: WOS:000259307200003
+Keywords: single-nucleotide polymorphisms
+genome-wide association
+linkage disequilibrium
+macular degeneration
+logistic-regression
+hdl cholesterol
+plasma-levels
+gene
+susceptibility
+contribute
+Abstract: Although whole-genome association studies using tagSNPs are a powerful approach for detecting common variants, they are underpowered for detecting associations with rare variants. Recent studies have demonstrated that common diseases can be due to functional variants with a wide spectrum of allele frequencies, ranging from rare to common. An effective way to identify rare variants is through direct sequencing. The development of cost-effective sequencing technologies enables association studies to use sequence data from candidate genes and, in the future, from the entire genome. Although methods used for analysis of common variants are applicable to sequence data, their performance might not be optimal. In this study, it is shown that the collapsing method, which involves collapsing genotypes across variants and applying a univariate test, is powerful for analyzing rare variants, whereas multivariate analysis is robust against inclusion of noncausal variants. Both methods are superior to analyzing each variant individually with univariate tests. In order to unify the advantages of both collapsing and multiple-marker tests, we developed the Combined Multivariate and Collapsing (CMC) method and demonstrated that the CMC method is both powerful and robust. The CMC method can be applied to either candidate-gene or whole-genome sequence data.
+Notes: 349TW
+Times Cited:242
+Cited References Count:37
+URL: <Go to ISI>://WOS:000259307200003
+http://ac.els-cdn.com/S0002929708004084/1-s2.0-S0002929708004084-main.pdf?_tid=6e960f90-d8fd-11e2-83de-00000aab0f6b&acdnat=1371659557_5ca578f2bc1b1ec7079a75532e6f69f0
+'File' Attachments: internal-pdf://Li-2008-Methods for detectin-0733614505/Li-2008-Methods for detectin.pdf
+Author Address: Leal, SM
+Baylor Coll Med, Dept Mol & Human Genet, Houston, TX 77030 USA
+Baylor Coll Med, Dept Mol & Human Genet, Houston, TX 77030 USA
+Baylor Coll Med, Dept Mol & Human Genet, Houston, TX 77030 USA
+Language: English
+
+Comments: This paper proposed a statistic method Combined Multivariate and Collapsing method to detect associations with rare variants for common diseases. This paper can serve illustrating the importance of rare variant detection. Moreover, its Introduction is a good brief review of common disease common variant(CDCV) and common disease rare variant (CDCV) hypothesis.

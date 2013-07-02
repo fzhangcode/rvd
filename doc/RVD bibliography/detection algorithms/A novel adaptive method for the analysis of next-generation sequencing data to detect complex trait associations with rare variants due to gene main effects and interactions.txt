@@ -1,0 +1,49 @@
+﻿Reference Type:  Journal Article
+Record Number: 1212
+Author: Liu, D. J. and Leal, S. M.
+Year: 2010
+Title: A novel adaptive method for the analysis of next-generation sequencing data to detect complex trait associations with rare variants due to gene main effects and interactions
+Journal: PLoS Genet
+Volume: 6
+Issue: 10
+Pages: e1001156
+Date: Oct
+Short Title: A novel adaptive method for the analysis of next-generation sequencing data to detect complex trait associations with rare variants due to gene main effects and interactions
+Alternate Journal: PLoS genetics
+ISSN: 1553-7404 (Electronic)
+1553-7390 (Linking)
+DOI: 10.1371/journal.pgen.1001156
+PMCID: 2954824
+Accession Number: 20976247
+Keywords: African Americans/genetics
+Algorithms
+Angiopoietins/genetics
+Computational Biology/*methods
+Computer Simulation
+Energy Metabolism/genetics
+European Continental Ancestry Group/genetics
+Genetic Predisposition to Disease/*genetics
+*Genetic Variation
+Humans
+Monte Carlo Method
+Reproducibility of Results
+Sequence Analysis, DNA/methods/*statistics & numerical data
+Abstract: There is solid evidence that rare variants contribute to complex disease etiology. Next-generation sequencing technologies make it possible to uncover rare variants within candidate genes, exomes, and genomes. Working in a novel framework, the kernel-based adaptive cluster (KBAC) was developed to perform powerful gene/locus based rare variant association testing. The KBAC combines variant classification and association testing in a coherent framework. Covariates can also be incorporated in the analysis to control for potential confounders including age, sex, and population substructure. To evaluate the power of KBAC: 1) variant data was simulated using rigorous population genetic models for both Europeans and Africans, with parameters estimated from sequence data, and 2) phenotypes were generated using models motivated by complex diseases including breast cancer and Hirschsprung's disease. It is demonstrated that the KBAC has superior power compared to other rare variant analysis methods, such as the combined multivariate and collapsing and weight sum statistic. In the presence of variant misclassification and gene interaction, association testing using KBAC is particularly advantageous. The KBAC method was also applied to test for associations, using sequence data from the Dallas Heart Study, between energy metabolism traits and rare variants in ANGPTL 3,4,5 and 6 genes. A number of novel associations were identified, including the associations of high density lipoprotein and very low density lipoprotein with ANGPTL4. The KBAC method is implemented in a user-friendly R package.
+Notes: Liu, Dajiang J
+Leal, Suzanne M
+eng
+5 R90 DK071505-04/DK/NIDDK NIH HHS/
+R01-DC03594/DC/NIDCD NIH HHS/
+RC2-HL102926/HL/NHLBI NIH HHS/
+RL1HL092550/HL/NHLBI NIH HHS/
+Research Support, N.I.H., Extramural
+Research Support, Non-U.S. Gov't
+Research Support, U.S. Gov't, Non-P.H.S.
+2010/10/27 06:00
+PLoS Genet. 2010 Oct 14;6(10):e1001156. doi: 10.1371/journal.pgen.1001156.
+URL: http://www.ncbi.nlm.nih.gov/pubmed/20976247
+http://www.plosgenetics.org/article/fetchObject.action?uri=info%3Adoi%2F10.1371%2Fjournal.pgen.1001156&representation=PDF
+'File' Attachments: internal-pdf://0834220870/Liu-2010-A novel adaptive met.pdf
+Author Address: Department of Molecular and Human Genetics, Baylor College of Medicine, Houston, Texas, USA.
+
+

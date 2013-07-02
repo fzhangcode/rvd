@@ -1,0 +1,36 @@
+﻿Reference Type:  Journal Article
+Record Number: 818
+Author: Zhan, H. M. and Xu, S. Z.
+Year: 2012
+Title: Adaptive Ridge Regression for Rare Variant Detection
+Journal: Plos One
+Volume: 7
+Issue: 8
+Date: Aug 28
+Short Title: Adaptive Ridge Regression for Rare Variant Detection
+Alternate Journal: Plos One
+ISSN: 1932-6203
+DOI: ARTN e44173
+DOI 10.1371/journal.pone.0044173
+Accession Number: WOS:000308213600088
+Keywords: common diseases
+association analysis
+complex diseases
+lipid-metabolism
+loci
+susceptibility
+selection
+angptl3
+model
+triglycerides
+Abstract: It is widely believed that both common and rare variants contribute to the risks of common diseases or complex traits and the cumulative effects of multiple rare variants can explain a significant proportion of trait variances. Advances in high-throughput DNA sequencing technologies allow us to genotype rare causal variants and investigate the effects of such rare variants on complex traits. We developed an adaptive ridge regression method to analyze the collective effects of multiple variants in the same gene or the same functional unit. Our model focuses on continuous trait and incorporates covariate factors to remove potential confounding effects. The proposed method estimates and tests multiple rare variants collectively but does not depend on the assumption of same direction of each rare variant effect. Compared with the Bayesian hierarchical generalized linear model approach, the state-of-the-art method of rare variant detection, the proposed new method is easy to implement, yet it has higher statistical power. Application of the new method is demonstrated using the well-known data from the Dallas Heart Study.
+Notes: 998CA
+Times Cited:0
+Cited References Count:43
+URL: <Go to ISI>://WOS:000308213600088
+Author Address: Zhan, HM
+Univ Calif Riverside, Dept Bot & Plant Sci, Riverside, CA 92521 USA
+Univ Calif Riverside, Dept Bot & Plant Sci, Riverside, CA 92521 USA
+Univ Calif Riverside, Dept Bot & Plant Sci, Riverside, CA 92521 USA
+Language: English
+

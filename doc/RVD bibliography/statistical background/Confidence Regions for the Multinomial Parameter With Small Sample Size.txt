@@ -1,0 +1,37 @@
+﻿Reference Type:  Journal Article
+Record Number: 957
+Author: Chafai, D. and Concordet, D.
+Year: 2009
+Title: Confidence Regions for the Multinomial Parameter With Small Sample Size
+Journal: Journal of the American Statistical Association
+Volume: 104
+Issue: 487
+Pages: 1071-1079
+Date: Sep
+Short Title: Confidence Regions for the Multinomial Parameter With Small Sample Size
+Alternate Journal: J Am Stat Assoc
+ISSN: 0162-1459
+DOI: DOI 10.1198/jasa.2009.tm08152
+Accession Number: WOS:000270916100021
+Keywords: confidence region
+multinomial distribution
+small sample
+binomial proportion
+interval estimation
+single proportion
+approximate
+limits
+Abstract: Consider the observation of it iid realizations of an experiment with d >= 2 possible outcomes, which corresponds to a single observation of a multinomial distribution M(d)(n, p) where p is an unknown discrete distribution on {1,...,d}. In many applications, the construction of a confidence region for p when it is small is crucial. This challenging concrete problem has a long history. It is well known that the confidence regions built from asymptotic statistics do not have good coverage when n is small. On the other hand, most available methods providing nonasymptotic regions with controlled coverage are limited to the binomial case d = 2. Here we propose a new method valid for any d >= 2 that provides confidence regions with controlled coverage and small Volume. The method involves inversion of the "covering collection" associated with level sets of the likelihood. The behavior when d/n tends to infinity remains an interesting open problem beyond the scope of this work.
+Notes: 508FX
+Times Cited:1
+Cited References Count:28
+URL: <Go to ISI>://WOS:000270916100021
+http://www.tandfonline.com/doi/pdf/10.1198/jasa.2009.tm08152
+'File' Attachments: internal-pdf://Chafai-2009-Confidence Regions f-2239555843/Chafai-2009-Confidence Regions f.pdf
+Author Address: Chafai, D
+ENVT, INRA, UMR181, 23 Chemin Capelles, F-31076 Toulouse 3, France
+ENVT, INRA, UMR181, 23 Chemin Capelles, F-31076 Toulouse 3, France
+ENVT, INRA, UMR181, F-31076 Toulouse 3, France
+Univ Toulouse, CNRS, UMR 5219, Inst Math, F-31062 Toulouse, France
+Language: English
+

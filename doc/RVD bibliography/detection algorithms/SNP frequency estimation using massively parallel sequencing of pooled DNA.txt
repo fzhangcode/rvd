@@ -1,0 +1,32 @@
+﻿Reference Type:  Journal Article
+Record Number: 881
+Author: Ingman, M. and Gyllensten, U.
+Year: 2009
+Title: SNP frequency estimation using massively parallel sequencing of pooled DNA
+Journal: European Journal of Human Genetics
+Volume: 17
+Issue: 3
+Pages: 383-386
+Date: Mar
+Short Title: SNP frequency estimation using massively parallel sequencing of pooled DNA
+Alternate Journal: Eur J Hum Genet
+ISSN: 1018-4813
+DOI: DOI 10.1038/ejhg.2008.182
+Accession Number: WOS:000263457800016
+Keywords: snp
+sequencing
+loci
+Abstract: Resequencing of genomic regions that have been implicated by linkage and/or association studies to harbor genetic susceptibility loci represents a necessary step to identify causal variants. Massively parallel sequencing (MPS) offers the possibility of SNP discovery and frequency determination among pooled DNA samples. The strategies of pooling DNA samples and pooling PCR amplicons generated from individual DNA samples were evaluated, and both were found to return accurate estimates of SNP frequencies across varying levels of sequence coverage.
+Notes: 408TL
+Times Cited:23
+Cited References Count:7
+URL: <Go to ISI>://WOS:000263457800016
+http://www.nature.com/ejhg/journal/v17/n3/pdf/ejhg2008182a.pdf
+'File' Attachments: internal-pdf://Ingman-2009-SNP frequency estima-4018454441/Ingman-2009-SNP frequency estima.pdf
+Author Address: Ingman, M
+Uppsala Univ, Dept Genet & Pathol, Rudbeck Lab, S-75185 Uppsala, Sweden
+Uppsala Univ, Dept Genet & Pathol, Rudbeck Lab, S-75185 Uppsala, Sweden
+Uppsala Univ, Dept Genet & Pathol, Rudbeck Lab, S-75185 Uppsala, Sweden
+Language: English
+
+Comments:This paper provided the approach of SNP discovery by taking advantage of very high coverage possible with Massively parallel sequencing (MPS). No graphical model was built. The method found 16 SNPs of MAF ranging from 3.7% to 40%. This method also found several new SNPs not present in dbSNP, all but three of which were below 1% frequency. 

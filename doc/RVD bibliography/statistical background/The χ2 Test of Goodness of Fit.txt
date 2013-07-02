@@ -1,0 +1,17 @@
+﻿Reference Type:  Journal Article
+Record Number: 954
+Author: Cochran, William G.
+Year: 1952
+Title: The χ2 Test of Goodness of Fit
+Journal: The Annals of Mathematical Statistics
+Volume: 23
+Issue: 3
+Pages: 315-345
+Short Title: The χ2 Test of Goodness of Fit
+ISSN: 00034851
+DOI: 10.2307/2236678
+Abstract: This paper contains an expository discussion of the chi square test of goodness of fit, intended for the student and user of statistical theory rather than for the expert. Part I describes the historical development of the distribution theory on which the test rests. Research bearing on the practical application of the test--in particular on the minimum expected number per class and the construction of classes--is discussed in Part II. Some varied opinions about the extent to which the test actually is useful to the scientist are presented in Part III. Part IV outlines a number of tests that have been proposed as substitutes for the chi square test (the ω2 test, the smooth test, the likelihood ratio test) and Part V a number of supplementary tests (the run test, tests based on low moments, subdivision of chi square into components).
+URL: http://www.jstor.org/stable/2236678
+'File' Attachments: internal-pdf://2236678-2194536962/2236678.pdf
+
+

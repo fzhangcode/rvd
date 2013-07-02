@@ -1,0 +1,46 @@
+﻿Reference Type:  Journal Article
+Record Number: 1195
+Author: Li, H., Ruan, J. and Durbin, R.
+Year: 2008
+Title: Mapping short DNA sequencing reads and calling variants using mapping quality scores
+Journal: Genome Res
+Volume: 18
+Issue: 11
+Pages: 1851-8
+Date: Nov
+Short Title: Mapping short DNA sequencing reads and calling variants using mapping quality scores
+Alternate Journal: Genome research
+ISSN: 1088-9051 (Print)
+1088-9051 (Linking)
+DOI: 10.1101/gr.078212.108
+PMCID: 2577856
+Accession Number: 18714091
+Keywords: Algorithms
+Bayes Theorem
+Chromosome Mapping/*statistics & numerical data
+Computer Simulation
+DNA/*genetics
+DNA, Bacterial/genetics
+Diploidy
+Genome, Bacterial
+Genome, Human
+Humans
+Polymorphism, Single Nucleotide
+Reproducibility of Results
+Salmonella paratyphi A/genetics
+Sequence Alignment/statistics & numerical data
+Sequence Analysis, DNA/statistics & numerical data
+*Software
+Abstract: New sequencing technologies promise a new era in the use of DNA sequence. However, some of these technologies produce very short reads, typically of a few tens of base pairs, and to use these reads effectively requires new algorithms and software. In particular, there is a major issue in efficiently aligning short reads to a reference genome and handling ambiguity or lack of accuracy in this alignment. Here we introduce the concept of mapping quality, a measure of the confidence that a read actually comes from the position it is aligned to by the mapping algorithm. We describe the software MAQ that can build assemblies by mapping shotgun short reads to a reference genome, using quality scores to derive genotype calls of the consensus sequence of a diploid genome, e.g., from a human sample. MAQ makes full use of mate-pair information and estimates the error probability of each read alignment. Error probabilities are also derived for the final genotype calls, using a Bayesian statistical model that incorporates the mapping qualities, error probabilities from the raw sequence quality scores, sampling of the two haplotypes, and an empirical model for correlated errors at a site. Both read mapping and genotype calling are evaluated on simulated data and real data. MAQ is accurate, efficient, versatile, and user-friendly. It is freely available at http://maq.sourceforge.net.
+Notes: Li, Heng
+Ruan, Jue
+Durbin, Richard
+eng
+Wellcome Trust/United Kingdom
+Research Support, Non-U.S. Gov't
+2008/08/21 09:00
+Genome Res. 2008 Nov;18(11):1851-8. doi: 10.1101/gr.078212.108. Epub 2008 Aug 19.
+URL: http://www.ncbi.nlm.nih.gov/pubmed/18714091
+Author Address: The Wellcome Trust Sanger Institute, Hinxton CB10 1SA, United Kingdom.
+
+

@@ -1,0 +1,17 @@
+﻿Reference Type:  Journal Article
+Record Number: 1040
+Author: Pan, Chungen, Cheung, Byron, Tan, Suiyi, Li, Chunling, Li, Lin, Liu, Shuwen and Jiang, Shibo
+Year: 2010
+Title: Genomic Signature and Mutation Trend Analysis of Pandemic (H1N1) 2009 Influenza A Virus
+Journal: PLoS ONE
+Volume: 5
+Issue: 3
+Pages: e9549
+Short Title: Genomic Signature and Mutation Trend Analysis of Pandemic (H1N1) 2009 Influenza A Virus
+DOI: 10.1371/journal.pone.0009549
+Abstract: <p>A novel swine-origin pandemic influenza A(H1N1) virus (H1N1pdm, also referred to as S-OIV) was identified as the causative agent of the 21<sup>st</sup> century's first influenza pandemic, but molecular features conferring its ability of human-to-human transmission has not been identified. Here we compared the protein sequences of 2009 H1N1pdm strains with those causing other pandemics and the viruses isolated from humans, swines and avians, and then analyzed the mutation trend of the residues at the signature and non-signature positions, which are species- and non-species-associated, respectively, in the proteins of H1N1pdm during the pandemic of 2009. We confirmed that the host-specific genomic signatures of 2009 H1N1pdm, which are mainly swine-like, were highly identical to those of the 1918 H1N1pdm. During the short period of time when the pandemic alert level was raised from phase 4 to phase 6, one signature residue at the position of NP-100 mutated from valine to isoleucine. Four non-signature residues, at positions NA-91, NA-233, HA-206, and NS1-123, also changed during the epidemic in 2009. All these mutant residues, except that at NA-91, are located in the viral functional domains, suggesting that they may play roles in the human adaption and virulence of 2009 H1N1pdm.</p>
+URL: http://dx.doi.org/10.1371%2Fjournal.pone.0009549
+http://www.plosone.org/article/fetchObject.action?uri=info%3Adoi%2F10.1371%2Fjournal.pone.0009549&representation=PDF
+'File' Attachments: internal-pdf://0831481035/Pan-2010-Genomic Signature an.pdf
+
+
