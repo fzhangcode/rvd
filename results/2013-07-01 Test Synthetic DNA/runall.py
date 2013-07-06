@@ -58,7 +58,7 @@ for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
             pass
     except IOError as e:
         caseFileList = ["../../data/synthetic_dcs/%s" % filename for filename in toc.Filename[toc.Dilution==dilution]]
-        (r, n, loc, refb, ee) = load_depth(caseFileList)
+        (r, n, loc, refb, ee) = rvd27.load_depth(caseFileList)
         phi, theta_s, mu_s = rvd27.mh_sample(r, n, nsample=500, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
         rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n,loc=loc,

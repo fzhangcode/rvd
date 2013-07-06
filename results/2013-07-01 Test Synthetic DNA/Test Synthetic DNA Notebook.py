@@ -32,9 +32,6 @@ rvddir = os.path.join('../../src/python/rvd27')
 sys.path.insert(0, rvddir)
 import rvd27
 
-#os.chdir("/Users/pjflaherty/Research/rvd2/results/2013-07-01 Test Synthetic DNA")
-#os.chdir("S:/yhe2/Research/rvd2/results/2013-07-01 Test Synthetic DNA")
-
 tocfilename = "synthetic_toc.txt"
 toc = pd.read_table(tocfilename)
 ##print toc
@@ -46,7 +43,7 @@ with h5py.File('control.hdf5', 'r') as f:
     MControl = f['phi/M'][...]
     phiControl['mu0'] = f['phi/mu0'][()]
     phiControl['M0'] = f['phi/M0'][()]
-    eeControl['ee']=f['ee'][...]
+    eeControl=f['ee'][...]
 
 with h5py.File(caseFile, 'r') as f:
     phiCase = {}
@@ -55,7 +52,7 @@ with h5py.File(caseFile, 'r') as f:
     MCase = f['phi/M'][...]
     phiCase['mu0'] = f['phi/mu0'][()]
     phiCase['M0'] = f['phi/M0'][()]
-    eeCase['ee']=f['ee'][...]
+    eeCase=f['ee'][...]
     
 
 muControl = np.array(np.median(muControl_s, 1))
@@ -98,41 +95,35 @@ plt.ylabel('Sample SNR')
 plt.title('SNR Ratio for Variant Call')
 plt.savefig("SNR Scatterplot.pdf")
 
-
-##logging.debug("Read in sequencing depth of dilution: %0.1f" % dilution)
-##caseFileList = ["../../data/synthetic_dcs/%s" % filename for filename in toc.Filename[toc.Dilution==dilution]]
-##(r, n, e) = runall.load_depth(caseFileList)
-
-print np.shape(eeCase)
-print np.shape(r)
-print np.shape(n)
-
-
-
 ## set the SNR shreshold as 1
 threshold=1
 indices = [i for i in range(J) if SNR[i]>1]
 
-
+lamda=-1
 m=len(indices)
 p=np.zeros((m,N))
 for i in range(m):
     for j in range(N):
-        p[i,j]=rvd27.chi2test(eeCase[j,indices[i],:])
+        p[i,j]=rvd27.chi2test(eeCase[j,indices[i],:],lamda=lamda)
 
 print eeCase[0,indices,:]
-
 print indices
-print p       
-pdb.set_trace()
+print p
+
 pmedian=np.median(p,1)
-
-
-##plt.figure()
-##plt.plot(indices, pmedian, marker='o')
-##plt.plot(tpLoc, SNR[tpLoc-1], color='r', marker='o', linestyle='None')
-##plt.xlabel('Location')
-##plt.ylabel('SNR')
-##plt.title('SNR Ratio for Variant Call')
-##plt.savefig("SNR.pdf")
-
+pdb.set_trace()
+if lamda==-1 or 0:
+    plt.figure()
+    f,axarr = plt.subplots(2,sharex=True)
+    axarr[0].plot(roi, SNR, marker='o')
+    axarr[0].plot(tpLoc, SNR[tpLoc-1], color='r', marker='o', linestyle='None')
+    axarr[0].axhline(y=1, xmin=0, xmax=400,color='g',linestyle='--')
+    axarr[0].set_ylabel('SNR')
+    axarr[0].set_title('SNR Ratio and chi2 test for Variant Call')
+    ##plt.savefig("SNR.pdf")
+    
+    axarr[1].plot(indices, pmedian, color='r', marker='o', linestyle='None')
+    axarr[1].set_xlabel('Location')
+    axarr[1].set_ylabel('p-value')
+    axarr[1].set_title('SNR Ratio for Variant Call')
+    plt.savefig("SNR.pdf")

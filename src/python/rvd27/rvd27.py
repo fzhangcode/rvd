@@ -502,7 +502,7 @@ def load_depth(dcFileNameList):
             c = np.reshape(c,(-1,3))   
         r.append(r1)
         n.append(n1)
-        ee.append(n1)
+        ee.append(c)
     r = np.array(r)
     n = np.array(n)
     ee = np.array(ee)
