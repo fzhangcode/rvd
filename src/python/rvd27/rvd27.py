@@ -280,7 +280,6 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thi
             for j in xrange(0, J):
                 args = (mu[j], Qsd[j], theta[:,j], M[j], alpha0, beta0)
                 mu[j] = sampleLocMuMH(args)
-	
         # Save the new sample
         mu_s[ns, :] = np.copy(mu)
 
@@ -311,7 +310,6 @@ def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
     h5file['phi'].create_dataset('M', (J,), dtype='f')
     h5file.create_dataset('theta_s', (N, J, nsample), dtype='f')
     h5file.create_dataset('mu_s', (J, nsample), dtype='f')
-    
     # Initialize estimates using MoM
     phi, mu, theta = estimate_mom(r, n)
     logging.debug("MoM: mu0 = %0.3e; M0 = %0.3e." % (phi['mu0'], phi['M0']) )
@@ -320,7 +318,6 @@ def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
     mu[mu < np.finfo(np.float).eps*1e4] = phi['mu0']
     theta[theta < np.finfo(np.float).eps*1e4] = phi['mu0']
     phi['M'][phi['M'] < np.finfo(np.float).eps *1e4] = 1
-    
     # Sample theta, mu, M and update parameter estiamtes
     theta_s = np.zeros( (N, J, nsample) )
     mu_s = np.zeros( (J, nsample) )
@@ -335,11 +332,9 @@ def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
         mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], phi['M'], mu=mu, nsample=50, pool=pool)
         mu = np.median(mu_mh, axis=0)
-        
         # Store the sample
         theta_s[:,:,i] = np.copy(theta)
         mu_s[:,i] = np.copy(mu)
-        
         # Update parameter estimates
         # phi['mu0'] = np.mean(mu)
         # phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
@@ -522,7 +517,7 @@ def chi2test(X, lamda=2.0/3, pvector=np.array([1.0/3]*3)):
     X=np.array(X)
 
     if lamda==0 or lamda==-1:
-        C=2.0/np.sum(X*np.log(X*1.0/E))
+        C=2.0*np.sum(X*np.log(X*1.0/E))
     else:
         C=2.0/(lamda*(lamda+1))*np.sum(X*((X*1.0/E)**lamda-1))
         
