@@ -9,7 +9,7 @@ import pickle
 import multiprocessing as mp
 import h5py
 import logging
-from scipy.special import gammainc
+import scipy
 import pdb
 print os.getcwd()
 import scipy.stats as ss
@@ -21,9 +21,12 @@ import rvd27
 
 with h5py.File('control.hdf5', 'r') as f:
     muControl_s = f['mu'][...]
-    
-dilution_opt=(0.1,0.3,1.0,10.0,100.0)
+(J,N)=np.shape(muControl_s)
 
+
+dilution_opt=(0.1,0.3,1.0,10.0,100.0)
+t=[]
+var=False # whether the variance of muCase_s and muControl_s is assumed equal or not
 for d in xrange(5):
     dilution=dilution_opt[d]
     
@@ -50,7 +53,7 @@ for d in xrange(5):
     title='Histogram of mu when '+'dilution='+str(dilution)+' position='+str(position1+1)
     ax1.set_title(title)
     ax1.set_ylabel('t')
-    ax1.legend( ['Control','Case'])
+    ax1.legend( ['Case','Control'])
 
     position2=244
     ax2=fig.add_subplot(2,1,2)
@@ -60,9 +63,33 @@ for d in xrange(5):
     ax2.set_title(title)
     ax2.set_ylabel('t')
     ax2.set_xlabel('mu')
-    ax2.legend(['Control','Case'])
-    plt.show()
+    ax2.legend(['Case','Control'])
+    plt.savefig('Histogram of mu_s when Dilution='+str(dilution)+'.jpg')
+    
 
+    ##    scipy.stats.ttest_ind(a, b, axis=0, equal_var=True)[source] returns
+    ##    a test decision for the null hypothesis that the data in vectors xand
+    ##    y comes from independent random samples normal distributions with
+    ##    equal means and equal but variances,using the two-sample t-test.
+    stat=np.array(scipy.stats.ttest_ind(muCase_s, muControl_s, axis=1, equal_var=var))
+    t.append(stat[0,:])
+    
+t=np.array(t)    
+pos=np.arange(J)
+mpos=np.arange(85,346,20)
 
-
-
+fig2=plt.figure(figsize=(9,16))
+for i in xrange(5):
+    ax=fig2.add_subplot(3,2,i+1)
+    ax.plot(pos,t[i,:],marker='o')
+    ax.plot(mpos-1,t[i,mpos-1],color='r',marker='o',linestyle='None')
+    ax.set_xlabel('Location')
+    ax.set_ylabel('t')
+    ax.set_title('Dilution='+str(dilution_opt[i]))
+    
+if var:
+    title='tstat '+'with assumed equal variace'+'.jpg'
+else:
+    title='tstat '+'with assumed unequal variace'+'.jpg'
+    
+plt.savefig(title)
