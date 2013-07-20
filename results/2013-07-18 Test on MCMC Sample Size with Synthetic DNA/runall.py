@@ -31,7 +31,7 @@ toc = pd.read_table(tocfilename)
 
 # <codecell>
 nsample_opt=[4000,40000]
-for i in xrange(2):
+for i in xrange(len(nsample_opt)):
     nsample=nsample_opt[i]
     logging.debug("SamplingSize="+str(nsample))
     # Estimate the model for the cases
@@ -43,7 +43,7 @@ for i in xrange(2):
     except IOError as e:
         controlFileList = ["../../data/synthetic_dcs/%s" % filename for filename in toc.Filename[toc.isRef=='Y']]
         (r, n, loc, refb, ee) = rvd27.load_depth(controlFileList)
-        phi, theta_s, mu_s = rvd27.mh_sample(r, n, nsample=400, burnin=0.2, pool=pool)
+        phi, theta_s, mu_s = rvd27.mh_sample(r, n, nsample=nsample, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
         rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
                refb=refb, ee=ee)
@@ -62,7 +62,7 @@ for i in xrange(2):
         except IOError as e:
             caseFileList = ["../../data/synthetic_dcs/%s" % filename for filename in toc.Filename[toc.Dilution==dilution]]
             (r, n, loc, refb, ee) = rvd27.load_depth(caseFileList)
-            phi, theta_s, mu_s = rvd27.mh_sample(r, n, nsample=500, burnin=0.2, pool=pool)
+            phi, theta_s, mu_s = rvd27.mh_sample(r, n, nsample=nsample, burnin=0.2, pool=pool)
             logging.debug("Saving model in %s" % h5FileName)
             rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n,loc=loc,
                refb=refb, ee=ee)
