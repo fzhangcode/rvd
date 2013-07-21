@@ -1,12 +1,13 @@
-2013-07-01 Test Synthetic DNA
+2013-07-18 Test on Gibbs sampling steps with Synthetic DNA
 ==============================
 
 Purpose
 ------------
-To test RVD2.7 on real sequencing data where the truth about the mutation status is know.
+To test the effect of Gibbs sampling size on mutation detection accuracy
 
 Conclusions
 -----------------
+Gibbs sampling size 400 is enough to build the empirical posterior distribution of mu_s. There was insignificant improvement with sampling size at 4000 over 400. 
 
 Background
 -----------------
@@ -17,17 +18,13 @@ Materials and Equipment
 
 Experimental Protocol
 ---------------------------
-t test
+
 
 Results
 -----------
-![dilution=0.1](http://i.imgur.com/KZpsic0.jpg)
-![dilution=0.3](http://i.imgur.com/LJdlpix.jpg)
-![dilution=1](http://i.imgur.com/5xH6g1b.jpg)
-![dilution=10](http://i.imgur.com/0B7Ycm6.jpg)
-![dilution=100](http://i.imgur.com/kPuocDG.jpg)
+![](http://i.imgur.com/shSjdyU.jpg)
+![](http://i.imgur.com/NWgjyXi.jpg)
 
-![tstats](http://i.imgur.com/kHDRhYj.jpg)
 Archived Samples
 -------------------------
 
@@ -35,7 +32,7 @@ Archived Computer Data
 ------------------------------
 
 
-Prepared by: _________________________ Date: _____________________
+Prepared by: __________Yuting He______  Date: _____________________
 
 
 Witnessed by: ________________________

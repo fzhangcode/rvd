@@ -261,7 +261,7 @@ def sampleLocMuMH(args):
         mu = mu_p
     return mu
     
-def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thin=0, pool=None):
+def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, thin=0, pool=None):
     """ Return a sample of mu with parameters mu0 and M0.
     """
     if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
@@ -271,8 +271,8 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thi
     beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
     
     Qsd = mu/10
-    mu_s = np.zeros( (nsample, J) ) 
-    for ns in xrange(0, nsample):
+    mu_s = np.zeros( (mh_nsample, J) ) 
+    for ns in xrange(0, mh_nsample):
         if pool is not None:
             args = zip(mu, Qsd, theta.T, M, repeat(alpha0, J), repeat(beta0, J))
             mu = pool.map(sampleLocMuMH, args)
@@ -284,13 +284,13 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, nsample=1, thi
         mu_s[ns, :] = np.copy(mu)
 
     if burnin > 0.0:
-        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 0)
+        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*mh_nsample):], 0)
     if thin > 0:
         mu_s = np.delete(mu_s, np.s_[::thin], 0)
     
     return mu_s
     
-def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
+def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=50, burnin=0.2, thin=2, pool=None):
     """ Return MAP parameter and latent variable estimates obtained by 
 
     Metropolis-Hastings sampling.
@@ -308,8 +308,8 @@ def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
     h5file['phi'].create_dataset('mu0', (1,), dtype='f')
     h5file['phi'].create_dataset('M0', (1,), dtype='f')
     h5file['phi'].create_dataset('M', (J,), dtype='f')
-    h5file.create_dataset('theta_s', (N, J, nsample), dtype='f')
-    h5file.create_dataset('mu_s', (J, nsample), dtype='f')
+    h5file.create_dataset('theta_s', (N, J, gibbs_nsample), dtype='f')
+    h5file.create_dataset('mu_s', (J, gibbs_nsample), dtype='f')
     # Initialize estimates using MoM
     phi, mu, theta = estimate_mom(r, n)
     logging.debug("MoM: mu0 = %0.3e; M0 = %0.3e." % (phi['mu0'], phi['M0']) )
@@ -319,9 +319,9 @@ def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
     theta[theta < np.finfo(np.float).eps*1e4] = phi['mu0']
     phi['M'][phi['M'] < np.finfo(np.float).eps *1e4] = 1
     # Sample theta, mu, M and update parameter estiamtes
-    theta_s = np.zeros( (N, J, nsample) )
-    mu_s = np.zeros( (J, nsample) )
-    for i in xrange(0, nsample):
+    theta_s = np.zeros( (N, J, gibbs_nsample) )
+    mu_s = np.zeros( (J, gibbs_nsample) )
+    for i in xrange(0, gibbs_nsample):
         if i % 100 == 0 and i > 0: logging.debug("Gibbs Iteration %d" % i)
             
         # Draw samples from p(theta | r, mu, M) by Gibbs
@@ -330,7 +330,7 @@ def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
         theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], phi['M'], mu=mu, nsample=50, pool=pool)
+        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], phi['M'], mu=mu, mh_nsample=mh_nsample, pool=pool)
         mu = np.median(mu_mh, axis=0)
         # Store the sample
         theta_s[:,:,i] = np.copy(theta)
@@ -350,8 +350,8 @@ def mh_sample(r, n, nsample=10000, burnin=0.2, thin=2, pool=None):
     
     # Apply the burn-in and thinning
     if burnin > 0.0:
-        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nsample):], 1)
-        theta_s = np.delete(theta_s, np.s_[0:np.int(burnin*nsample):], 2)
+        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*gibbs_nsample):], 1)
+        theta_s = np.delete(theta_s, np.s_[0:np.int(burnin*gibbs_nsample):], 2)
     if thin > 1:
         mu_s = np.delete(mu_s, np.s_[::thin], 1)
         theta_s = np.delete(theta_s, np.s_[::thin], 2)

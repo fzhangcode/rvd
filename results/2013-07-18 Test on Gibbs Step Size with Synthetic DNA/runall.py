@@ -25,7 +25,7 @@ import rvd27
 
 # <codecell>
 
-pool = mp.Pool(processes=60)
+pool = mp.Pool(processes=30)
 tocfilename = "synthetic_toc.txt"
 toc = pd.read_table(tocfilename)
 
