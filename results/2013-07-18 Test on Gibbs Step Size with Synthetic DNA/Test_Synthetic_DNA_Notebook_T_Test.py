@@ -20,13 +20,12 @@ sys.path.insert(0, rvddir)
 import rvd27
 
 dilution_opt=(0.1,0.3,1.0,10.0,100.0)
-nsample_opt=(400,4000,40000)
+nsample_opt=(400,4000)
 
 
 var=False # whether the variance of muCase_s and muControl_s is assumed equal or not
 
 for n in xrange(len(nsample_opt)):
-    pdb.set_trace()
     controlFile='SamplingSize='+str(nsample_opt[n])+'_Control.hdf5'
     with h5py.File(controlFile, 'r') as f:
         muControl_s = f['mu'][...]
