@@ -21,7 +21,7 @@ import rvd27
 
 dilution_opt=(0.1,0.3,1.0,10.0,100.0)
 gibbs_nsample_opt=[400]
-mh_nsample_opt=[1,10,50]
+mh_nsample_opt=[1,10,50,100,1000]
 
 
 var=False # whether the variance of muCase_s and muControl_s is assumed equal or not

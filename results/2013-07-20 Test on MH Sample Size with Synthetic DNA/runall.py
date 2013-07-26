@@ -30,9 +30,9 @@ tocfilename = "synthetic_toc.txt"
 toc = pd.read_table(tocfilename)
 
 # <codecell>
-##gibbs_nsample_opt=[400,4000,40000]
+
 gibbs_nsample_opt=[400]
-mh_nsample_opt=[1,10,50,100]
+mh_nsample_opt=[1,10,50,100,1000]
 for i in xrange(len(gibbs_nsample_opt)):
     gibbs_nsample=gibbs_nsample_opt[i]
     logging.debug("Gibbs step size="+str(gibbs_nsample))
