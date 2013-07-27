@@ -48,7 +48,7 @@ Several things to mention:
 
 5. we noticed that there is a very strange point at position 205 in dilution 0.1. By looking in to the sequence data as shown in Table 1, it can be seen that the distribution of the data in position 205 is not as extreme as mutated position 145, but similarly as extreme as none position 146. We need to think about whether this is because of the data or the insensitive of the model that can not distinct position 205 from non-mutated positions.
 
-Table 1
+Table 1 Dilution=0.1
 
 ![](http://i.imgur.com/ceosv9o.jpg)
 

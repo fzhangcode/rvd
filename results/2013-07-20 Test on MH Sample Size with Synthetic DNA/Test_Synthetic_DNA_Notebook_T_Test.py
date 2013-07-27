@@ -21,7 +21,7 @@ import rvd27
 
 dilution_opt=(0.1,0.3,1.0,10.0,100.0)
 gibbs_nsample_opt=[400]
-mh_nsample_opt=[1,10,50,100,1000]
+mh_nsample_opt=[100]
 
 
 var=False # whether the variance of muCase_s and muControl_s is assumed equal or not
@@ -83,12 +83,19 @@ for n in xrange(len(gibbs_nsample_opt)):
         t=np.array(t)    
         pos=np.arange(J)
         mpos=np.arange(85,346,20)
+        
 
         fig2=plt.figure(figsize=(9,16))
         for i in xrange(5):
+            t_min=min(t[i,mpos-1])
+##            t_min_ind=[i for i,j in enumerate(j==t_min) if j]
+            indices=[k for k,v in enumerate(t[i,:]) if v>t_min]
+            
             ax=fig2.add_subplot(3,2,i+1)
             ax.plot(pos,t[i,:],marker='o')
             ax.plot(mpos-1,t[i,mpos-1],color='r',marker='o',linestyle='None')
+            for p in xrange(len(indices)):
+                ax.text(indices[p],t[i,indices[p]],str(indices[p]))
             ax.set_xlabel('Location')
             ax.set_ylabel('t')
             ax.set_title('ngibbs='+str(gibbs_nsample_opt[n])+'_nmh='+str(mh_nsample_opt[m])+'dilution='+str(dilution_opt[i]))
