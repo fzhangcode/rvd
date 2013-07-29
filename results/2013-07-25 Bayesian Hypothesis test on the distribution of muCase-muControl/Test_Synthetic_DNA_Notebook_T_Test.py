@@ -34,7 +34,7 @@ for n in xrange(len(gibbs_nsample_opt)):
             muControl_s = f['mu'][...]
         (Nmh,ngibbs,J)=np.shape(muControl_s)
 
-        
+        mu_percent=[]
         for d in xrange(5):
             dilution=dilution_opt[d]
             caseFile="ngibbs="+str(gibbs_nsample_opt[n])+"_nmh="+str(mh_nsample_opt[m])+'_'
@@ -51,9 +51,9 @@ for n in xrange(len(gibbs_nsample_opt)):
 
             with h5py.File(caseFile, 'r') as f:
                 muCase_s = f['mu'][...]
-##            pdb.set_trace()
+
             Z_mh=muCase_s-muControl_s
-            Z_gibbs=np.mean(muCase_s-muControl_s,0)
+            Z_gibbs=np.median(muCase_s-muControl_s,0)
 
             ## plot histogram
             position1=7
@@ -101,3 +101,30 @@ for n in xrange(len(gibbs_nsample_opt)):
             title='hist(Z) when nGibbs='+str(gibbs_nsample_opt[n])+' nMH='+str(mh_nsample_opt[m])+'dilution='+str(dilution_opt[d])+'.pdf'
  
             plt.savefig(title)
+
+            # compute the percentage of mu that is larger than 0; Actually consider should compute the percecntage of theta higher than 0
+            mu_plus=[]
+            for j in xrange(J):
+                indices_plus=[k for k,v in enumerate(Z_gibbs[:,j]) if v>0]
+                percent_temp=np.sum(Z_gibbs[indices_plus,j])/(np.sum(np.absolute(Z_gibbs[:,j])))
+                mu_plus.append(percent_temp)
+
+            mu_plus=np.array(mu_plus)
+            mu_percent.append(mu_plus)
+        mu_percent=np.array(mu_percent)
+        
+        pos=np.arange(J)
+        mpos=np.arange(85,346,20)
+        
+        fig2=plt.figure(figsize=(9,16))
+        for d in xrange(5):
+            ax=fig2.add_subplot(3,2,d+1)
+            ax.plot(pos,mu_percent[d,:],marker='o')
+            ax.plot(mpos-1,mu_percent[d,mpos-1],color='r',marker='o',linestyle='None')
+
+            ax.set_xlabel('Location')
+            ax.set_ylabel('p')
+            ax.set_title('dilution='+str(dilution_opt[d]))
+        title='mu_p when ngibbs='+str(gibbs_nsample_opt[n])+'_nmh='+str(mh_nsample_opt[m])+'.jpg'            
+        plt.savefig(title)
+

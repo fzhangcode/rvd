@@ -88,7 +88,6 @@ for n in xrange(len(gibbs_nsample_opt)):
         fig2=plt.figure(figsize=(9,16))
         for i in xrange(5):
             t_min=min(t[i,mpos-1])
-##            t_min_ind=[i for i,j in enumerate(j==t_min) if j]
             indices=[k for k,v in enumerate(t[i,:]) if v>t_min]
             
             ax=fig2.add_subplot(3,2,i+1)
