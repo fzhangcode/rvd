@@ -30,7 +30,7 @@ tocfilename = "synthetic_toc.txt"
 toc = pd.read_table(tocfilename)
 
 # <codecell>
-gibbs_nsample_opt=[400]
+gibbs_nsample_opt=[4000]
 ##mh_nsample_opt=[1,10,50,100,1000]
 mh_nsample_opt=[50]
 
