@@ -18,9 +18,9 @@ logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(module)s:%(message)s')
 
 # Insert the src/python/rvd28 directory at front of the path
-rvddir = os.path.join('../../src/python/rvd28')
+rvddir = os.path.join('../../src/python/rvd27')
 sys.path.insert(0, rvddir)
-import rvd28
+import rvd27
 
 
 # <codecell>
@@ -48,8 +48,8 @@ for i in xrange(len(gibbs_nsample_opt)):
                 pass
         except IOError as e:
             controlFileList = ["../../data/synthetic_dcs/%s" % filename for filename in toc.Filename[toc.isRef=='Y']]
-            (r, n, loc, refb, ee) = rvd28.load_depth(controlFileList)
-            phi, theta_s, mu_s = rvd28.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
+            (r, n, loc, refb, ee) = rvd27.load_depth(controlFileList)
+            phi, theta_s, mu_s = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
             logging.debug("Saving model in %s" % h5FileName)
             rvd28.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
                    refb=refb, ee=ee)
@@ -67,8 +67,8 @@ for i in xrange(len(gibbs_nsample_opt)):
                     pass
             except IOError as e:
                 caseFileList = ["../../data/synthetic_dcs/%s" % filename for filename in toc.Filename[toc.Dilution==dilution]]
-                (r, n, loc, refb, ee) = rvd28.load_depth(caseFileList)
-                phi, theta_s, mu_s = rvd28.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
+                (r, n, loc, refb, ee) = rvd27.load_depth(caseFileList)
+                phi, theta_s, mu_s = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
                 logging.debug("Saving model in %s" % h5FileName)
                 rvd28.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n,loc=loc,
                    refb=refb, ee=ee)

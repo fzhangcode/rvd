@@ -12,7 +12,7 @@ import logging
 import scipy
 import pdb
 import scipy.stats as ss
-import pyroc
+
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(message)s')
@@ -24,25 +24,29 @@ def main():
     gibbs_nsample_opt=[4000]
     ##mh_nsample_opt=[10,50,100,1000]
     mh_nsample_opt=[50]
-    N=1000
+    N=1000 # Z sampling size
     steps=100
-    figform='.png'
-    
-    
+    alpha=0.05
+    figform='.png'    
     
     for n in xrange(len(gibbs_nsample_opt)):
         for m in xrange(len(mh_nsample_opt)):
             ngibbs=gibbs_nsample_opt[n]
             nmh=mh_nsample_opt[m]
+            
             '''ROC plot''' 
             figroc=plt.figure(figsize=(8,13))
-            titleroc='ROC plot when nGibbs='+str(ngibbs)+' nMH='+str(nmh)+' steps='+str(steps)
+            titleroc='ROCplot_nGibbs='+str(ngibbs)+'_nMH='+str(nmh)+\
+                      '_steps='+str(steps)+'_alpha='+str(alpha)
             plt.suptitle(titleroc)
+            
             for d in xrange(5):
                 dilution=dilution_opt[d]
 
-                h5FileName='ROC points when nGibbs='+str(ngibbs)+' nMH='+str(nmh)+' dilution='+str(dilution)+' steps='+str(steps)+'.hdf5'
-
+                h5FileName='ROC_points_nGibbs='+str(ngibbs)+'_nMH='+str(nmh)+'_dilution='+str(dilution)+\
+                            '_steps='+str(steps)+'_alpha='+str(alpha)+'.hdf5'
+                h5FileName = h5FileName.replace(".", "_", 2)
+                
                 try:                   
                     with h5py.File(h5FileName, 'r') as f:
                         logging.debug("Z and ROC points dataset already exist")
@@ -69,30 +73,28 @@ def main():
                         
                     (muCase_s,muControl_s,Z)=Zsampling(caseFile,controlFile,N)
                     '''Bayesian hypothesis testing for Z'''
-                    points=BayTest(Z,steps)
+                    points=BayTest(Z,steps,alpha)
                     logging.debug("Saving model in %s" % h5FileName)
-                    save_rocPoints(h5FileName,muCase_s,muControl_s,Z,points)
+                    save_rocPoints(h5FileName,muCase_s,muControl_s,Z,points,steps,alpha)
 
                     
                 '''plot the histograms'''
-                fig1=plt.figure(figsize=(16,9))
                 bins=40
                 position=[8,65,106,387,205,225]
-                title='hist(Z) when nGibbs='+str(ngibbs)+' nMH='+str(nmh)+' dilution='+str(dilution)+' steps='+str(steps)
+                title='histZ_nGibbs='+str(ngibbs)+'_nMH='+str(nmh)+'_dilution='+str(dilution)
+                title = title.replace(".", "_", 1)
+                HistPlotZ(position,Z,title,figform=figform)
                 
-                subHistPlotZ(fig1,position,Z,title,figform=figform)
                 
-                
-                title='hist(XY) when nGibbs='+str(ngibbs)+' nMH='+str(nmh)+' dilution='+str(dilution)+' steps='+str(steps)
-                fig2=plt.figure(figsize=(16,9))
-                subHistPlotXY(fig2,position,muCase_s,muControl_s,title,figform=figform)
-    
-                
+                title='histXY_nGibbs='+str(ngibbs)+'_nMH='+str(nmh)+'_dilution='+str(dilution)
+                title = title.replace(".", "_", 1)
+                HistPlotXY(position,muCase_s,muControl_s,title,figform=figform)
                 ROCsubplot(figroc,points,d+1,'dilution='+str(dilution))
             figroc.savefig(titleroc+figform)        
 
 
-def subHistPlotZ(fighandle,position,Z,title=None,bins=40,subplotsize=[3,2],figform='.pdf'):
+def HistPlotZ(position,Z,title=None,bins=40,subplotsize=[3,2],figform='.pdf'):
+    fighandle=plt.figure(figsize=(16,9))
     plt.suptitle(title)
     for i in xrange(len(position)):        
         p=position[i]
@@ -105,7 +107,8 @@ def subHistPlotZ(fighandle,position,Z,title=None,bins=40,subplotsize=[3,2],figfo
     plt.savefig(title)
 
         
-def subHistPlotXY(fighandle,position,muCase_s,muControl_s,title=None,bins=40,subplotsize=[3,2],figform='.pdf'):
+def HistPlotXY(position,muCase_s,muControl_s,title=None,bins=40,subplotsize=[3,2],figform='.pdf'):
+    fighandle=plt.figure(figsize=(16,9))
     plt.suptitle(title)
     for i in xrange(len(position)):
         p=position[i]
@@ -137,7 +140,7 @@ def Zsampling(caseFile,controlFile,N):
 
     return muCase_s, muControl_s, Z
 
-def BayTest(Z,steps):
+def BayTest(Z,steps,alpha):
 ##    if Oneside:
 ##        else:
 ##
@@ -165,11 +168,11 @@ def BayTest(Z,steps):
             indices=[k for k,v in enumerate(Z[j,:]) if v>th]
 
             p=np.sum(np.absolute(Z[j,indices]))/(np.sum(np.absolute(Z[j,:])))
-            if p==.5:
+            if p==1-alpha:
                 if np.random.choice([True, False]):
                     C[j]=1
             else:
-                C[j]=int(p>.5)
+                C[j]=int(p>1-alpha)
 
         fpC=np.copy(C)
         fpC[pos-1]=np.zeros(len(pos))
@@ -185,24 +188,26 @@ def BayTest(Z,steps):
 
     '''ROC plot'''    
 def ROCsubplot(figroc,points,NOsubplot,subtitle):
-    axx=figroc.add_subplot(3,2,NOsubplot)
-    axx.plot(points[:,0],points[:,1],color='b',marker='o')
+    ax=figroc.add_subplot(3,2,NOsubplot)
+    ax.plot(points[:,0],points[:,1],color='b',marker='o')
 
-    axx.set_title(subtitle)
-    axx.grid(True)
-    axx.set_ylabel('True Positive Rate')
-    axx.set_xlabel('False Positive Rate')
+    ax.set_title(subtitle)
+    ax.grid(True)
+    ax.set_ylabel('True Positive Rate')
+    ax.set_xlabel('False Positive Rate')
 
     '''text the threshold when the ROC point is closest to the (0,1)point'''    
     dpoints=[points[:,0],points[:,1]-1]
     dpoints=np.power(dpoints,2)
     distance=np.sum(dpoints,0)
     ind=distance.argmin()
-    axx.plot(points[ind,0],points[ind,1],color='r',marker='o')
-    axx.text(0.3,0.6,'TH='+str(points[ind,2]))
-    axx.text(0.3,0.5,'ACC='+str(points[ind,3]))
+    ax.plot(points[ind,0],points[ind,1],color='r',marker='o')
+    ax.text(0.2,0.6,'TH='+str('%0.4f'% points[ind,2]))
+    ax.text(0.2,0.5,'ACC='+str('%0.4f'% points[ind,3]))
+    ax.text(0.2,0.4,'FPR='+str('%0.4f'% points[ind,0]))
+    ax.text(0.2,0.3,'TPR='+str('%0.4f'% points[ind,1]))
 
-def save_rocPoints(h5FileName,muCase_s=None,muControl_s=None,Z=None,points=None):
+def save_rocPoints(h5FileName,muCase_s=None,muControl_s=None,Z=None,points=None,steps=None,alpha=None):
 
     # TODO add attributes to hdf5 file
     h5file = h5py.File(h5FileName, 'w')
@@ -221,7 +226,11 @@ def save_rocPoints(h5FileName,muCase_s=None,muControl_s=None,Z=None,points=None)
     if points is not None:
         h5file.create_dataset('points', data=points, 
                               chunks=True, fletcher32=True, compression='gzip')
-
+    if steps is not None:
+        h5file.create_dataset('steps', data=steps)
+    if alpha is not None:
+        h5file.create_dataset('alpha', data=alpha)
+    
     h5file.close()
 
 
