@@ -527,6 +527,38 @@ def chi2test(X, lamda=2.0/3, pvector=np.array([1.0/3]*3)):
     p = 1 - ss.chi2.cdf(C, df) 
     return(p)
  
+def sample_post_diff(muCaseG, muControlG, N):
+    """ Return N samples from the posterior distribution for 
+         u_j|r_case - u_j|r_control. """
+    
+    nCase = muCaseG.shape[1]
+    nControl = muControlG.shape[1]
+    
+    caseSample = np.random.choice(nCase, size=N, replace=True)
+    controlSample = np.random.choice(nControl, size=N, replace=True)
+    
+    muCaseS = muCaseG[:, caseSample]
+    muControlS = muControlG[:, controlSample]
+
+    Z = muCaseS - muControlS
+
+    return (Z, muCaseS, muControlS)
+ 
+def bayes_test(Z, roi):
+    """ Return posterior probabilities in regions defined in list of tuples (roi)
+        from samples in columns of Z. """
+
+    (J,N)=np.shape(Z)
+    
+    nTest = roi.shape[0] # get the number of regions to compute probabilities 
+    
+    p = np.zeros((J,nTest))
+    for i in xrange(nTest):
+        for j in xrange(J):
+            p[j,i] = np.float( np.sum( roi[i][0] < Z < roi[i][1] ) ) / N
+
+    return p
+    
 if __name__ == '__main__':
     main()
     
