@@ -44,31 +44,37 @@ def main():
                 else:
                     caseFile+='Case100_0.hdf5'
 
-                title=" dilution="+str(dilution)+" position="+str(position)+" replicate="+str(replicate)+" Case"
-                MCMCtraces(caseFile,position,replicate,title,figform='.pdf')
+                title="Case_dilution="+str(dilution)+"_position="+str(position)+"_replicate="+str(replicate)
+                title = title.replace(".", "_", 1)
+                MCMCtraces(caseFile,position,replicate,dilution=dilution,title=title,figform=figform)
 
             controlFile="ngibbs="+str(ngibbs)+"_nmh="+str(nmh)+"_Control.hdf5"
-            title="position="+str(position)+" replicate="+str(replicate)+" Control"
-            MCMCtraces(controlFile,position,replicate,title,figform='.pdf')
+            title="Control_position="+str(position)+"_replicate="+str(replicate)
+            MCMCtraces(controlFile,position,replicate,dilution=None,title=title,figform=figform)
 
+
+def autocorr(x):
+    result = np.correlate(x, x, mode='full')
+    return result[result.size/2:]
     
-def MCMCtraces(h5FileName,position,replicate,title=None,figform='.pdf'):
-    
-    def autocorr(x):
-        result = np.correlate(x, x, mode='full')
-        return result[result.size/2:]
+def MCMCtraces(h5FileName,position,replicate,dilution=None,title=None,figform='.pdf'):
 
 
     with h5py.File(h5FileName, 'r') as f:
         mu_s = f['mu'][...]
         theta_s = f['theta'][...]
         
-    fig=plt.figure(figsize=(16,9))
-    plt.suptitle('position='+str(position)+' replicate='+str(replicate))
+    fig=plt.figure(figsize=(12,9))
+    
+    if dilution is not None:
+        plt.suptitle('Case dilution='+str(dilution)+' position='+str(position)+' replicate='+str(replicate))
+    else:
+        plt.suptitle('Control position='+str(position)+' replicate='+str(replicate))
     
     '''subplot for theta'''
     (N,J,G)=np.shape(theta_s)
     ax1=fig.add_subplot(2,2,1)
+    
     ax1.plot(np.arange(G),theta_s[replicate-1,position-1,:])
     ax1.set_title('MCMC trace for theta')
     ax1.set_xlabel('Gibbs steps')
@@ -98,8 +104,6 @@ def MCMCtraces(h5FileName,position,replicate,title=None,figform='.pdf'):
     ax4.set_ylabel('autocorr')
     plt.savefig(title+figform)
              
-
-
 if __name__ == '__main__':
     main()
 
