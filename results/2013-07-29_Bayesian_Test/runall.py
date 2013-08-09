@@ -17,7 +17,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(module)s:%(message)s')
 
-# Insert the src/python/rvd28 directory at front of the path
+# Insert the src/python/rvd27 directory at front of the path
 rvddir = os.path.join('../../src/python/rvd27')
 sys.path.insert(0, rvddir)
 import rvd27
