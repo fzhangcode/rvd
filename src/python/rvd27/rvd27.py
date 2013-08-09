@@ -78,10 +78,10 @@ def main():
 def gibbs(args):
     """ Top-level function to use gibbs sampling on a set of depth chart files
     """
-    (r, n, loc, refb, ee) = load_depth(args.dcfile)
+    (r, n, loc, refb) = load_depth(args.dcfile)
     (phi, theta_s, mu_s) = mh_sample(r, n)
     save_model(args.outputfile, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
-               refb=refb, ee=ee)
+               refb=refb)
 
 
 def sample_run():
@@ -130,7 +130,7 @@ def load_model(h5Filename):
     
     
 
-def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, refb=None, ee=None):
+def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, refb=None):
     """ Save the RVD2.7 model samples and parameters """
     
     # TODO add attributes to hdf5 file
@@ -159,9 +159,6 @@ def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, r
                               chunks=True, fletcher32=True, compression='gzip')
     if n is not None:
         h5file.create_dataset('n', data=n, 
-                              chunks=True, fletcher32=True, compression='gzip')
-    if ee is not None:
-        h5file.create_dataset('ee', data=ee,
                               chunks=True, fletcher32=True, compression='gzip')
 
     # Save the reference data
@@ -299,6 +296,10 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=50, burnin=0.2, thin=2, pool=
     """
     if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
     elif np.ndim(r) == 2: N, J = np.shape(r)
+    elif np.ndim(r) == 3: 
+        print np.shape(r)
+        r = np.sum(r, 2) # sum over non-reference bases
+        N, J = np.shape(r)
     
     # Initialize a hdf5 file for logging model progress
     h5Filename = tempfile.NamedTemporaryFile(suffix='.hdf5').name
@@ -460,26 +461,27 @@ def load_depth(dcFileNameList):
     J = len(loc)
     N = len(dcFileNameList)
     for i in xrange(0, N):
-            c = np.array( [cd[i][k] for k in loc] )
-            n1 = np.sum(c, 1)
-            #r1 = np.zeros(J)
-            refIdx=np.zeros(J)
+        logging.debug("Processing %s" % dcFileNameList[i])
+        c = np.array( [cd[i][k] for k in loc] )
+        n1 = np.sum(c, 1)
+        #r1 = np.zeros(J)
+        refIdx=np.zeros(J)
 
-            for j in xrange(0,J):
-                #r1[j] = n1[j] - c[j, acgt[refb[j]]]
-                refIdx[j] = 4*j+acgt[refb[j]]
-            c = np.delete(c, refIdx, None)
-            c = np.reshape(c, (J, 3) )
-            #r.append(r1)
-            n.append(n1)
-            r.append(c)
+        for j in xrange(0,J):
+            #r1[j] = n1[j] - c[j, acgt[refb[j]]]
+            refIdx[j] = 4*j+acgt[refb[j]]
+        c = np.delete(c, refIdx, None)
+        c = np.reshape(c, (J, 3) )
+        #r.append(r1)
+        n.append(n1)
+        r.append(c)
     r = np.array(r)
     n = np.array(n)
 
     return (r, n, loc, refb)
 
 def chi2test(X, lamda=2.0/3, pvector=np.array([1.0/3]*3)):
-    """ Do chi2 test to decide how well the error reads fits uniform multinormial distribution. P-value returned.
+    """ Do chi2 test to decide how well the error reads fits uniform multinomial distribution. P-value returned.
         lamda=1 Pearson's chi-square
         lamda=0 the log likelihood ratio statistic/ G^2
         lamda=-1/2 Freeman-Tukey's F^2
