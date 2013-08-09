@@ -61,7 +61,7 @@ for i in xrange(len(gibbs_nsample_opt)):
             logging.debug("Processing dilution: %0.1f" % dilution)
             
             h5FileName = "Case%0.1f.hdf5" % dilution.replace(".", "_", 1)
-            h5FileName = h5FileName.
+
             try:
                 with h5py.File(h5FileName, 'r') as f:
                     pass
