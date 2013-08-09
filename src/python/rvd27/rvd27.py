@@ -430,79 +430,53 @@ def make_depth(pileupFileName):
             subprocess.call(callString, stdout=fout)
     return dcFileName
 
-##def load_depth(dcFileNameList):
-##    """ Return (r, n, location, reference base) for a list of depth charts. The
-##        variable r is the error read depth and n is the total read depth.
-##    """
-##    r=[]; n=[]
-##    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
-##    
-##    loc = []
-##    refb = {}
-##    cd = []
-##    for dcFileName in dcFileNameList:
-##        with open(dcFileName, 'r') as dcFile:
-##            header = dcFile.readline().strip()
-##            dc = dcFile.readlines()
-##            dc = [x.strip().split("\t") for x in dc]
-##    
-##            loc1 = map(int, [x[2] for x in dc if x[4] in acgt.keys()])
-##            loc.append( loc1 )
-##            
-##            refb1 = dict(zip(loc1, [x[4] for x in dc if x[4] in acgt.keys()]))
-##            refb.update(refb1)
-##            cd.append( dict(zip(loc1, [map(int, x[5:9]) for x in dc if x[4] in acgt.keys()])) )
-##            
-##    loc = list(reduce(set.intersection, map(set, loc)))
-##    loc.sort()
-##    refb = [refb[k] for k in loc]
-##    
-##    J = len(loc)
-##    N = len(dcFileNameList)
-##    c = np.zeros( (J, 4, N) )
-##    for i in xrange(0, N):
-##            c = np.array( [cd[i][k] for k in loc] )
-##            n1 = np.sum(c, 1)
-##            r1 = np.zeros(J)
-##            for j in xrange(0,J):
-##                r1[j] = n1[j] - c[j, acgt[refb[j]]]
-##            r.append(r1)
-##            n.append(n1)
-##    r = np.array(r)
-##    n = np.array(n)
-##
-##    return (r,n,loc, refb)
-
 def load_depth(dcFileNameList):
-    r=[]; n=[];ee=[]
+    """ Return (r, n, location, reference base) for a list of depth charts. The
+        variable r is the error read depth and n is the total read depth.
+    """
+    r=[]; n=[]
     acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+    
+    loc = []
+    refb = {}
+    cd = []
     for dcFileName in dcFileNameList:
         with open(dcFileName, 'r') as dcFile:
             header = dcFile.readline().strip()
             dc = dcFile.readlines()
             dc = [x.strip().split("\t") for x in dc]
-            loc = map(int, [x[2] for x in dc])
-            refb = [x[4] for x in dc]
-            c = [map(int, x[5:9]) for x in dc]
-            c = np.array(c)
-            (J, K) = np.shape(c)
+    
+            loc1 = map(int, [x[2] for x in dc if x[4] in acgt.keys()])
+            loc.append( loc1 )
+            
+            refb1 = dict(zip(loc1, [x[4] for x in dc if x[4] in acgt.keys()]))
+            refb.update(refb1)
+            cd.append( dict(zip(loc1, [map(int, x[5:9]) for x in dc if x[4] in acgt.keys()])) )
+            
+    loc = list(reduce(set.intersection, map(set, loc)))
+    loc.sort()
+    refb = [refb[k] for k in loc]
+    
+    J = len(loc)
+    N = len(dcFileNameList)
+    for i in xrange(0, N):
+            c = np.array( [cd[i][k] for k in loc] )
             n1 = np.sum(c, 1)
-            r1 = np.zeros(J)
-            eInx=np.zeros(J)
+            #r1 = np.zeros(J)
+            refIdx=np.zeros(J)
 
-            for j in xrange(0, J):
-                r1[j] = n1[j] - c[j, acgt[refb[j]]]
-                eInx[j] = 4*j+acgt[refb[j]]
-            c = np.delete(c,eInx,None)
-            c = np.reshape(c,(-1,3))   
-        r.append(r1)
-        n.append(n1)
-        ee.append(c)
+            for j in xrange(0,J):
+                #r1[j] = n1[j] - c[j, acgt[refb[j]]]
+                refIdx[j] = 4*j+acgt[refb[j]]
+            c = np.delete(c, refIdx, None)
+            c = np.reshape(c, (J, 3) )
+            #r.append(r1)
+            n.append(n1)
+            r.append(c)
     r = np.array(r)
     n = np.array(n)
-    ee = np.array(ee)
-    return (r,n,loc,refb,ee)
 
+    return (r, n, loc, refb)
 
 def chi2test(X, lamda=2.0/3, pvector=np.array([1.0/3]*3)):
     """ Do chi2 test to decide how well the error reads fits uniform multinormial distribution. P-value returned.
