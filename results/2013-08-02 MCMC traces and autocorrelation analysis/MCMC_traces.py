@@ -52,10 +52,6 @@ def main():
             title="Control_position="+str(position)+"_replicate="+str(replicate)
             MCMCtraces(controlFile,position,replicate,dilution=None,title=title,figform=figform)
 
-
-def autocorr(x):
-    result = np.correlate(x, x, mode='full')
-    return result[result.size/2:]
     
 def MCMCtraces(h5FileName,position,replicate,dilution=None,title=None,figform='.pdf'):
 
@@ -64,7 +60,7 @@ def MCMCtraces(h5FileName,position,replicate,dilution=None,title=None,figform='.
         mu_s = f['mu'][...]
         theta_s = f['theta'][...]
         
-    fig=plt.figure(figsize=(12,9))
+    fig=plt.figure(figsize=(18,9))
     
     if dilution is not None:
         plt.suptitle('Case dilution='+str(dilution)+' position='+str(position)+' replicate='+str(replicate))
@@ -73,36 +69,53 @@ def MCMCtraces(h5FileName,position,replicate,dilution=None,title=None,figform='.
     
     '''subplot for theta'''
     (N,J,G)=np.shape(theta_s)
-    ax1=fig.add_subplot(2,2,1)
+    ax1=fig.add_subplot(2,3,1)
     
     ax1.plot(np.arange(G),theta_s[replicate-1,position-1,:])
     ax1.set_title('MCMC trace for theta')
     ax1.set_xlabel('Gibbs steps')
     ax1.set_ylabel('theta')
 
-    ax2=fig.add_subplot(2,2,2)
-    theta_ac=autocorr(theta_s[replicate-1,position-1,:])         
-    ax2.plot(np.arange(G),theta_ac)
+    ax2=fig.add_subplot(2,3,2)
+    ax2.acorr(theta_s[replicate-1,position-1,:], usevlines=True, normed=True, detrend=matplotlib.mlab.detrend_mean, maxlags=1599, lw=1)
     ax2.set_title('MCMC autocorr for theta')
-    ax2.set_xlabel('Gibbs steps')
+    ax2.set_xlabel('lags')
     ax2.set_ylabel('autocorr')
 
+    '''lag1 plot'''
+    ax3=fig.add_subplot(2,3,3)
+    ax3.plot(theta_s[replicate-1,position-1,0:G-2],theta_s[replicate-1,position-1,1:G-1],'*')
+    ax3.set_title('lag1 plot of theta')
+    ax3.set_xlabel('Yi-1')
+    ax3.set_ylabel('Yi')
     
     '''subplot for mu'''             
-    ax3=fig.add_subplot(2,2,3)
-    ax3.plot(np.arange(G),mu_s[position-1,:])
-    ax3.set_title('MCMC trace for mu')
-    ax3.set_xlabel('Gibbs steps')
-    ax3.set_ylabel('mu')
+    ax4=fig.add_subplot(2,3,4)
+    ax4.plot(np.arange(G),mu_s[position-1,:])
+    ax4.set_title('MCMC trace for mu')
+    ax4.set_xlabel('Gibbs steps')
+    ax4.set_ylabel('mu')
         
 
-    ax4=fig.add_subplot(2,2,4)
-    mu_ac=autocorr(mu_s[position-1,:])         
-    ax4.plot(np.arange(G),mu_ac)
-    ax4.set_title('MCMC autocorr for mu')
-    ax4.set_xlabel('Gibbs steps')
-    ax4.set_ylabel('autocorr')
+    ax5=fig.add_subplot(2,3,5)
+    ax5.acorr(mu_s[position-1,:], usevlines=True, normed=True,detrend=matplotlib.mlab.detrend_mean, maxlags=1599, lw=2)
+    ax5.set_title('MCMC autocorr for mu')
+    ax5.set_xlabel('lags')
+    ax5.set_ylabel('autocorr')
+
+
+    ax6=fig.add_subplot(2,3,6)
+    ax6.plot(mu_s[position-1,0:G-2],mu_s[position-1,1:G-1],'*')
+    ax6.set_title('lag1 plot of mu')
+    ax6.set_xlabel('Yi-1')
+    ax6.set_ylabel('Yi')
+
+                  
     plt.savefig(title+figform)
+
+
+
+             
              
 if __name__ == '__main__':
     main()
