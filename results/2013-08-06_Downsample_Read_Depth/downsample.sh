@@ -1,9 +1,6 @@
 #!/bin/sh
-clear
-echo "Run Picard to downsample syntehtic Bam files"
-echo "Please input desired downsampling rate"
-read dRate
-echo $dRate
+
+dRate=$1
 
 InputPath=../../data/Synthetic_BAM_files/
 OutputPath=../../data/Synthetic/
@@ -18,18 +15,18 @@ DownsamplePath=picard-tools-1.96/DownsampleSam.jar
 echo ----------------------------------------
 echo Start Downsampling
 
-for f in `find $InputPath -maxdepth 1 -name \*.bam -type f -printf "%f\n"`
+for f in $InputPath/*.bam
 do
-Input=${InputPath%%/}/$f
-Output=${OutputPath%%/}/$f
-echo $Output
+	filename=${f##*/}
+	Input=$f
+	Output=${OutputPath%%/}/$filename
+	echo $Output
 
-if [ -f $Output ]
-then
-echo File $f exists already
-else
-echo File $f does not exist
-java -Xmx2g -jar $DownsamplePath INPUT=$Input OUTPUT=$Output RANDOM_SEED=null PROBABILITY=$dRate VALIDATION_STRINGENCY=SILENT
-fi
-
+	if [ -f $Output ]
+		then
+			echo File $filename exists already
+		else
+			echo Downsampling $filename
+			java -Xmx2g -jar $DownsamplePath INPUT=$Input OUTPUT=$Output RANDOM_SEED=null PROBABILITY=$dRate VALIDATION_STRINGENCY=SILENT
+		fi
 done
