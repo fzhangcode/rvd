@@ -4,7 +4,7 @@ PICARD=java -Xmx2g -jar ../2013-08-06_Downsample_Read_Depth/picard-tools-1.96/Do
 PILEUP2DC=../../bin/pileup2dc
 
 BAMDIR := ../../data/Synthetic_BAM_files
-BAMFILE := $(wildcard $(addprefix $(BAMDIR)/, 20100916_c1_p1*.bam)) # all pair1 reads
+BAMFILE := $(wildcard $(addprefix $(BAMDIR)/, 20100916_c?_p?.*.bam)) # all pair1 & pair2
 
 DRATE = 0.01
 DOWNSAMPLEDIR = ./bam
@@ -34,7 +34,8 @@ clean:
 #TODO: form correct prerequisite
 # downsample the BAM file
 $(DOWNSAMPLEBAM): $(BAMFILE)
-	 $(PICARD) \
+	mkdir -p $(DOWNSAMPLEDIR)
+	$(PICARD) \
 		INPUT=$(addprefix $(BAMDIR)/, $(@F) ) \
 		OUTPUT=$@ \
 		RANDOM_SEED=null \
@@ -47,6 +48,7 @@ $(DOWNSAMPLESORTEDBAM): $(DOWNSAMPLEBAM)
 
 # Create the pileup file
 $(PILEUPFILE): $(DOWNSAMPLESORTEDBAM)
+	mkdir -p $(PILEUPDIR)
 	samtools mpileup \
 		-d 1000000 \
 		-f $(FASTAFILE) \
@@ -55,4 +57,5 @@ $(PILEUPFILE): $(DOWNSAMPLESORTEDBAM)
 
 # Create the depth chart file
 $(DEPTHFILE): $(PILEUPFILE)
+	mkdir -p $(DEPTHDIR)
 	$(PILEUP2DC) $(addprefix $(PILEUPDIR)/, $(addsuffix .pileup, $(basename $(@F)))) > $@
