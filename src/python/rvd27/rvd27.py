@@ -112,19 +112,25 @@ def load_model(h5Filename):
         out.append(phi)
         
         # Load theta if it exists
-        if u"theta_s" in h5file.keys():
-            theta = h5file['theta_s'][...]
+        if u"theta" in h5file.keys():
+            theta = h5file['theta'][...]
             out.append(theta)
             
         # Load mu if it exists
-        if u"mu_s" in h5file.keys():
-            mu = h5file['mu_s'][...]
+        if u"mu" in h5file.keys():
+            mu = h5file['mu'][...]
             out.append(mu)
             
         # Load loc if it exists
         if u"loc" in h5file.keys():
             loc = h5file['loc'][...]
             out.append(loc)
+	
+        # Load r if it exists
+        if u"r" in h5file.keys():
+            r = h5file['r'][...]
+            out.append(r)
+
             
     return tuple(out)
     
@@ -526,12 +532,12 @@ def bayes_test(Z, roi):
 
     (J,N)=np.shape(Z)
     
-    nTest = roi.shape[0] # get the number of regions to compute probabilities 
+    nTest = len(roi) # get the number of regions to compute probabilities 
     
     p = np.zeros((J,nTest))
     for i in xrange(nTest):
         for j in xrange(J):
-            p[j,i] = np.float( np.sum( roi[i][0] < Z < roi[i][1] ) ) / N
+		p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] >= roi[i][0]), (Z[j,:] < roi[i][1]) ) ) ) / N
 
     return p
     
