@@ -1,0 +1,198 @@
+Detection Threshold = 0.000500
+Processing dilution: 0.1%
+Position 8: Mutation Probability=0.53
+uniform dist p-value:
+ nan
+ nan
+ nan
+ 0.38
+ nan
+ 0.38
+Position 65: Mutation Probability=0.12
+uniform dist p-value:
+ 0.38
+ 1.00
+ nan
+ 0.38
+ 0.38
+ 0.35
+Position 106: Mutation Probability=0.02
+uniform dist p-value:
+ 0.38
+ nan
+ nan
+ nan
+ nan
+ nan
+Position 387: Mutation Probability=0.11
+uniform dist p-value:
+ nan
+ 0.57
+ 0.38
+ nan
+ nan
+ nan
+Position 205: Mutation Probability=0.65
+uniform dist p-value:
+ 0.14
+ 0.35
+ 0.07
+ 0.57
+ 0.60
+ 0.78
+Position 225: Mutation Probability=0.56
+uniform dist p-value:
+ 1.00
+ 1.00
+ 0.57
+ 0.38
+ 0.17
+ 0.57
+Processing dilution: 0.3%
+Position 8: Mutation Probability=0.80
+uniform dist p-value:
+ nan
+ nan
+ 0.57
+ nan
+ 0.38
+ nan
+Position 65: Mutation Probability=0.44
+uniform dist p-value:
+ 0.38
+ 0.38
+ 0.57
+ 0.35
+ 0.05
+ nan
+Position 106: Mutation Probability=0.02
+uniform dist p-value:
+ nan
+ nan
+ nan
+ nan
+ nan
+ 0.14
+Position 387: Mutation Probability=0.21
+uniform dist p-value:
+ nan
+ 0.38
+ 0.38
+ nan
+ nan
+ 0.38
+Position 205: Mutation Probability=1.00
+uniform dist p-value:
+ 0.78
+ 0.38
+ 0.78
+ 0.12
+ 0.17
+ 0.20
+Position 225: Mutation Probability=0.70
+uniform dist p-value:
+ 1.00
+ 0.38
+ 0.02
+ nan
+ 0.46
+ 0.08
+Processing dilution: 1.0%
+Position 8: Mutation Probability=0.94
+uniform dist p-value:
+ nan
+ 0.38
+ 0.38
+ 0.35
+ 0.38
+ nan
+Position 65: Mutation Probability=0.71
+uniform dist p-value:
+ 0.57
+ 0.17
+ 0.35
+ 0.17
+ 0.02
+ nan
+Position 106: Mutation Probability=0.23
+uniform dist p-value:
+ nan
+ 0.38
+ nan
+ 0.05
+ 0.57
+ 0.38
+Position 387: Mutation Probability=0.03
+uniform dist p-value:
+ nan
+ nan
+ nan
+ nan
+ 0.38
+ 0.38
+Position 205: Mutation Probability=1.00
+uniform dist p-value:
+ 0.01
+ 0.33
+ 0.13
+ 0.26
+ 0.19
+ 0.23
+Position 225: Mutation Probability=0.99
+uniform dist p-value:
+ 0.06
+ 0.22
+ 0.00
+ 0.46
+ 0.22
+ 0.35
+Processing dilution: 10.0%
+Position 8: Mutation Probability=0.34
+uniform dist p-value:
+ nan
+ 0.38
+ nan
+ nan
+ nan
+ nan
+Position 65: Mutation Probability=0.15
+uniform dist p-value:
+ nan
+ 0.57
+ 0.38
+ nan
+ 0.14
+ nan
+Position 106: Mutation Probability=0.00
+uniform dist p-value:
+ nan
+ 0.38
+ nan
+ nan
+ nan
+ nan
+Position 387: Mutation Probability=1.00
+uniform dist p-value:
+ nan
+ nan
+ nan
+ nan
+ nan
+ nan
+Position 205: Mutation Probability=1.00
+uniform dist p-value:
+ 0.00
+ 0.00
+ 0.00
+ 0.00
+ 0.00
+ 0.00
+Position 225: Mutation Probability=1.00
+uniform dist p-value:
+ 0.00
+ 0.00
+ 0.00
+ 0.00
+ 0.00
+ 0.00
+Processing dilution: 100.0%
