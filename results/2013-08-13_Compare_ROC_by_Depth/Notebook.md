@@ -19,6 +19,11 @@ Materials and Equipment
 Experimental Protocol
 ---------------------------
 
+Create depth charts in parallel starting no more than 10 jobs
+$ make -j 10
+
+Create the dilution model files
+$ python runall.py
 
 Results
 -----------
