@@ -1,0 +1,66 @@
+Detection Threshold = 0.000500
+Processing dilution: 0.1%
+Position 8: Mutation Probability=0.38
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 65: Mutation Probability=0.00
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  0.38
+Position 106: Mutation Probability=0.00
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  0.38  nan
+Position 387: Mutation Probability=0.39
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 205: Mutation Probability=0.00
+Mismatch Base Uniformity Test p-value:  0.38  nan  nan  nan  nan  nan
+Position 225: Mutation Probability=0.00
+Mismatch Base Uniformity Test p-value:  nan  nan  0.38  nan  nan  nan
+Processing dilution: 0.3%
+Position 8: Mutation Probability=0.07
+Mismatch Base Uniformity Test p-value:  0.38  nan  nan  nan  nan  nan
+Position 65: Mutation Probability=0.00
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  0.38
+Position 106: Mutation Probability=0.02
+Mismatch Base Uniformity Test p-value:  nan  nan  0.38  nan  nan  0.38
+Position 387: Mutation Probability=0.56
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 205: Mutation Probability=0.01
+Mismatch Base Uniformity Test p-value:  0.38  nan  0.38  nan  nan  nan
+Position 225: Mutation Probability=0.14
+Mismatch Base Uniformity Test p-value:  0.57  nan  0.38  nan  nan  0.05
+Processing dilution: 1.0%
+Position 8: Mutation Probability=0.54
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 65: Mutation Probability=0.03
+Mismatch Base Uniformity Test p-value:  nan  nan  0.38  nan  0.38  nan
+Position 106: Mutation Probability=0.01
+Mismatch Base Uniformity Test p-value:  nan  nan  0.38  nan  0.38  nan
+Position 387: Mutation Probability=0.01
+Mismatch Base Uniformity Test p-value:  0.38  nan  nan  nan  nan  nan
+Position 205: Mutation Probability=0.03
+Mismatch Base Uniformity Test p-value:  nan  nan  0.14  0.57  nan  nan
+Position 225: Mutation Probability=0.00
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  0.38  nan
+Processing dilution: 10.0%
+Position 8: Mutation Probability=0.94
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 65: Mutation Probability=0.05
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  0.38  nan  nan
+Position 106: Mutation Probability=0.93
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 387: Mutation Probability=0.92
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 205: Mutation Probability=1.00
+Mismatch Base Uniformity Test p-value:  0.14  0.38  0.05  0.14  0.14  0.05
+Position 225: Mutation Probability=1.00
+Mismatch Base Uniformity Test p-value:  0.14  0.02  0.05  0.01  0.00  0.01
+Processing dilution: 100.0%
+Position 8: Mutation Probability=0.95
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 65: Mutation Probability=0.93
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 106: Mutation Probability=0.96
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 387: Mutation Probability=0.96
+Mismatch Base Uniformity Test p-value:  nan  nan  nan  nan  nan  nan
+Position 205: Mutation Probability=1.00
+Mismatch Base Uniformity Test p-value:  0.00  0.00  0.00  0.00  0.00  0.00
+Position 225: Mutation Probability=1.00
+Mismatch Base Uniformity Test p-value:  0.00  0.00  0.00  0.00  0.00  0.00

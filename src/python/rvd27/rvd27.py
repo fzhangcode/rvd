@@ -494,9 +494,12 @@ def chi2test(X, lamda=2.0/3, pvector=np.array([1.0/3]*3)):
         lamda=-1  Neyman modified chi-square
         lamda=-2  modified G^2
     """
-    nsum=np.sum(X)
-    E=nsum*pvector
     X=np.array(X)
+
+    nsum=np.sum(X)
+    if nsum == 0: return np.nan # return NaN if there are no counts
+    E=nsum*pvector
+
 
     if lamda==0 or lamda==-1:
         C=2.0*np.sum(X*np.log(X*1.0/E))
