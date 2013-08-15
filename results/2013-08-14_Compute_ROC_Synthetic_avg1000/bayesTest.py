@@ -30,21 +30,46 @@ def main():
         # Load the case model samples
         caseFile="Case%s.hdf5" % str(d).replace(".","_")
         (casePhi, caseTheta, caseMu, caseLoc, caseR) = rvd27.load_model(caseFile)
+	# Extract the common locations in case and control
+        caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
+        controlLocIdx = [i for i in xrange(len(controlLoc)) if controlLoc[i] in caseLoc]
+
+	caseMu = caseMu[caseLocIdx,:]
+	controlMu = controlMu[controlLocIdx,:]
+	caseR = caseR[:,caseLocIdx,:]
+	controlR = controlR[:,controlLocIdx,:]
+	loc = caseLoc[caseLocIdx]
+        J = len(loc)
 
         # Sample from the posterior Z = muCase - muControl        
         (Z, caseMuS, controlMuS) = rvd27.sample_post_diff(caseMu, controlMu, N)
 
         postP = rvd27.bayes_test(Z, [(T, np.inf)]) # Posterior Prob that muCase is greater than muControl by T
+	
+        nRep = caseR.shape[0]
+	chi2P = np.zeros((J,nRep))
+	for j in xrange(J):
+	    chi2P[j,:] = np.array([rvd27.chi2test( caseR[i,j,:] ) for i in xrange(nRep)] )
+	# Save the test results
+	f = h5py.File('postTest%s.hdf5' % str(d).replace('.','_'),'w')
+	f.create_dataset('loc', data=loc)
+	f.create_dataset('postP', data=postP)
+	f.create_dataset('T', data=T)
+	f.create_dataset('chi2pvalue',data=chi2P)
+	f.close()
 
+
+        # Print the results for a select group of positions
         (nRep, J, M) = caseR.shape
 	testPos = (8, 65, 106, 387, 205, 225)
         for pos in testPos:
             j = pos-1
             chi2P = [rvd27.chi2test( caseR[i,j,:] ) for i in xrange(nRep)]
             print("Position %d: Mutation Probability=%0.2f" % (caseLoc[j], postP[j]) )
-	    print "uniform dist p-value:"
+	    print "Mismatch Base Uniformity Test p-value:",
 	    for i in xrange(nRep):
-		    print " %0.2f" % chi2P[i]
+		    print " %0.2f" % chi2P[i],
+            print
 
 def histPlotZ(position,Z,title=None,bins=40,subplotsize=[3,2],figform='.pdf'):
     fighandle=plt.figure(figsize=(16,9))

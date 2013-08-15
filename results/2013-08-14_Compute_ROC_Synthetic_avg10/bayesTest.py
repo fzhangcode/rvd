@@ -33,20 +33,29 @@ def main():
 	# Extract the common locations in case and control
         caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
         controlLocIdx = [i for i in xrange(len(controlLoc)) if controlLoc[i] in caseLoc]
+
 	caseMu = caseMu[caseLocIdx,:]
 	controlMu = controlMu[controlLocIdx,:]
-        loc = caseLoc[caseLocIdx]
+	caseR = caseR[:,caseLocIdx,:]
+	controlR = controlR[:,controlLocIdx,:]
+	loc = caseLoc[caseLocIdx]
+        J = len(loc)
 
         # Sample from the posterior Z = muCase - muControl        
         (Z, caseMuS, controlMuS) = rvd27.sample_post_diff(caseMu, controlMu, N)
 
         postP = rvd27.bayes_test(Z, [(T, np.inf)]) # Posterior Prob that muCase is greater than muControl by T
 	
+        nRep = caseR.shape[0]
+	chi2P = np.zeros((J,nRep))
+	for j in xrange(J):
+	    chi2P[j,:] = np.array([rvd27.chi2test( caseR[i,j,:] ) for i in xrange(nRep)] )
 	# Save the test results
 	f = h5py.File('postTest%s.hdf5' % str(d).replace('.','_'),'w')
 	f.create_dataset('loc', data=loc)
 	f.create_dataset('postP', data=postP)
 	f.create_dataset('T', data=T)
+	f.create_dataset('chi2pvalue',data=chi2P)
 	f.close()
 
 

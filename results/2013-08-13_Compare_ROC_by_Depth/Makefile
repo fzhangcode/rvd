@@ -29,7 +29,6 @@ clean:
 	rm $(DOWNSAMPLEBAM)
 	rm $(DOWNSAMPLESORTEDBAM)
 	rm $(PILEUPFILE)
-	rm $(DEPTHFILE)
 
 #TODO: form correct prerequisite
 # downsample the BAM file
