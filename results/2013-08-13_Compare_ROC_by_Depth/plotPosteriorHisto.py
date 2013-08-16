@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 import logging
+import pdb
 
 # Insert the src/python/rvd27 directory at front of the path
 rvddir = os.path.join('../../src/python/rvd27')
@@ -14,44 +15,91 @@ logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(message)s')
 
 def main():
-    dilutionList = (0.1,0.3,1.0,10.0)
+    dilutionList = (0.1,0.3,1.0,10.0,100.0)
     N=1000 # Z sampling size  
     (n_gibbs, nmh) = (4000, 50)
 
-            
+    Nreads=[]
+    label=[]       
     for d in dilutionList:
         
         h5FileName = 'ROC_dilution%d.hdf5' % d
+        logging.debug("Processing dilution: %0.1f%%" % d)        
 
-        logging.debug("Processing dilution: %0.1f%%" % d)
-        
-        # Load the control model samples
         controlFile="Control.hdf5"
-        (controlPhi, controlTheta, controlMu, controlLoc) = rvd27.load_model(controlFile)
-        
-        # Load the case model samples
         caseFile="Case%s.hdf5" % str(d).replace(".","_")
-        (casePhi, caseTheta, caseMu, caseLoc) = rvd27.load_model(caseFile)
 
-        # Sample from the posterior Z = muCase - muControl        
-        (Z, caseMuS, controlMuS) = rvd27.sample_post_diff(caseMu, controlMu, N)
-        [rvd27.bayes_test(Z, [(T, np.inf)]) for T in np.linspace(0, np.max(np.max(Z)), num=100)]
-        #logging.debug("Saving model in %s" % h5FileName)
-#        save_rocPoints(h5FileName,muCase_s,muControl_s,Z,points,steps,alpha)
-#
-#                    
-        """ plot the histograms"""
-        position=[8,65,106,387,205,225]
-        title = "histZ_dilution=%s" % str(d).replace(".","_")
-        histPlotZ(position,Z,title,figform='.png')
-                
-                
-        title='histXY_dilution=%s' % str(d).replace(".","_")
-        histPlotXY(position, caseMuS, controlMuS, title, figform='.png')
+        [fpr, tpr, reads] = ROCpoints(controlFile,caseFile)
+        Nreads.extend(reads)
+
+        # ROC 
+        plt.plot(fpr,tpr)
+        label.extend(('%0.1f%%' % d,))
+        
+        
+##    plt.title('Median of read depth=%d' % np.median(np.array(Nreads),axis=None))
+    plt.legend(label,loc=4)
+
+    plt.title('Read depth median = %d' % np.median(np.array(Nreads),axis=None))
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.show()
+    plt.savefig('ROC_plot.png')
+
+ 
+##        """ plot the histograms"""
+##        position=[8,65,106,387,205,225]
+##        title = "histZ_dilution=%s" % str(d).replace(".","_")
+##        histPlotZ(position,Z,title,figform='.png')
+##                
+##                
+##        title='histXY_dilution=%s' % str(d).replace(".","_")
+##        histPlotXY(position, caseMuS, controlMuS, title, figform='.png')
 #                ROCsubplot(figroc,points,d+1,'dilution='+str(dilution))
 #            figroc.savefig(titleroc+figform)        
 
+def ROCpoints(controlFile,caseFile,N=1000,P=0.95):
+    # Load the model samples
+    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = rvd27.load_model(controlFile)
+    
+    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = rvd27.load_model(caseFile)
 
+    # Extract the common locations in case and control
+    caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
+    controlLocIdx = [i for i in xrange(len(controlLoc)) if controlLoc[i] in caseLoc]
+
+    caseMu = caseMu[caseLocIdx,:]
+    controlMu = controlMu[controlLocIdx,:]
+    caseR = caseR[:,caseLocIdx,:]
+    controlR = controlR[:,controlLocIdx,:]
+    
+    loc = caseLoc[caseLocIdx]
+    J = len(loc)
+    pos = np.arange(85,346,20)
+    pos = [loc[i] for i in xrange(J) if loc[i] in pos]
+
+    
+    # Sample from the posterior Z = muCase - muControl        
+    (Z, caseMuS, controlMuS) = rvd27.sample_post_diff(caseMu, controlMu, N)
+    
+    # Compute cumulative posterior probability for regions (Threshold,np.inf) 
+    pList = [rvd27.bayes_test(Z, [(T, np.inf)]) for T in np.linspace(np.min(np.min(Z)), np.max(np.max(Z)), num=300)]
+
+    # mutation classification
+    clsList = np.array((np.array(pList)>P).astype(int))
+    clsList = clsList.reshape((clsList.shape[0],clsList.shape[1]))# category list
+
+    # false postive rate
+    fpr = np.array([float(sum(clsList[i])-sum(clsList[i,np.array(pos)-1]))/(clsList.shape[1]-len(pos)) \
+           for i in xrange(clsList.shape[0])])
+    
+    # true positive rate
+    tpr = np.array([float(sum(clsList[i,np.array(pos)-1]))/len(pos) for i in xrange(clsList.shape[0])])
+
+    reads=[caseN,controlN]
+    return fpr,tpr, caseN
+        
+    
 def histPlotZ(position,Z,title=None,bins=40,subplotsize=[3,2],figform='.pdf'):
     fighandle=plt.figure(figsize=(16,9))
     plt.suptitle(title)
