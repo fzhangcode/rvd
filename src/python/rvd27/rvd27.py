@@ -131,6 +131,10 @@ def load_model(h5Filename):
             r = h5file['r'][...]
             out.append(r)
 
+        if u"n" in h5file.keys():
+            n = h5file['n'][...]
+            out.append(n)
+
             
     return tuple(out)
     
