@@ -19,7 +19,7 @@ def main():
             
     # Load the control model samples
     controlFile="Control.hdf5"
-    (controlPhi, controlTheta, controlMu, controlLoc, controlR) = rvd27.load_model(controlFile)
+    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = rvd27.load_model(controlFile)
     
     T = 0.0005 # detection threshold
     print("Detection Threshold = %f" % T)
@@ -29,7 +29,7 @@ def main():
         
         # Load the case model samples
         caseFile="Case%s.hdf5" % str(d).replace(".","_")
-        (casePhi, caseTheta, caseMu, caseLoc, caseR) = rvd27.load_model(caseFile)
+        (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = rvd27.load_model(caseFile)
 	# Extract the common locations in case and control
         caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
         controlLocIdx = [i for i in xrange(len(controlLoc)) if controlLoc[i] in caseLoc]

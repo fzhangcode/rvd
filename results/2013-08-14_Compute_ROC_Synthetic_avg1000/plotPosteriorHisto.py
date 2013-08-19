@@ -27,11 +27,11 @@ def main():
         
         # Load the control model samples
         controlFile="Control.hdf5"
-        (controlPhi, controlTheta, controlMu, controlLoc) = rvd27.load_model(controlFile)
+        (controlPhi, controlTheta, controlMu, controlLoc, controlN) = rvd27.load_model(controlFile)
         
         # Load the case model samples
         caseFile="Case%s.hdf5" % str(d).replace(".","_")
-        (casePhi, caseTheta, caseMu, caseLoc) = rvd27.load_model(caseFile)
+        (casePhi, caseTheta, caseMu, caseLoc, caseN) = rvd27.load_model(caseFile)
 
         # Sample from the posterior Z = muCase - muControl        
         (Z, caseMuS, controlMuS) = rvd27.sample_post_diff(caseMu, controlMu, N)

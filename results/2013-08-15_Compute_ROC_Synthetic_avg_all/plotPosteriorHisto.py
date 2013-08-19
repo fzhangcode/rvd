@@ -16,11 +16,11 @@ logging.basicConfig(level=logging.DEBUG,
 
 def main():
     dilutionList = (0.1,0.3,1.0,10.0,100.0)
-    folderList = ('2013-08-14_Compute_ROC_Synthetic_avg1000',)
+##    folderList = ('2013-08-14_Compute_ROC_Synthetic_avg1000',)
 
-##    folderList = ('2013-08-14_Compute_ROC_Synthetic_avg10',\
-##              '2013-08-14_Compute_ROC_Synthetic_avg100',\
-##              '2013-08-14_Compute_ROC_Synthetic_avg1000')
+    folderList = ('2013-08-14_Compute_ROC_Synthetic_avg10',\
+              '2013-08-14_Compute_ROC_Synthetic_avg100',\
+              '2013-08-14_Compute_ROC_Synthetic_avg1000')
     
     N=1000 # Z sampling size  
     (n_gibbs, nmh) = (4000, 50)
@@ -30,6 +30,7 @@ def main():
         logging.debug("Processing dilution: %0.1f%%" % d)
         i=i+1
         plt.figure(i)
+        label=[]
         for f in folderList:            
             controlFile = "../%s/Control.hdf5" %f
             caseFile = "Case%s.hdf5" % str(d).replace(".","_")
@@ -39,9 +40,9 @@ def main():
             [fpr,tpr] = ROCpoints(controlFile,caseFile)            
             
             plt.plot(fpr,tpr)
-            label = (f[36:],)
-            plt.legend(label,4)
-            
+            label.extend((f[36:],))
+
+        plt.legend(label,4)            
         title = 'ROC_dilution%0.1f%%' % d
         plt.title(title)
         plt.xlabel('False Positive Rate')
