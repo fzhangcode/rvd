@@ -157,8 +157,8 @@ def test(args):
         f.create_dataset('chi2pvalue',data=chi2P)
         f.close()
     
-    #write_vcf(['chr18:'+x for x in map(str, caseLoc)], refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
-    write_vcf(caseLoc, refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
+    write_vcf(['chr18:'+x for x in map(str, caseLoc)], refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
+    #write_vcf(caseLoc, refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
     
 def write_vcf(loc, refb, caseR, caseMu, postP, chi2P):
     """ Write high confidence variant calls to VCF 4.2 file.
@@ -185,10 +185,10 @@ def write_vcf(loc, refb, caseR, caseMu, postP, chi2P):
         r = np.squeeze(caseR[:,i,:]) # replicates x bases
         
         # Make a list of the alternate bases for each replicate
-        acgt_r = dict(acgt)
-        del acgt_r[refb[i]]
-        acgt_key = acgt_r.keys()
-        altb = [acgt_key[x] for x in np.argmax(r, axis=1)]
+        acgt_r = ['A','C','G','T']
+        del acgt_r[ acgt[refb[i]] ]
+
+        altb = [acgt_r[x] for x in np.argmax(r, axis=1)]
         
         if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
             logging.debug(loc[i])
