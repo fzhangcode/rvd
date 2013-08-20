@@ -2,21 +2,25 @@
 
 """rvd27.py: Compute MAP estimates for RVD2.7 model."""
 
+from __future__ import print_function
+from __future__ import division
+
 import numpy as np
 
-import scipy as sp
 import scipy.stats as ss
-from scipy.special import gammaln, psi, polygamma
+from scipy.special import gammaln
 
-import matplotlib.pyplot as plt
 import logging
-import time
 import multiprocessing as mp
 from itertools import repeat
 import h5py
 import tempfile
 
-# from __future__ import division
+import os
+from datetime import date
+
+
+
 
 
 def main():
@@ -48,6 +52,23 @@ def main():
     argpGibbs.add_argument('-p', '--pool', type=int, default=None,
                 help='number of workers in multithread pool')
     argpGibbs.set_defaults(func=gibbs)
+                
+                
+    # create subparser to compare two model files
+    argpTest = subparsers.add_parser('test', 
+                        help='test if case error rate is greater than control by T')
+    argpTest.add_argument('controlHDF5Name',
+                help='control model file (HDF5)')
+    argpTest.add_argument('caseHDF5Name',
+                help='case model file (HDF5)')
+    argpTest.add_argument('-T', type=float, default=0.005,
+                help='threshold for computing variant probability (default=0.005)')
+    argpTest.add_argument('-N', type=int, default=1000,
+                help='Monte-Carlo sample size (default=1000)')
+    argpTest.add_argument('-o', '--output', dest='outputFile', nargs='?', 
+                default='test.hdf5')
+    argpTest.set_defaults(func=test)
+        
                 
     # create subparser to sample the model
     argpGen = subparsers.add_parser('gen', 
@@ -83,6 +104,100 @@ def gibbs(args):
     save_model(args.outputfile, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
                refb=refb)
 
+def test(args):
+    """ Top-level function to test for variants.
+    """
+    
+    # Load the Case and Control Model files
+    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(args.controlHDF5Name)
+    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(args.caseHDF5Name)
+    
+    # Extract the common locations in case and control
+    caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
+    controlLocIdx = [i for i in xrange(len(controlLoc)) if controlLoc[i] in caseLoc]
+
+    caseMu = caseMu[caseLocIdx,:]
+    controlMu = controlMu[controlLocIdx,:]
+    caseR = caseR[:,caseLocIdx,:]
+    controlR = controlR[:,controlLocIdx,:]
+    caseLoc = caseLoc[caseLocIdx]
+    controlLoc = controlLoc[controlLocIdx]
+    J = len(caseLoc)
+    
+    with h5py.File(args.controlHDF5Name, 'r') as f:
+        refb = f['/refb'][...]
+        f.close()
+    refb = refb[controlLocIdx]
+    
+    
+    # Sample from the posterior Z = muCase - muControl
+    # Adjusting for baseline error rate for case and control
+    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu-casePhi['mu0'], controlMu-controlPhi['mu0'], args.N)
+    
+    # Posterior Prob that muCase is greater than muControl by T
+    postP = bayes_test(Z, [(args.T, np.inf)]) 
+    
+    # chi2 test for goodness-of-fit to a uniform distribution for non-ref bases
+    nRep = caseR.shape[0]
+    chi2Prep = np.zeros((J,nRep))
+    chi2P = np.zeros(J)
+    for j in xrange(J):
+	    chi2Prep[j,:] = np.array([chi2test( caseR[i,j,:] ) for i in xrange(nRep)] )
+	    if np.any(np.isnan(chi2Prep[j,:])):
+	        chi2P[j] = np.nan
+	    else:
+	       chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
+	    
+
+    # Save the test results
+    with h5py.File(args.outputFile, 'w') as f:
+        f.create_dataset('loc', data=caseLoc)
+        f.create_dataset('postP', data=postP)
+        f.create_dataset('T', data=args.T)
+        f.create_dataset('chi2pvalue',data=chi2P)
+        f.close()
+    
+    #write_vcf(['chr18:'+x for x in map(str, caseLoc)], refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
+    write_vcf(caseLoc, refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
+    
+def write_vcf(loc, refb, caseR, caseMu, postP, chi2P):
+    """ Write high confidence variant calls to VCF 4.2 file.
+    """
+    
+    #TODO: get dbSNP id for chrom:pos
+    J = len(loc)
+    
+    today=date.today()
+    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+    
+    chrom = [x.split(':')[0][3:] for x in loc]
+    pos = [int(x.split(':')[1]) for x in loc]
+
+    vcfF = open('test.vcf','w')
+    
+    print("##fileformat=VCFv4.1", file=vcfF)
+    print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
+    
+    print("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele Frequency\">", file=vcfF)
+    
+    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO", file=vcfF)
+    for i in xrange(J):
+        r = np.squeeze(caseR[:,i,:]) # replicates x bases
+        
+        # Make a list of the alternate bases for each replicate
+        acgt_r = dict(acgt)
+        del acgt_r[refb[i]]
+        acgt_key = acgt_r.keys()
+        altb = [acgt_key[x] for x in np.argmax(r, axis=1)]
+        
+        if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
+            logging.debug(loc[i])
+            logging.debug(postP[i])
+            #print("%s\t%d\t.\t%c\t%s\t.\t.\t." % (chrom[i], pos[i], refb[i], ','.join(altb)), file=vcfF)
+            print("%s\t%d\t.\t%c\t%s\t.\tPASS\tAF=%0.3f" % (chrom[i], pos[i], refb[i], altb[0], caseMu[i]*100.0), file=vcfF)
+    
+    vcfF.close()
+    
 
 def sample_run():
     n = 1000
@@ -297,7 +412,7 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, 
     
     return mu_s
     
-def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=50, burnin=0.2, thin=2, pool=None):
+def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=None):
     """ Return MAP parameter and latent variable estimates obtained by 
 
     Metropolis-Hastings sampling.
@@ -307,7 +422,6 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=50, burnin=0.2, thin=2, pool=
     if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
     elif np.ndim(r) == 2: N, J = np.shape(r)
     elif np.ndim(r) == 3: 
-        print np.shape(r)
         r = np.sum(r, 2) # sum over non-reference bases
         N, J = np.shape(r)
     
@@ -381,10 +495,6 @@ def ll(phi, r):
     """
     pass
 
-
-
-
-
 def make_pileup(bamFileName, fastaFileName, region):
     """ Creates a pileup file using samtools mpileup in /pileup directory.
     """
@@ -456,8 +566,8 @@ def load_depth(dcFileNameList):
             header = dcFile.readline().strip()
             dc = dcFile.readlines()
             dc = [x.strip().split("\t") for x in dc]
-    
-            loc1 = map(int, [x[2] for x in dc if x[4] in acgt.keys()])
+            
+            loc1 = map(str, [x[1]+':'+x[2] for x in dc if x[4] in acgt.keys()])
             loc.append( loc1 )
             
             refb1 = dict(zip(loc1, [x[4] for x in dc if x[4] in acgt.keys()]))
