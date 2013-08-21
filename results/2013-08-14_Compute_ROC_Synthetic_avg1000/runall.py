@@ -24,11 +24,11 @@ import rvd27
 
 
 pool = mp.Pool(processes=48)
-tocfilename = "synthetic_toc.txt"
+tocfilename = "synthetic_toc_p1.txt"
 toc = pd.read_table(tocfilename)
 
 gibbs_nsample = 4000
-mh_nsample = 50
+mh_nsample = 10
 
 logging.debug("Gibbs step size=%d" % gibbs_nsample)
 logging.debug("mh sample size=%d" % mh_nsample)
@@ -40,7 +40,7 @@ try:
     with h5py.File(h5FileName, 'r') as f:
         pass
 except IOError as e:
-    controlFileList = ["depth_chart/%s" % filename for filename in toc.Filename[toc.isRef=='Y']]
+    controlFileList = ["../2013-08-06_Downsample_Read_Depth/depth_chart/100/%s" % filename for filename in toc.Filename[toc.isRef=='Y']]
     (r, n, loc, refb) = rvd27.load_depth(controlFileList)
     phi, theta_s, mu_s = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
     logging.debug("Saving model in %s" % h5FileName)
@@ -57,7 +57,7 @@ for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
         with h5py.File(h5FileName, 'r') as f:
             pass
     except IOError as e:
-        caseFileList = ["depth_chart/%s" % filename for filename in toc.Filename[toc.Dilution==dilution]]
+        caseFileList = ["../2013-08-06_Downsample_Read_Depth/depth_chart/100/%s" % filename for filename in toc.Filename[toc.Dilution==dilution]]
         (r, n, loc, refb) = rvd27.load_depth(caseFileList)
         phi, theta_s, mu_s = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
