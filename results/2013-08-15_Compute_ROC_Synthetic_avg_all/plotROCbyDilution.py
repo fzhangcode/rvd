@@ -20,7 +20,7 @@ def main():
     folderList = ('2013-08-14_Compute_ROC_Synthetic_avg10',\
               '2013-08-14_Compute_ROC_Synthetic_avg100',\
               '2013-08-14_Compute_ROC_Synthetic_avg1000', \
-	      '2013-08-14_Compute_ROC_Synthetic_avg10000')
+	      '2013-08-19_Compute_ROC_Synthetic_avg10000')
 
     
     N=1000 # Z sampling size  
@@ -42,7 +42,8 @@ def main():
             
             plt.plot(fpr,tpr, label='%0.1f' % cov)
 
-        plt.legend(loc=4)            
+        plt.legend(loc=4)
+        plt.plot([0,1],[0,1],color='k',linestyle='dashed')
         plt.title('%0.1f%% Mutant Mixture' % d)
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
