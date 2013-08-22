@@ -97,7 +97,7 @@ def ROCpoints(controlFile,caseFile,N=1000,P=0.95):
     tpr = np.array([float(sum(clsList[i,np.array(pos)-1]))/len(pos) for i in xrange(clsList.shape[0])])
 
     reads=[caseN,controlN]
-    return fpr,tpr, caseN
+    return fpr,tpr,reads
         
     
 def histPlotZ(position,Z,title=None,bins=40,subplotsize=[3,2],figform='.pdf'):
