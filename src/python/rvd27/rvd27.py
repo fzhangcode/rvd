@@ -17,10 +17,8 @@ import h5py
 import tempfile
 
 import os
+import subprocess
 from datetime import date
-
-
-
 
 
 def main():
@@ -67,7 +65,7 @@ def main():
                 help='Monte-Carlo sample size (default=1000)')
     argpTest.add_argument('-o', '--output', dest='outputFile', nargs='?', 
                 default='test.hdf5')
-    argpTest.set_defaults(func=test)
+    argpTest.set_defaults(func=test_main)
         
                 
     # create subparser to sample the model
@@ -104,13 +102,17 @@ def gibbs(args):
     save_model(args.outputfile, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
                refb=refb)
 
-def test(args):
+def test_main(args):
+    test(args.controlHDF5Name, args.caseHDF5Name, args.T, args.N, args.outputName)
+
+def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile="test"):
     """ Top-level function to test for variants.
     """
     
     # Load the Case and Control Model files
-    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(args.controlHDF5Name)
-    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(args.caseHDF5Name)
+    logging.debug(controlHDF5Name)
+    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(controlHDF5Name)
+    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(caseHDF5Name)
     
     # Extract the common locations in case and control
     caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
@@ -124,7 +126,7 @@ def test(args):
     controlLoc = controlLoc[controlLocIdx]
     J = len(caseLoc)
     
-    with h5py.File(args.controlHDF5Name, 'r') as f:
+    with h5py.File(controlHDF5Name, 'r') as f:
         refb = f['/refb'][...]
         f.close()
     refb = refb[controlLocIdx]
@@ -132,10 +134,10 @@ def test(args):
     
     # Sample from the posterior Z = muCase - muControl
     # Adjusting for baseline error rate for case and control
-    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu-casePhi['mu0'], controlMu-controlPhi['mu0'], args.N)
+    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu-casePhi['mu0'], controlMu-controlPhi['mu0'], N)
     
     # Posterior Prob that muCase is greater than muControl by T
-    postP = bayes_test(Z, [(args.T, np.inf)]) 
+    postP = bayes_test(Z, [(T, np.inf)]) 
     
     # chi2 test for goodness-of-fit to a uniform distribution for non-ref bases
     nRep = caseR.shape[0]
@@ -150,17 +152,16 @@ def test(args):
 	    
 
     # Save the test results
-    with h5py.File(args.outputFile, 'w') as f:
+    with h5py.File(outputFile+'.hdf5', 'w') as f:
         f.create_dataset('loc', data=caseLoc)
         f.create_dataset('postP', data=postP)
-        f.create_dataset('T', data=args.T)
+        f.create_dataset('T', data=T)
         f.create_dataset('chi2pvalue',data=chi2P)
         f.close()
     
-    write_vcf(['chr18:'+x for x in map(str, caseLoc)], refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
-    #write_vcf(caseLoc, refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
+    write_vcf(outputFile+'.vcf', caseLoc, refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
     
-def write_vcf(loc, refb, caseR, caseMu, postP, chi2P):
+def write_vcf(outputFile, loc, refb, caseR, caseMu, postP, chi2P):
     """ Write high confidence variant calls to VCF 4.2 file.
     """
     
@@ -173,7 +174,7 @@ def write_vcf(loc, refb, caseR, caseMu, postP, chi2P):
     chrom = [x.split(':')[0][3:] for x in loc]
     pos = [int(x.split(':')[1]) for x in loc]
 
-    vcfF = open('test.vcf','w')
+    vcfF = open(outputFile,'w')
     
     print("##fileformat=VCFv4.1", file=vcfF)
     print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
@@ -519,13 +520,13 @@ def make_pileup(bamFileName, fastaFileName, region):
                                   "%s.pileup" % pileupFileName.split(".", 1)[0])
     
     # Run samtools pileup only if the file doesn't already exist.
-    try:
-        with open(pileupFileName, 'r'):
-            logging.debug("Pileup file exists: %s" % pileupFileName)
-    except IOError:
-        logging.debug("[call] %s", " ".join(callString))
-        with open(pileupFileName, 'w') as fout:
-            subprocess.call(callString, stdout=fout)
+    #try:
+    #    with open(pileupFileName, 'r'):
+    #        logging.debug("Pileup file exists: %s" % pileupFileName)
+    #except IOError:
+    logging.debug("[call] %s", " ".join(callString))
+    with open(pileupFileName, 'w') as fout:
+        subprocess.call(callString, stdout=fout)
     return pileupFileName
 
 def make_depth(pileupFileName):
@@ -542,13 +543,13 @@ def make_depth(pileupFileName):
     dcFileName = pileupFileName.split("/")[-1]
     dcFileName = os.path.join("depth_chart", 
                                   "%s.dc" % dcFileName.split(".", 1)[0])
-    try:
-        with open(dcFileName, 'r'):
-		logging.debug("Depth chart file exists: %s" % dcFileName) 
-    except IOError:
-        logging.debug("Converting %s to depth chart." % pileupFileName)
-        with open(dcFileName, 'w') as fout:
-            subprocess.call(callString, stdout=fout)
+    #try:
+    #    with open(dcFileName, 'r'):
+#		logging.debug("Depth chart file exists: %s" % dcFileName) 
+    #except IOError:
+    logging.debug("Converting %s to depth chart." % pileupFileName)
+    with open(dcFileName, 'w') as fout:
+        subprocess.call(callString, stdout=fout)
     return dcFileName
 
 def load_depth(dcFileNameList):
@@ -567,8 +568,8 @@ def load_depth(dcFileNameList):
             dc = dcFile.readlines()
             dc = [x.strip().split("\t") for x in dc]
             
-            loc1 = map(str, [x[1]+':'+x[2] for x in dc if x[4] in acgt.keys()])
-            loc.append( loc1 )
+            loc1 = [x[1]+':'+str(x[2]).strip('\000') for x in dc if x[4] in acgt.keys()]
+	    loc.append( loc1 )
             
             refb1 = dict(zip(loc1, [x[4] for x in dc if x[4] in acgt.keys()]))
             refb.update(refb1)
@@ -576,6 +577,7 @@ def load_depth(dcFileNameList):
             
     loc = list(reduce(set.intersection, map(set, loc)))
     loc.sort()
+    logging.debug(loc)
     refb = [refb[k] for k in loc]
     
     J = len(loc)
@@ -594,7 +596,6 @@ def load_depth(dcFileNameList):
         c = np.reshape(c, (J, 3) )
         #r.append(r1)
         n.append(n1)
-        r.append(c)
     r = np.array(r)
     n = np.array(n)
 
