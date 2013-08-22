@@ -1,0 +1,518 @@
+\documentclass[11pt]{amsart}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{algorithm, algorithmic}
+\usepackage{graphicx}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+%\usepackage{epstopdf}
+%\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\newcommand{\RR}{I\!\!R} %real numbers
+\DeclareMathOperator{\diag}{diag}
+
+\title{A Mixed-Membership Model for Heterogenous Tumor Subtype Classification}
+\author{}
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+\section{Introduction}
+
+Genomic analyses of many solid cancers have shown that there is extensive genetic heterogeneity between individual tumors \cite{Parsons:2008fu, Bonavia:2011hf} as well as within individual tumors \cite{Heppner:1984ve, Dexter:1978ux}. Microdissection and DNA sequencing has recently validated the existence of intratumor heterogeneity at high resolution \cite{Gerlinger:2012fs}. Characterizing intratumor heterogeneity is important because it may be a contributing factor to mono therapy treatment failure \cite{} and accurately estimating the subtypes present in an individual tumor may lead to improved combinatorial therapies.
+
+Many cancers have been classified into distinct genetic subtypes that develop by means of activation or repression of different driver pathways. These tumor subtypes are commonly identified and characterized by clustering the genomic data from hundreds of samples \cite{Eisen:1998ue}. In an effort to disambiguate driver from passenger mutations, the genomic signatures associated with each subtype are sparse and comprised only of those aberrations that are thought to be involved in oncogenesis. New tumors are then classified based on their similarity to the centroids or signatures of those subtypes. However, this classification approach makes an all-or-none assumption about the primary tumor that is not the case for heterogeneous tumors.
+
+Mixed-membership models have emerged in recent years as a modeling tool for data where the all-or-none clustering assumption doesn't make sense. The topic-modeling framework \cite{Blei:2003tn} has proven useful for modeling the structure in large corpri of text documents where each document may contain a mixture of topics. Mixed-membership models have also been used in population genetics \cite{Pritchard:2000uv},  and social network analysis \cite{Airoldi:2008wi}.
+
+We show that using a novel mixed-membership model for genomic classification of primary tumors samples, we achieve a more accurate and complete representation of primary, heterogeneous tumors. Our model achieves the dual purpose of (1) representing each sample as a mixture of genomic subtypes and (2) representing each subtype signature as a sparse set of genomic features that delineate driving oncogenic pathways. We demonstrate our model on RNA expression data from primary gioblastoma samples with thousands of genomic features and hundreds of samples. We show that we recover known subtypes with a sparse set of driving aberrations and that many of the primary samples are in fact mixed.
+
+
+\section{Model Structure}
+
+Given a data matrix $y \in \RR^{M \times N}$ where the element $y_{ji}$ is an observation of feature $j$ in sample $i$, we would like to find a representation of $y$ such that each sample vector is $y_i = x\theta_i$ where $x \in \RR^{M \times K}$ is a matrix of $K$ cluster centroids and $\theta_i \in \RR^K$ is a distribution over clusters for sample $i$. Furthermore, we would like $x$ to be sparse for purposes of cluster interpretability and generalizability to test cases. In the specific case of cancer subtyping, $y_{ji}$ is a relative gene expression measurement for gene $j$ in patient $i$. 
+
+\subsection{Generative Process}\label{subset:gen_process}
+The generative process for the data set under the Gaussian Laplace Dirichlet (GLaD) model is:
+%maybe mention what GLaD stands for (Gaussian Laplace Dirichlet) ? 
+\begin{enumerate}
+\item Choose K cluster centroids from $x_k \thicksim \text{Laplace}(\lambda)$
+\item For each sample $y_i$:
+	\begin{enumerate}
+	\item Choose a distribution over clusters $\theta_i \thicksim \text{Dirichlet}(\alpha)$
+	\item Sample the expression vector $y_i \thicksim \text{Normal}(x\theta_i, \Sigma)$
+	\end{enumerate}
+\end{enumerate}
+
+{\bf This model has two levels of sampling.} First, the cluster centroids are chosen once and for all for the entire data set. Then, the expected value of each gene expression vector is a mixture of cluster centroids.  The hierarchical model can be represented as a graphical model (Figure \ref{fig:graphical_model}). The Laplace distribution over $x_{jk}$ enforces sparsity in the subtype matrix \cite{Kabn 2007} and the Dirichlet distribution over $\theta_i$ places a distribution over the $K$ clusters for each sample. For simplicity, we assume that $\Sigma = \sigma^2 I_J$ for the remainder, but this assumption can easily be relaxed for a structured or full covariance matrix.
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=60mm]{pdf_figs/graphical_model.pdf}
+\caption{GLaD Graphical Model}
+\label{fig:graphical_model}
+\end{center}
+\end{figure}
+
+Given this model structure, the joint distribution over the latent and observed variables for a sample given the parameters is
+\begin{equation}\label{eqn:jointpdf}
+\begin{split}
+p\left( x,  \theta_i, y_i; \alpha, \lambda, \sigma^2 \right) &= p\left( x ; \lambda \right) p\left( \theta_i ; \alpha \right) p\left( y_i | x, \theta_i ; \sigma^2 \right)\\
+&=\left[ \prod_{j=1}^M \prod_{k=1}^K \frac{1}{2 \lambda} \exp \left( -\frac{|x_{jk}|}{\lambda} \right) \right]\left[ \frac{\Gamma\left( \sum_{k=1}^K \alpha_k \right)} { \prod_{k=1}^K \Gamma \left( \alpha_k \right)}
+\prod_{k=1}^K \theta_{ki}^{\alpha_k - 1 } \right]\\
+&\quad\ \cdot \left[ \prod_{j=1}^M \left( 2\pi \sigma^2 \right)^{ -\frac{1}{2} } \exp \left( -\frac{1}{2 \sigma^2 }\left( y_{ij} - x_j\theta_i \right)^2 \right)\right]
+\end{split}
+\end{equation}
+
+Integrating over the latent variables $x$ and $\theta_i$ yields the marginal distribution of a sample expression vector,
+\begin{equation}
+p\left( y_i ; \alpha, \lambda, \Sigma \right) = \int_x p\left( x ; \lambda \right) \int_{\theta_i} p\left( \theta_i ; \alpha \right) p\left( y_i | x, \theta_i; \Sigma \right) d\theta_i dx
+\end{equation}
+
+Finally, assuming independent samples, the probability of the dataset is
+% we may only need to assume exchangeable samples
+\begin{equation}
+p\left( y ; \alpha, \lambda, \Sigma \right) = \prod_{i=1}^N \int_x p\left( x ; \lambda \right) \int_{\theta_i} p\left( \theta_i ; \alpha \right) p\left( y_i | x, \theta_i; \Sigma \right) d\theta_i dx
+\end{equation}
+
+\subsection{Comparison to other clustering and topic models}
+The GLaD model is distinguished from other clustering and topic models. A classical clustering model would sample a Dirichlet once for the entire data set. Then, each expression vector is allocated to one of the clusters. This is the assumption of the PAM50 method \cite{} and many other all-or-none approaches \cite{}. 
+
+A topic model choses from the Dirichlet distribution for sample as we have done here. The conditional distribution (a multinomial in LDA and a Gaussian for Latent Process Decomposition) is then sampled repeatedly. Mixing of subtypes in a given sample is accomplished  combining multiple Gaussian kernels. Instead, in our model, the mixing of clusters happens exclusively in the mean value parameter of the Gaussian distribution resulting in a single Gaussian whose expected value is a mixture of the cluster centroids. 
+
+
+
+
+
+\subsection {Interpretation as  Matrix Factorization}\label{subsec:matfac_interp}
+The hierarchical model \eqref{eqn:jointpdf} can be interpreted as a matrix factorization problem with particular constraints. The negative complete data log-likelihood, retaining only terms involving $x$ and $\theta$, is
+
+\begin{equation}\label{eqn:loglike1}
+\begin{split}
+-LL\left( x, \theta | y \right) = &\sum_{j=1}^M \sum_{i=1}^N \frac{1}{2 \sigma^2} \left( y_{ij} -x_j\theta_i \right)^2  + N\sum_{j=1}^M \sum_{k=1}^K \frac{|x_{jk}|}{\lambda}  \\
+& - \sum_{k=1}^K \left( \alpha_k - 1 \right) \sum_{i=1}^N \log \theta_{ki},
+\end{split}
+\end{equation}
+with the constraints $\sum_{k=1}^K \theta_{ki} = 1, \ \forall i$ and $\theta_{ki} \geq 0, \ \forall i,k$. We  aim to minimize \eqref{eqn:loglike1} in order to maximize the complete data log-likelihood. Setting $\sigma^2 = 1$, $\alpha_k=1$ and $\lambda=1$ to eliminate parameters of the statistical model from the more general matrix factorization problem leaves the objective function
+
+\begin{equation}\label{eqn:loglike2}
+f\left( x, \theta | y\right) = \sum_{i=1}^N \sum{j=1}^M \frac{1}{2} \left( y_{ij} -x_j\theta_i \right)^2 + N\sum_{j=1}^M \sum_{k=1}^K |x_{jk}|.
+\end{equation}
+
+The first term in \eqref{eqn:loglike2} can be viewed as a loss function for the difference between the predicted measurement $\hat{y_i} = x\theta_i$ and the actual data, $y_i$. The second term is a sparsity penalty function where setting $x_{jk}$ to a non-zero value has a cost associated with it proportional to the magnitude of $x_{jk}$ and inversely proportional to $\lambda$. Viewing \eqref{eqn:loglike2} as a Lagrangian function where only the terms involving $x$ and $\theta$ have been retained, the matrix factorization problem can be written as
+
+\begin{equation}\label{eqn:matfac1}
+\begin{split}
+\underset{x,\theta}{\text{minimize}} & \quad\ \| y - x\theta \|_2^2\\
+\text{subject to} & \quad\ \|x\|_1 \leq b\\
+& \quad\  \theta^T \mathbf{1}_K=\mathbf{1}_N\\
+& \quad\  \theta \geq 0.
+\end{split}
+\end{equation}
+where the inequality on $\theta$ is component-wise for the matrix. The optimization problem \eqref{eqn:matfac1} is biconvex in $x$ and $\theta$.
+
+% [talk about relation to MMF Mackey at el]
+
+%\begin{figure}[htbp]
+%\begin{center}
+%\includegraphics[width = 0.4\linewidth]{eps_figs/model1.eps}
+%\caption{Graphical Model}
+%\label{fig:graph1}
+%\end{center}
+%\end{figure}
+
+\section{Inference and Parameter Estimation}
+
+Statistical inference for this model focuses on the  posterior distribution over latent variables
+\begin{equation}
+p(\theta, x | y; \alpha, \lambda, \Sigma) = \frac{ p(\theta, x, y; \alpha, \lambda, \Sigma) } { p(y; \alpha, \lambda, \Sigma) }.
+\end{equation}
+Since exact inference is intractable for this model, we have developed approximate inference algorithms using iterated conditional modes, Gibbs sampling and a variational approximation. We explore the advantages and disadvantages of each approach after presenting the algorithms.
+
+\subsection{Iterated Conditional Modes (ICM)}
+
+Iterated Conditional Modes (ICM) (Besag 1986) is a a greedy ascent approximation algorithm that proceeds in two steps: (1) assign $\hat{x}^{(p+1)}$ and $\hat{\theta}^{(p+1)}$ by maximizing the complete data likelihood conditional on the current parameter estimates $\hat{\phi}^{(p)}$ and (2) update the parameter estimates $\hat{\phi}^{(p+1 )}$ by maximizing the complete data likelihood conditional on the current latent variable estimates $\hat{x}^{(p)}$ and $\hat{\theta}^{(p)}$.
+\begin{algorithm}
+\caption{Iterated Conditional Modes Algorithm}
+\label{alg:assign_update}
+\begin{algorithmic}[1]
+
+\REPEAT
+
+\STATE $\hat{x}^{(p+1)} \leftarrow \arg \max\limits_x \log p\left( x, \hat{\theta}^{(p)}, y ; \hat{\phi}^{(p)} \right)$
+
+\STATE $\hat{\theta}^{(p+1)} \leftarrow \arg \max\limits_\theta \log p\left( \hat{x}^{(p+1)}, \theta, y ; \hat{\phi}^{(p)} \right)$
+
+\STATE $\hat{\phi}^{(p+1)} \leftarrow \arg \max\limits_\phi \log p\left( \hat{x}^{(p+1)}, \hat{\theta}^{(p+1)}, y ; \phi \right)$
+
+\UNTIL {complete data log-likelihood convergence}
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Gibbs Sampling}
+A Markov chain Monte Carlo (MCMC) sampling approach approximates the posterior distribution $p \left( x, \theta | y; \phi \right)$ by sampling. We use the Metropolis--Hastings (M--H) algorithm to obtain samples from the conditional distributions of each latent variable in turn and then optimize the joint distribution over the model parameters.
+
+\begin{algorithm}[ht]
+\caption{Metropolis within Gibbs Algorithm}
+\label{alg:metro_gibbs}
+\begin{algorithmic}[1]
+
+\REPEAT
+\FOR {j = 1 to M}
+	\STATE Draw T samples from $p \left( x_{j} | \theta^{(p)}, y; \hat{\phi}^{(p)} \right)$ using M--H
+	\STATE Set $x_j^{(p+1)}$ to the sample mean
+\ENDFOR
+
+\FOR {i = 1 to N}
+	\STATE Draw T samples from $p \left( \theta_i | x^{(p+1)}, y ; \hat{\phi}^{(p)} \right)$ using M--H
+	\STATE Set $\theta_i^{(p+1)}$ to the sample mean
+\ENDFOR
+
+\STATE Set $\hat{\phi}^{(p+1)} \leftarrow \arg \max\limits_{\phi} p \left( y , x^{(p+1)}, \theta^{(p+1)}; \hat{\phi}^{(p)} \right)$
+
+\UNTIL {sample size is sufficient}
+\end{algorithmic}
+\end{algorithm}
+
+%TODO: Comment on difference between mean and mode for laplace
+The sample mean is only one of many functions that may be applied to the MCMC samples to obtain a point estimate from the posterior distribution. The posterior mode or median may perform better than the mean in certain applications (Kyung et al. 2010). Convergence may be monitored in many ways as well and is an important consideration when running time is a limitation (Cowles \& Carlin 1996). After estimating the parameters, samples can be obtained from the joint posterior distribution $p(x,\theta | y, \hat{\phi}^{(p)})$ using the same procedure except keeping $\hat{\phi}^{(p)}$ fixed.
+
+\subsection{Variational Inference}
+
+We derive a fast non-conjugate variational inference algorithm to estimate the posterior distribution $p(\theta, x | y)$. The algorithm alternates between optimizing the approximate posterior distribution $q(x, \theta)$ and updating the parameters $\phi=\{\alpha, \lambda, \sigma^2\}$. The algorithm performs conjugate gradient ascent on the evidence lower bound (ELBO) $\mathcal{L}(q, p)$ where $q$ is the approximate posterior distribution and $p$ is the true posterior distribution. We describe the algorithm briefly here and give an algorithm in Algorithm~\ref{alg:lapvar} and provide details in Appendix~\ref{sec:varlap}.
+
+The variational algorithm performs coordinate ascent on the auxiliary function by alternating between updating variational distribution and updating the parameters of the model.
+\begin{description}
+	\item[(E step)] Maximize $\mathcal{L}(q, p)$ with respect to $q$
+	\item[(M step)] Maximize $\mathcal{L}(q, p)$ with respect to $\phi$
+\end{description}
+The variational E-step optimizes the tightness of the approximation to the true posterior distribution and the M-step maximizes the log-likelihood of the data with the misisng data  completed by the variational approximation. In practice, we loop over the variational E-step until the change in the evidence lower bound is small and then move to the E-step \cite{Blei}.
+
+Since we do not have a natural conjugate pair for $q(x)$ and $y$ we cannot derive an analytical update for $q(x)$. Instead, we use the Laplace approximation and numerically approximate $q(x)$ with a Gaussian. We use a variational dirichlet to approximate $q(\theta)$ as in latent Dirichlet allocation \cite{Blei}. 
+
+We chose to factorize the variational distribution as
+\begin{equation}
+	q(\theta,x) = \prod_{j=1}^J q(x_j) \prod_{i=1}^N q(\theta_i).
+\end{equation}
+This factorization for $q(x)$ is different than the mean-field factoriztion $q(x)=\prod_{k,j} q(x_{jk})$. We find that preserving some of the dependencies between random variables in the variational approximation yields an algorithm that performs much better and avoids trival solutions. More details are provided in Appendix~\ref{sec:varlap}.
+
+
+\begin{algorithm}[ht]
+\caption{Laplace Variational Approximation}
+\label{alg:lapvar}
+\begin{algorithmic}[1]
+
+\REPEAT
+\FOR {j = 1 to J}
+	\STATE Set $x_j^{(p+1)} \leftarrow \arg \max\limits_{x_j} f(x_j)$
+	\STATE Approximate $q( x_j ) \approx \mathcal{N} \left( x_j^{(p+1)}, -\triangledown^2 f( x_j^{(p+1)} ) \right)$
+	\STATE Compute sufficient statistics $E_{q(x_j)} \left[ x_j \right]$, $E_{q(x_j)} \left[ x_j^T x_j \right]$ and $E_{q(x_j)} \left[ | x_j | \right]$
+\ENDFOR
+
+
+\FOR {i = 1 to N}
+	\STATE Compute maximum likelihood estimate for $\gamma_i$ where $q(\theta_i; \gamma_i) \thicksim \text{Dir} (\gamma_i)$
+	\STATE Compute sufficient statistics $E_{q(\theta_i)} \left[ \theta_i \right]$, $E_{q(\theta_i)} \left[ \theta_i \theta_i^T \right]$ and $E_{q(\theta_i)} [ \log \theta_i ]$
+\ENDFOR
+
+\STATE Set $\hat{\phi}^{(p+1)} \leftarrow \arg \max\limits_{\phi} \mathcal{L}(q,p)$
+
+\UNTIL {change in evidence lower bound is small}
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Estimating the number of clusters (K)}
+
+The problem of estimating the number of clusters for any clustering method is challenging. Methods for choosing K include the silhouette measure \cite{}, information theoretic measures \cite{}, cross-validation \cite{} and non-parametric Bayes methods \cite{}. Prediction accuracy on held-out data (i.e. prediction -perplexity) has been used in the context of topic-model for documents \cite{}. Here, we use a simple Bayesian Information criterion approach to roughly estimate $K$,
+
+\begin{equation}
+\text{BIC}(q,\phi) = -2 \cdot \mathcal{L}(q, p) + \left( K \cdot (J + N + 1) +2 \right) \log(N).
+\end{equation} 
+We count a parameter for each element of $x$ and $\theta$ as well as for $\lambda$, $\sigma^2$ and $\alpha$.
+
+We do not expect that this method will achieve perfect accuracy, only that it will guide selection towards a reasonable value. We avoid computing the true likelihood and instead use the ELBO to avoid performing the intervals over $x$ and $\theta$. As such, this version is only an approximation. We show results of this metric on tissue mixture data later.
+
+\section{Results on Simulation Data}
+
+We used a simulated data set with known parameter values to assess the performance of the three inference approaches and to assess the model in comparison to similar methods for clustering gene expression data.
+
+Two data sets with 500 features and either 40 or 60 samples were generated from a random Gaussian distribution. We refer to these data sets as "pure" and "mixed". For both, the expected value for the first 20 features is +2 for subtype A and -2 for subtype B. The remaining features have an expected value of zero. The standard deviation is set to 1. For the pure sample data set, 20 samples were generated from subtype A and 20 from subtype B for a total of 40. For the mixed sample data set, the first 40 samples are identical to the pure data set and an additional 20 samples were generated as a 50:50 mixture of A and B for a total of 60 samples. 
+
+\subsection{Speed and Accuracy of Inference Algorithms}
+We developed three different inference algorithms: ICM, MCMC and variational, to obtain at least point estimates for the parameters and latent variables of the model. We compare those algorithms on the same data set and measure the time to arrive at solutions and the accuracy of those solutions. All three algorithms were initialized with the same parameter values. We terminated ICM and MCMC optimization when the change in complete data log-likelihood was less than 0.1\% and we terminated the variational algorithm when the change in the ELBO \eqref{eqn:elbo} was less than 0.1\%. We ran the MCMC algorithm as described in \ref{} collecting $T=8000$ samples of the posterior distribution and took a 3000 sample burn-in and thinned every 2 samples. All three algorithms are run serially for these tests, but may be made much faster using standard multi-threading or map-reduce methods.
+
+To measure the performance of these algorithms, we compared the true value, $x$, with the point estimate, $\hat{x}$, by the total $L_1$ distance $\sum_j \sum_k | x_{jk} - \hat{x}_{jk} |$  and the true value $\theta$ with the point estimate $\hat{\theta}$ using the classification error rate (CER),
+\begin{equation}\label{eqn:cer}
+\text{CER}(\theta, \hat{\theta}) = \frac{1}{N} \sum_{i=1}^N \sum_{k=1}^K | \theta_{ki} - \hat{\theta}_{ki} |.
+\end{equation}
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=5in]{pdf_figs/algorithm_time_compare.pdf}
+%the caption mentions that the variational algorithm is returning results faster than both ICM and MCMC but it's not the case. ICM is much faster than both of them.
+\caption{Timing comparison for ICM, MCMC and variational algorithms for GLaD model}
+\label{fig:alg_compare}
+\end{center}
+\end{figure}
+
+The ICM algorithm runs very quickly and completes in 42 sec. While the accuracy of the ICM estimate for $x$ is as good as MCMC and the variation algorithm, the CER for $\theta$ is much worse. The MCMC algorithm takes more time at 62,120 sec to complete, but arrives at a similar solution as the ICM algorithm. Assessing convergence for the MCMC algorithm is difficult, though there are several methods to do so \cite{}. Generally, these convergence assessment methods require more sample collection and thus result in slower algorithms. Finally, the variational approach yields good CER and total $L_1$ distance for $x$ in a reasonable amount of time (8,626 sec). We use the variational algorithm for the following experiments.
+
+\subsection{Comparison to LPD and Sparse K-means}
+
+To assess the performance of GLaD with other mixed-membership and sparse clustering algorithms, we compared the CER to sparse K-means and latent process decomposition on pure and mixed data sets. All algorithms were initialized with random starting points. Figure~\ref{fig:model_compare} shows the sample fraction estimates under two simulated data scenarios for Latent Process Decomposition (LPD), Sparse K-means and GLaD. The pure data scenario is shown in the left column and mixed scenario is shown in the right column. All models are estimated with $K=2$ subtypes in both scenarios and the true mixture fractions for each sample are shown in the top row of the figures. Black and white bars denote the two subtype fractions for each sample. 
+
+LPD is able to accurately estimate the sample fractions under both the pure and mixed scenarios. The pure data is very accurate with a classification error rate (CER) of 0.116. The mixed CER is also good at 0.202. Sparse K-means is very accurate for the pure scenario data (CER=0.0), but incorrectly classifies all of the mixed samples (CER = 0.33). This is expected since the algorithm was not intended to classify mixed samples. GLaD classifies the pure data with a CER of 0.317 and the mixed data with a CER of 0.196. 
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics{pdf_figs/model_compare.pdf}
+\caption{Comparison of sample classification by Latent Process Decomposition, Sparse K-means and GLaD }
+\label{fig:model_compare}
+\end{center}
+\end{figure}
+
+It is evident in the figure that LPD has a higher variance in the classification proportion for the mixed samples while GLaD has less variability. However, GLaD errs on the side of more mixing for the pure samples in both the pure and mixed data scenarios.
+
+
+\section{Results on In-vitro Mixture Data}
+
+While simulation data is useful to obtain quantitative performance metrics with a known data set under ideal conditions, it does not necessarily represent the variability in real gene expression data. Shen-Or et al performed an in-vitro mixture experiment that yields a good data set to test our algorithm while still providing a true positive control. They independently isolated RNA from rat lung, liver and brain tissue. Then the mixed those samples at varying fractions and measured the levels on microarrays with replicates. This data set gives us known mixture fractions and a known number of subtypes with real gene expression microarray data variability.
+
+The initial data set contains 42 samples and 31,099 features. The measurements are the RMA normalized microarray intensities on a $\log_2$ scale. We preprocessed the probes to select only those that have a coefficient of variation greater than 20\% yielding a data matrix that is $1198 \times 42$ in size. We set $K=3$ and estimated the model and variational parameters for the GLaD model on this in-vitro mixture experiment. 
+
+
+Since the true number of mixing components is known to be three for this data set, we used the BIC approach outlined above to estimate $K$. Figure~\ref{fig:rat_bic_K} shows that the BIC method optimally chooses $K=5$, there is a clear minimum at 4. We use this criterion as a rough guide to estimate $K$ in general.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=120mm]{pdf_figs/rat_bic_K.pdf}
+\caption{Bayesian Information Criterion metric to estimate K}
+\label{fig:rat_bic_K}
+\end{center}
+\end{figure}
+
+
+Figure~\ref{fig:rat_mixture_theta} shows true values of $\theta$ and point estimates, $\hat{\theta}$ for three subtypes which we have labeled by their associated tissue types. Clearly, the GLaD model identifies both the pure and mixed samples in the data set. 
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics{pdf_figs/rat_mixture_estimate.pdf}
+\caption{Posterior estimates for mixture fractions for in-vitro mixed tissue samples.}
+\label{fig:rat_mixture_theta}
+\end{center}
+\end{figure}
+
+The data set is biased towards brain tissue with more samples containing higher fractions of that tissue. The empirical Bayes estimates of $\alpha$ reflect this bias in the data set and thus bias the subtype fraction estimates for the pure samples. In applications where one would prefer not to bias the subtype predictions a-priori, uniform values for $\alpha$ can be set and fixed. However, the estimated $\alpha$ values do provide some information about the entire data set if that is of interest.
+
+The genes within each subtype signature are clearly associated with the corresponding tissue type. Table~\ref{tbl:rat_signature} shows the top 10 genes ranked by absolute value of $x_{j}$ for the three subtypes. All of the top 10 genes are over expressed in the subtype indicated. We have annotated each subtype by the most closely matching tissue type. In the liver signature, there are genes associated with blood components (ITIH4, FGA, MUG1, FGB, PZP) and genes that are associated with liver regeneration (A1BG) and molecule uptake (FABP1). In the brain subtype, the top component is MBP - a myelin sheath component. The signature also includes VSNL1 - a neuronal calcium sensor, SNAP25 - a synaptic vesicle dicing protein and PLP1 - a transmembrane myelin protein. Finally, the lung signature contains SLC24A2 which if defective causes pulmonary alveolar microlithiasis and SFTPD which plays a role in defense response in the lung.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=60mm]{tables/rat_sig.pdf}
+\caption{Tissue mixture subtype signatures}
+\label{tbl:rat_signature}
+\end{center}
+\end{figure}
+
+
+\section{Results on Glioblastoma Tumor Classification}
+
+We applied the GLaD model to microarray measurements of RNA expression levels in glioblastoma (GBM) tumors obtained as part of The Cancer Genome Atlas (TCGA) project \cite{McLendon:2008gr, Verhaak:2010bj}. We used the unified filtered matrix provided in the supplementary materials \cite{Verhaak:2010bj}. This data has been normalized and filtered for the most differentially expressed genes leaving a data matrix with $1740$ features and $202$ primary tumor samples. 
+
+We set $K=4$ for this data because the TCGA group showed four canonical subtypes: Classical (CL), Proneural (PN), Neural(NL) and Mesenchymal(MES) \cite{Verhaak:2010bj}. Since these are biopsy samples, we expect that there is some normal cell contamination in the samples. Indeed, normal contamination was also observed by Verhaak et al and clustered within the Neural subtypes. As such, we expect that mixture fractions of the Neural subtype may represent normal cell contamination in our model.
+
+Figure~\ref{fig:gbm_distribution} shows the distribution over subtypes for each sample in the glioblastoma data set. We have labeled the subtypes based on their similarity to the reported subtypes in Verhaak et al.  As expected there is considerable mixing between the classical subtype and other subtypes possibly due to normal cell contamination. We also see significant mixing among the other subtypes indicating that the samples are indeed generally not pure. There are several mesenchymal samples that show little to no mixing with the other subtypes (bottom-left) and these represent more examples of the subtype while there are very few pure pro-neural. This may be due to a distinct oncogenic mechanism at work in the mesenchymal subtype compared to some pathway overlap for the pro neural subtype.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=60mm]{pdf_figs/gbm_theta.pdf}
+\caption{Subtype distributions for each of 202 GBM samples}
+\label{fig:gbm_distribution}
+\end{center}
+\end{figure}
+
+Table~\ref{tbl:gbm_signature} shows the genes involved in the four subtypes identified by the GLaD model. Like topic models, each subtype has coefficient values for all features. However, the Laplace distribution prior has the effect of regularizing uninformative coefficients towards zero yielding a sparse signature. We report only the top 15 candidates for the signature here and the full table is available in supplementary information. Genes in green are unregulated in the subtype and genes in blue are down regulated. Genes in bold were also identified by Verhaak et al. for that subtype except UGT8 which was associated with neural-like while we associated it with proneural.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=120mm]{tables/gbm_sig.pdf}
+\caption{Sparse subtype signatures for GBM}
+\label{tbl:gbm_signature}
+\end{center}
+\end{figure}
+
+Upregulation of DKK1 and POSTN is associated with the mesenchymal subtype in our analysis. DKK1 plays a role in inhibition of the WNT signaling pathway and the presence of bone lesions in multiple myeloma patents \cite{Tian:2003ht}. Although the entire function of perstonin (POSTN) is not known, it is frequently unregulated in cancers and has been associated with adhesion and differentiation of osteoblasts \cite{Kudo:2007we}. These markers in combination with collagen-specific genes COL1A1 and COL1A2 point to the role of these genes in the precursor to bone and cartilage development this subtype's mesenchymal-like genomic character.
+
+The classical subtype has only one highly unregulated gene - EGFR. Verhaak et al observed this association at both the mRNA and DNA levels in 97\% of classical-like cells indicating its strong association\cite{Verhaak:2010bj}. The proneural actin and microtubule related genes TMSL8 and DCX are over expressed in the proneural subtype \cite{Brown:2003hc}. Finally, the neural-like subtype contains the central-nervous system water channel AQP4 and other genes associated with normal neural cells.
+
+\appendix
+\section{Derivation of Variational Inference Algorithm}\label{sec:varlap}
+
+We propose the following factorized variational distribution for the approximate posterior distribution over latent variables
+\begin{equation}
+	q(x, \theta) = q(x)q(\theta) = \prod_{j=1}^J q(x_{j}) \prod_{i=1}^N q(\theta_i).
+\end{equation}
+
+%The optimal variational distributions, given by \cite{Bishop} are of the form
+%\begin{eqnarray}
+%	q(\theta)  \propto \exp \left\{ E_{q(x)} \left[ \log p(y|x, \theta) p(\theta) \right] \right\} \\
+%	q(x) \propto \exp \left\{ E_{q(\theta)} \left[ \log p(y|x, \theta) p(x) \right] \right\}.
+%\end{eqnarray}
+%
+%We see the expected complete log-likelihood appears in the exponents  $f( \theta_i ) = E_{q(x)} \left[ \log p(y|x, \theta_i) p(\theta_i) \right]$ and $f( x_j ) = E_{q(\theta)} \left[\log p(y|x_j, \theta) p(x_j) \right]$. In Laplace variational inference \cite{Wang 2013} we take the Taylor approximation around the maximum of $q(\theta_i)$ and $q(x_j)$ which naturally leads to the following multivariate Gaussian approximations: 
+%\begin{eqnarray}
+%	q( \hat{ \theta }_i)  \approx \mathcal{N} \left( \hat{\theta}_i, -\triangledown^2 f( \hat{ \theta }_i ) \right)\\
+%	q( \hat{ x }_j) \approx \mathcal{N} \left( \hat{x}_j, -\triangledown^2 f( \hat{ x }_j ) \right)
+%\end{eqnarray}
+%for each sample $i$ and feature $j$. 
+
+The log-likelihood of the data can be bound using the usual variational approximation
+\begin{equation}
+\begin{split}
+\log p(y ; \phi)   &= \log \int_x \int_\theta p(y,x,\theta) dx d\theta \\
+&= \log \int_x \int_\theta p(y,x,\theta) \frac{ q(x,\theta) } { q(x,\theta) } dx d\theta \\
+&\geq \int_x \int_\theta q(x, \theta) \log \frac{ p(y,x,\theta) } { q(x,\theta) } dx d\theta \\
+&= E_q \left[ \log p(y, x, \theta) \right] - E_q \left[ \log q(x, \theta) \right] \\
+&\triangleq \mathcal{L}(q, p)
+\end{split}
+\end{equation}
+
+The \emph{evidence lower bound} (ELBO),  $\mathcal{L}(q, p)$, is composed of the expected complete log-likelihood and the entropy of the variational distribution. Maximizing the auxiliary function suggests a tradeoff between opposing the objectives of maximizing the likelihood of the data under the variational distribution and maximizing the entropy of the variational distribution. The auxiliary function can also be seen as minimizing the KL-divergence between the variational distribution and the data distribution, $D_{KL}(q\|p)$.
+
+Writing out the ELBO gives
+\begin{equation}\label{eqn:elbo}
+\begin{split}
+	\mathcal{L}(q,p) &= E_q \left[ \log p(y|x,\theta; \sigma^2) \right] + E_q \left[ \log p(x ; \lambda) \right] + E_q \left[ \log p(\theta; \alpha) \right] \\
+	& \quad- E_q \left[ \log q(x) \right] - E_q \left[ \log q(\theta) \right]
+\end{split}
+\end{equation}
+
+The individual terms of \eqref{eqn:elbo} are shown in \eqref{eqn:llbnd1} -- \eqref{eqn:llbnd5}:
+\begin{equation}\label{eqn:llbnd1}
+\begin{split}
+	E_q \left[ \log p(y|x,\theta; \sigma^2) \right] &= \sum_{i=1}^N \sum_{j=1}^J E_q \left[ \log p(y_{ji} | x_j, \theta_i) \right] \\
+	&= \sum_{i=1}^N \sum_{j=1}^J \left( -\frac{1}{2} \log (2 \pi \sigma^2 ) - \frac{1}{2 \sigma^2} E_q \left[ (y_{ji} - x_j \theta_i)^2 \right] \right) \\
+	&=   -\frac{NJ}{2} \log (2 \pi \sigma^2 ) - \frac{1}{2 \sigma^2} \sum_{i=1}^N \sum_{j=1}^J \left( E_q [ y_{ji}^2 ]  - 2 y_{ji} E_q [ x_j ] E_q[ \theta_i ] + E_q \left[ (x_j \theta_i)^2 \right] \right) \\
+	&= -\frac{NJ}{2} \log (2 \pi \sigma^2 ) - \frac{1}{2 \sigma^2} \sum_{i=1}^N \sum_{j=1}^J \left( E_q [ y_{ji}^2 ]  - 2 y_{ji} E_q [ x_j ] E_q[ \theta_i ] + \text{Tr} ( E_q [  \theta_i \theta_i^T ] E_q [ x_j^T x_j ] ) \right)
+\end{split}
+\end{equation}
+%The last term of \eqref{eqn:llbnd1} is simplified using the trace trick and the linearity of both the trace and expectation operator.
+%\begin{eqnarray}
+%	E_q \left[ (x_j \theta_i)^2 \right] &= E_q \left[ \text{Tr} (\theta_i^T x_j^T x_j \theta_i) \right] \\
+%	& = E_q \left[ \text{Tr} ( \theta_i \theta_i^T x_j^T x_j) \right]  \\
+%	& = \text{Tr} ( E_q \left[  \theta_i \theta_i^T x_j^T x_j \right] ) \\
+%	& = \text{Tr} ( E_q [  \theta_i \theta_i^T ] E_q [ x_j^T x_j ] ).
+%\end{eqnarray}
+
+\begin{equation}\label{eqn:llbnd2}
+	E_q \left[ \log p(x; \lambda) \right] = - K J \log(2 \lambda) -  \sum_{j=1}^J \sum_{k=1}^K \frac{ E_q[ | x_{jk} | ] }{ \lambda }
+\end{equation}
+
+\begin{equation}\label{eqn:llbnd3}
+	E_q \left[ \log p(\theta; \alpha) \right] = N \log \Gamma \left( \sum_k \alpha_k \right) - N \sum_{k=1}^K \log \Gamma(\alpha_k) + \sum_{n=1}^N \sum_{k=1}^K (\alpha_k - 1) E_q[ \log \theta_{kn} ]
+\end{equation}
+
+\begin{equation}\label{eqn:llbnd4}
+	E_q \left[ \log q(x) \right] = \sum_{j=1}^J \sum_{k=1}^K E_q \left[ \log q(x_{jk}) \right]
+\end{equation}
+
+\begin{equation}\label{eqn:llbnd5}
+	E_q \left[ \log q(\theta; \gamma) \right] = \sum_{n=1}^N E_q \left[ \log q(\theta_i) \right]
+\end{equation}
+
+In order to compute the ELBO, we require these expected values computed with respect to the variational distribution: $E_q(x_j)$, $E_q(x_j^Tx_j)$, $E_q |x_{jk} |$, $E_q(\theta_i)$, $E_q(\theta_i \theta_i^T)$, $E_q(\log \theta_i)$. We aim to find a variational distribution that makes the computation of these expectations simple, so we choose the variational distribution,
+\begin{equation}
+	q(x, \theta) =\prod_{j=1}^J q(x_j) \prod_{i=1}^N q(\theta_i),
+\end{equation}
+where $q(x_j) \thicksim \mathcal{N} \left( \hat{x}_{j}, {-\triangledown f( \hat{x}_j ) }^{-1} \right)$ and $q(\theta_i) \thicksim \text{Dir}(\gamma_i)$. We use the Laplace approximation for $q(x_j)$ and the Dirichlet distribution for $q(\theta_i)$ to allow for the analytical computation of the required expected values.
+
+\subsection{Variational Distribution $q(\theta_i)$}
+
+The probability density function for $q(\theta_i) \thicksim \text{Dir}(\gamma_i)$ is 
+\begin{equation}
+	q(\theta_i; \gamma_i) = \log \Gamma \left( \sum_k \gamma_{ki} \right) - \sum_k \log \Gamma (\gamma_{ki}) + \sum_k (\gamma_{ki} - 1) \left( \psi(\gamma_{ki}) - \psi ( \gamma_{0i} ) \right)
+\end{equation}
+where we define $\gamma_{0i} = \sum_k \gamma_{ki}$.
+
+The expected values needed for the ELBO can then be easily found to be for the Dirichlet
+\begin{eqnarray}
+	E_q[ \log \theta_i ] =& \psi(\gamma_{ki}) - \psi ( \gamma_{0i} ) \\
+	E_q[\theta_i] =& \frac{ \gamma_{ki} } { \gamma_{0i} } \\
+	E_q[\theta_i \theta_i^T] =& \frac{ \gamma_i \gamma_i^T + \text{diag}(\gamma_i) } { \gamma_{0i} ( 1 + \gamma_{0i} ) }
+\end{eqnarray}
+
+Note that it is difficult to use the Laplace approximation for $q(\theta_i)$ as we have done for $q(x_j)$.  The normal distribution has support over the real line and presents complications for the computation of $E_q[\log \theta_i]$.
+
+\subsection{Variational Distribution $q( x_j )$}
+
+We use the Laplace approximation for the variational distribution $q(x_j)$, 
+\begin{equation}
+	q(x_j) \approx \mathcal{N} \left( \hat{x}_j, -\triangledown^2 f(x_j)^{-1} \right)
+\end{equation}
+where $\hat{x}_j$ maximizes the ELBO \eqref{eqn:elbo} and $f(x_j)$ isolates the terms of the ELBO that depend on $x_j$. Under the Laplace approximation, the Hessian of the ELBO is used to estimate the covariance matrix.
+
+Isolating the terms in ELBO that depend on $x_j$ gives
+\begin{equation}\label{eqn:f_x}
+	f( x_j ) = \frac{1}{\sigma^2}\sum_{i=1}^N y_{ij}E_{q} [\theta_i] x_j - \frac{1}{2 \sigma^2}\sum_{i=1}^N \text{Tr}(E_q[ \theta_i \theta_i^T ] x_j^T x_j) -\frac{1^T_K | x_j | } { \lambda }.
+\end{equation}
+
+The gradient of \eqref{eqn:f_x} is
+\begin{equation}
+	\triangledown f( x_j ) =  \frac{1} { \sigma^2 } \sum_{i=1}^N y_{ij}E_{q} [\theta_i] - \frac{1}{\sigma^2}\sum_{i=1}^N E_q[ \theta_i \theta_i^T ] x_j^T -\frac{ \text{sgn} (x_j) } { \lambda }.
+\end{equation}
+
+The Hessian of \eqref{eqn:f_x} is
+\begin{equation}
+	\triangledown^2 f( x_j )=  - \frac{1}{\sigma^2}\sum_{i=1}^N E_q[ \theta_i \theta_i^T ].
+\end{equation}
+We have used the fact that $\frac{d\text{sgn} (x) } { dx } = \delta(x)$ where $\delta(x)$ is the Kronecker delta function. Since this function is zero everywhere except for at the point $x=0$ we approximate it to be zero everywhere for the purpose of estimating the Hessian.
+
+ The expected values needed for the ELBO are
+\begin{eqnarray}
+	E_q[ |x_j| ] =& \sqrt{ \frac{ 2 \Sigma(\hat{x}_j)_{kk} } {\pi} } \exp \left( -\frac{ \hat{x}_{jk}^2 } { 2 \Sigma(\hat{x}_j)_{kk} } \right) + \hat{x}_{jk} \left( 1 - 2 \Phi \left( - \frac{ \hat{x}_{jk} } { \sqrt{ \Sigma(\hat{x}_j)_{kk} } } \right) \right)\\
+	E_q[\theta_i] =& \frac{ \gamma_{ki} } { \gamma_{0i} } \\
+	E_q[\theta_i \theta_i^T] \approx& \frac{ \gamma_i \gamma_i^T + \text{diag}(\gamma_i) } { \gamma_{0i} ( 1 + \gamma_{0i} ) }
+\end{eqnarray}
+where $\Phi(x)$ is the standard normal cumulative distribution function.
+
+We see that the normal approximation for $q(x_j)$ allows for the analytical computation of $E_q(|x_j|)$ because $|x_j|$ has a folded normal distribution. In our notation, we define $\Sigma(\hat{x}_j)_{kk}$ to be the element in the k-th row and column of the covariance matrix estimate $\Sigma(\hat{x}_j)  \triangleq -\triangledown^2 f( \hat{x}_j )^{-1}$.
+
+\subsection{Optimizing Model Parameters $\phi=\{\alpha, \lambda, \sigma^2\}$}
+
+The M-step in the variational EM algorithm requires us to maximize the ELBO with respect to each model parameter.
+
+\subsubsection{Optimizing $\lambda$} The ELBO with respect to $\lambda$ is
+\begin{equation}
+\mathcal{L}_{[\lambda]} = - K J \log(2 \lambda) -  \sum_{j=1}^J \sum_{k=1}^K \frac{ E_q[ | x_{jk} | ] }{ \lambda }.
+\end{equation}
+
+Taking the derivative with respect to $\lambda$ and setting it equal to zero gives an analytical update,
+\begin{equation}
+	\lambda \leftarrow  \frac{1}{KJ} \sum_{j=1}^J \sum_{k=1}^K E_q[ | x_{jk} | ],
+\end{equation}
+where $E_q[ | x_{jk} | ]$ is obtained from the folded Normal distribution of the Laplace approximation.
+
+\subsubsection{Optimizing $\sigma^2$} The ELBO with respect to $\sigma^2$ is
+\begin{equation}
+\mathcal{L}_{[\sigma^2]} = \sum_{i=1}^N \sum_{j=1}^J \left( -\frac{1}{2} \log (2 \pi \sigma^2 ) - \frac{1}{2 \sigma^2} E_q \left[ (y_{ji} - x_j \theta_i)^2 \right] \right).
+\end{equation}
+
+Taking the derivative with respect to $\sigma^2$ and setting it equal to zero gives an analytical update,
+\begin{equation}
+		\sigma^2 \leftarrow  \frac{1}{NJ} \sum_{i=1}^N \sum_{j=1}^J  E_q \left[ (y_{ji} - x_j \theta_i)^2 \right].
+\end{equation}
+
+Expanding the expected sum-of-squares error term gives
+\begin{equation}
+	\sigma^2 \leftarrow  \frac{1}{NJ} \sum_{i=1}^N \sum_{j=1}^J  \left( E_q [ y_{ji}^2 ]  - 2 y_{ji} E_q [ x_j ] E_q[ \theta_i ] + \text{Tr} ( E_q [  \theta_i \theta_i^T ] E_q [ x_j^T x_j ] ) \right)
+\end{equation}
+
+\subsubsection{Optimizing $\alpha$} 
+Only one term in the ELBO involves $\alpha$ and we optimize the ELBO numerically. We simply maximize $E_q \left[ \log p(\theta; \alpha) \right]$ with respect to $\alpha$ using standard constrained numerical optimization methods. While it is possible to use the structure of the Hessian of the ELBO with respect to $\alpha$ to derive a fast Newton-Raphson update step \cite{Blei}, we opt to use packaged optimization software here.
+
+
+\bibliographystyle{apalike}
+\bibliography{bioinfo}
+\end{document}  
