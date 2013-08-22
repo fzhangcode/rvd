@@ -13,3 +13,6 @@ tmp*
 *.bam
 *.pileup
 *.dc
+Thumbs.db
+*.eps
+.DS_Store
