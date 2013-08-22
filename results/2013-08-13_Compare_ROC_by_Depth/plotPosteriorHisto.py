@@ -39,11 +39,11 @@ def main():
         
 ##    plt.title('Median of read depth=%d' % np.median(np.array(Nreads),axis=None))
     plt.legend(label,loc=4)
+    plt.plot([0,1],[0,1],color='k',linestyle='dashed')
 
     plt.title('Read depth median = %d' % np.median(np.array(Nreads),axis=None))
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.show()
     plt.savefig('ROC_plot.png')
 
  
