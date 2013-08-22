@@ -6,8 +6,8 @@ PILEUP2DC=../../bin/pileup2dc
 BAMDIR := ../../data/Synthetic_BAM_files
 BAMFILE := $(wildcard $(addprefix $(BAMDIR)/, 20100916_c?_p?.*.bam)) # all pair1 & pair2
 
-DRATE = 0.1
-DFRAC = "10"
+DRATE = 1
+DFRAC = 1
 DOWNSAMPLEDIR = ./bam
 DOWNSAMPLEBAM := $(addprefix $(DOWNSAMPLEDIR)/, $(notdir $(BAMFILE) ) )
 # := enforces wildcard expansion
