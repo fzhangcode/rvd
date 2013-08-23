@@ -1,12 +1,13 @@
-2013-08-13 Compare ROC by Read Depth
+2013-08-13 Read depth and precision parameter M evaluation across position
 ==============================
 
 Purpose
 ------------
-To measure sensitivity and specificity for full RVD2 pipeline for various read depths on synthetic gene data.
+Read depth and precision parameter M evaluation across position
 
 Conclusions
 -----------------
+The precision parameter M varied in large scale across position. A prior on M may be a possible solution to constrain the range.
 
 Background
 -----------------
@@ -22,6 +23,8 @@ Experimental Protocol
 
 Results
 -----------
+![](Depth_M.png)
+
 
 Archived Samples
 -------------------------
@@ -30,7 +33,7 @@ Archived Computer Data
 ------------------------------
 
 
-Prepared by: _________________     Date: _____________________
+Prepared by: Yuting He_________________     Date: _____________________
 
 
 Witnessed by: ________________________

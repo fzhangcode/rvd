@@ -106,9 +106,11 @@ def gibbs(args):
 def test_main(args):
     test(args.controlHDF5Name, args.caseHDF5Name, args.T, args.N, args.outputFile)
 
-def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile="test"):
+def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile=None):
     """ Top-level function to test for variants.
     """
+    
+    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
     
     # Load the Case and Control Model files
     logging.debug(controlHDF5Name)
@@ -150,20 +152,40 @@ def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile="test"):
 	        chi2P[j] = np.nan
 	    else:
 	       chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
-	    
 
-    # Save the test results
-    with h5py.File(outputFile+'.hdf5', 'w') as f:
-        f.create_dataset('loc', data=caseLoc)
-        f.create_dataset('postP', data=postP)
-        f.create_dataset('T', data=T)
-        f.create_dataset('chi2pvalue',data=chi2P)
-        f.close()
+    # Call variants that have postP > 0.95 and chi2pvalue < 0.05 after Bonferroni correction
+    call = []
+    altb = []
+    for i in xrange(J):
+        r = np.squeeze(caseR[:,i,:]) # replicates x bases
+        
+        # Make a list of the alternate bases for each replicate
+        acgt_r = ['A','C','G','T']
+        del acgt_r[ acgt[refb[i]] ]
+
+        altb_r = [acgt_r[x] for x in np.argmax(r, axis=1)]
+        
+        if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
+            altb.append(altb_r[0]) # TODO: find a better way to report all alternate bases
+            call.append(True)
+        else:
+            altb.append(None)
+            call.append(False)
+            
+    if outputFile is not None:
+        # Save the test results
+        with h5py.File(outputFile+'.hdf5', 'w') as f:
+            f.create_dataset('loc', data=caseLoc)
+            f.create_dataset('postP', data=postP)
+            f.create_dataset('T', data=T)
+            f.create_dataset('chi2pvalue',data=chi2P)
+            f.close()
     
-    write_vcf(outputFile+'.vcf', caseLoc, refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
-    return caseLoc, caseMu, controlMu postP, chi2P
+        write_vcf(outputFile+'.vcf', caseLoc, call, refb, altb, np.mean(caseMu, axis=1))
+        
+    return caseLoc, caseMu, controlMu, postP, chi2P
 
-def write_vcf(outputFile, loc, refb, caseR, caseMu, postP, chi2P):
+def write_vcf(outputFile, loc, call, refb, altb, caseMu):
     """ Write high confidence variant calls to VCF 4.2 file.
     """
     
@@ -171,7 +193,7 @@ def write_vcf(outputFile, loc, refb, caseR, caseMu, postP, chi2P):
     J = len(loc)
     
     today=date.today()
-    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+    
 ##    chrom = [x.split(':')[0][3:] for x in loc]
 ##    pos = [int(x.split(':')[1]) for x in loc]
     chrom=np.copy(loc)
@@ -186,19 +208,8 @@ def write_vcf(outputFile, loc, refb, caseR, caseMu, postP, chi2P):
     
     print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO", file=vcfF)
     for i in xrange(J):
-        r = np.squeeze(caseR[:,i,:]) # replicates x bases
-        
-        # Make a list of the alternate bases for each replicate
-        acgt_r = ['A','C','G','T']
-        del acgt_r[ acgt[refb[i]] ]
-
-        altb = [acgt_r[x] for x in np.argmax(r, axis=1)]
-        
-        if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
-            logging.debug(loc[i])
-            logging.debug(postP[i])
-            #print("%s\t%d\t.\t%c\t%s\t.\t.\t." % (chrom[i], pos[i], refb[i], ','.join(altb)), file=vcfF)
-            print("%s\t%d\t.\t%c\t%s\t.\tPASS\tAF=%0.3f" % (chrom[i], pos[i], refb[i], altb[0], caseMu[i]*100.0), file=vcfF)
+        if call[i]:
+            print("%s\t%d\t.\t%c\t%s\t.\tPASS\tAF=%0.3f" % (chrom[i], pos[i], refb[i], altb[i], caseMu[i]*100.0), file=vcfF)
     
     vcfF.close()
     
