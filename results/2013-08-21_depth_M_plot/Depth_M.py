@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 import logging
-import pdb
 
 ##os.chdir('S://yhe2//Research//rvd2//results//2013-08-21_depth_M_plot')
 
@@ -24,21 +23,21 @@ def main():
     (n_gibbs, nmh) = (4000, 50)
 
     fig=plt.figure(figsize=(12,20))
-    plt.suptitle('Read depth and M plot')
+    plt.suptitle('Read depth/M across position')
 
     controlFile = "../%s/Control.hdf5" %folder
     (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = rvd27.load_model(controlFile)
-##    pdb.set_trace()
     
     sub0=len(dilutionList)+1
     ax=fig.add_subplot(sub0,2,1)
+    #TODO: use index of controlN rather than directly controlLOC
     ax.plot(controlLoc,controlN.T)
     ax.set_title('Control')
     ax.set_ylabel('Depth(N)')
-##    leg=['replicate1','2','3','4','5','6']
-##    ax.legend(leg)
+    leg=['1','2','3','4','5','6']
+    ax.legend(leg,loc=2,ncol=2,prop={'size':10})
     ax=fig.add_subplot(sub0,2,2)
-    ax.plot(controlLoc,controlPhi['M'])
+    ax.semilogy(controlLoc,controlPhi['M'])
     ax.set_title('Control')
     ax.set_ylabel('M')
     
@@ -51,19 +50,18 @@ def main():
         (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = rvd27.load_model(caseFile)
         ax=fig.add_subplot(sub0,2,2*dilutionList.index(d)+3)
         ax.plot(caseLoc,caseN.T)
-        ax.set_title(str(d).replace(".","_"))
+        ax.set_title("Dilution %0.1f%%" % d)
         if dilutionList.index(d)==len(dilutionList)-1:
-            ax.set_xlabel('Loc')
+            ax.set_xlabel('Position')
         ax.set_ylabel('Depth(N)')
         
         ax=fig.add_subplot(sub0,2,2*dilutionList.index(d)+4)
-        ax.plot(caseLoc,casePhi['M'])
-        ax.set_title(str(d).replace(".","_"))
+        ax.semilogy(caseLoc,casePhi['M'])
+        ax.set_title("Dilution %0.1f%%" % d)
         if dilutionList.index(d)==len(dilutionList)-1:
-            ax.set_xlabel('Loc')
+            ax.set_xlabel('Position')
         ax.set_ylabel('M')
     plt.savefig('Depth_M')
-    plt.show()  
 
 if __name__ == '__main__':
     main()
