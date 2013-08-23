@@ -16,3 +16,4 @@ tmp*
 Thumbs.db
 *.eps
 .DS_Store
+*.vcf

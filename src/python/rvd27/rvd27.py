@@ -20,6 +20,7 @@ import os
 import subprocess
 from datetime import date
 
+import pdb
 
 def main():
     import argparse
@@ -53,7 +54,7 @@ def main():
                 
                 
     # create subparser to compare two model files
-    argpTest = subparsers.add_parser('test', 
+    argpTest = subparsers.add_parser('test_main', 
                         help='test if case error rate is greater than control by T')
     argpTest.add_argument('controlHDF5Name',
                 help='control model file (HDF5)')
@@ -103,7 +104,7 @@ def gibbs(args):
                refb=refb)
 
 def test_main(args):
-    test(args.controlHDF5Name, args.caseHDF5Name, args.T, args.N, args.outputName)
+    test(args.controlHDF5Name, args.caseHDF5Name, args.T, args.N, args.outputFile)
 
 def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile="test"):
     """ Top-level function to test for variants.
@@ -160,7 +161,8 @@ def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile="test"):
         f.close()
     
     write_vcf(outputFile+'.vcf', caseLoc, refb, caseR, np.mean(caseMu, axis=1), postP, chi2P)
-    
+    return caseLoc, caseMu, controlMu postP, chi2P
+
 def write_vcf(outputFile, loc, refb, caseR, caseMu, postP, chi2P):
     """ Write high confidence variant calls to VCF 4.2 file.
     """
@@ -170,10 +172,11 @@ def write_vcf(outputFile, loc, refb, caseR, caseMu, postP, chi2P):
     
     today=date.today()
     acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+##    chrom = [x.split(':')[0][3:] for x in loc]
+##    pos = [int(x.split(':')[1]) for x in loc]
+    chrom=np.copy(loc)
+    pos=np.copy(loc)
     
-    chrom = [x.split(':')[0][3:] for x in loc]
-    pos = [int(x.split(':')[1]) for x in loc]
-
     vcfF = open(outputFile,'w')
     
     print("##fileformat=VCFv4.1", file=vcfF)
