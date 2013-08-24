@@ -21,6 +21,7 @@ import subprocess
 from datetime import date
 
 import re
+import pdb
 
 def main():
     import argparse
@@ -165,13 +166,14 @@ def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile=None):
 
         altb_r = [acgt_r[x] for x in np.argmax(r, axis=1)]
         
-        if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
+##        if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
+        if postP[i] >0.95: # Bonferroni Correction
             altb.append(altb_r[0]) # TODO: find a better way to report all alternate bases
             call.append(True)
         else:
             altb.append(None)
             call.append(False)
-            
+     
     if outputFile is not None:
         # Save the test results
         with h5py.File(outputFile+'.hdf5', 'w') as f:
@@ -183,7 +185,7 @@ def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile=None):
     
         write_vcf(outputFile+'.vcf', caseLoc, call, refb, altb, np.mean(caseMu, axis=1))
         
-    return caseLoc, caseMu, controlMu, postP, chi2P
+    return caseLoc, caseMu, controlMu, postP, chi2P, call
 
 def write_vcf(outputFile, loc, call, refb, altb, caseMu):
     """ Write high confidence variant calls to VCF 4.2 file.
@@ -196,7 +198,6 @@ def write_vcf(outputFile, loc, call, refb, altb, caseMu):
     
     chrom = [x.split(':')[0][3:] for x in loc]
     pos = [int(x.split(':')[1]) for x in loc]
-    pdb.set_trace()
     vcfF = open(outputFile,'w')
     
     print("##fileformat=VCFv4.1", file=vcfF)
