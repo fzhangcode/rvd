@@ -20,7 +20,7 @@ import os
 import subprocess
 from datetime import date
 
-import pdb
+import re
 
 def main():
     import argparse
@@ -194,11 +194,9 @@ def write_vcf(outputFile, loc, call, refb, altb, caseMu):
     
     today=date.today()
     
-##    chrom = [x.split(':')[0][3:] for x in loc]
-##    pos = [int(x.split(':')[1]) for x in loc]
-    chrom=np.copy(loc)
-    pos=np.copy(loc)
-    
+    chrom = [x.split(':')[0][3:] for x in loc]
+    pos = [int(x.split(':')[1]) for x in loc]
+    pdb.set_trace()
     vcfF = open(outputFile,'w')
     
     print("##fileformat=VCFv4.1", file=vcfF)
@@ -590,7 +588,13 @@ def load_depth(dcFileNameList):
             cd.append( dict(zip(loc1, [map(int, x[5:9]) for x in dc if x[4] in acgt.keys()])) )
             
     loc = list(reduce(set.intersection, map(set, loc)))
-    loc.sort()
+
+    def stringSplitByNumbers(x):
+        r = re.compile('(\d+)')
+        l = r.split(x)
+        return [int(y) if y.isdigit() else y for y in l]
+
+    loc = sorted(loc,key = stringSplitByNumbers)
     logging.debug(loc)
     refb = [refb[k] for k in loc]
     
