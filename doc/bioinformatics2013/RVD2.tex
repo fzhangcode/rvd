@@ -1,0 +1,134 @@
+\documentclass[11pt,reqno]{amsart}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{algorithm, algorithmic}
+\usepackage{graphicx}
+
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+%\usepackage{epstopdf}
+%\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\newcommand{\RR}{I\!\!R} %real numbers
+\DeclareMathOperator{\diag}{diag}
+
+\title{RVD2}
+\author{}
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+\section{Materials and Methods}
+
+\subsection{Materials}
+\subsection{Model structure}\
+
+Consider the following hierarchical model as the generative process for RVD2 model
+
+\begin{align}
+\mu_j|\mu_0,M_0 &\thicksim \text{Beta}(a, b)\\
+\theta_{ij}|\mu_j,M_j &\thicksim \text{Beta}(\mu_j,M_j)\\
+r_{ij}|\theta_{ij},n_{ij} &\thicksim \text{Binomial}(\theta_{ij}, n_{ij})
+\end{align}
+
+For each genomic location,  $j=1,\ldots,J$, and each repilcate  $i=1,\ldots,N$, $n_{ij}$ is the total counts, while $r_{ij}$ stands for the non-reference read counts. Variable $r_{ij}$ is drawn from a binomial distribution with probability parameter $\theta_{ij}$ and total count $n_{ij}$.  The error probability $\theta_{ij}$ has a prior beta distribution with position -specific rate parameter $mu_j$ and precision parameter $M_j$.
+
+The position error rate $\mu_j$ has a beta distribution as hypoprior distribution with parameter $\mu_0$ and $M_0$. This is to ensure that the error rate is between 0 and 1. The prior is useful for situations when there is a significant minor allele. 
+
+This model only addresses error/reference positions  and does not model individual nucleotide frequencies.
+
+Given this model, the inferential object of interest here is the joint posterior distribution over the latent variable $p(\theta,\mu|r,n)$.
+
+The joint posterior distribution is
+\begin{equation}
+\begin{split}
+ p(\theta, \mu | r,n; \mu_0,M_0,M) &= \frac{p(r,\theta,\mu;\mu_0,M_0,M)}{p(r;\mu_0,M_0,M)}\\
+ & = \prod_{i=1}^N\prod_{j=1}^J\frac{p(r_{ij}|\theta_{ij},n_{ij})p(\theta_{ij}|\mu_j,M_j)p(\mu_j|\mu_0,M_0)}{p(r_{ij};n_{ij},M,\mu_0,M_0)}
+\end{split} 
+\end{equation}
+
+However, the normalization factor in the posterior distribution,
+\begin{equation}
+ {p(r_{ij};n_{ij},M,\mu_0,M_0)}=\int_{\theta_{ij}}\int_{\mu_j}p(r_{ij}\theta_{ij},n_{ij})p(\theta_{ij}|\mu_j,M_j)p(\mu_j|\mu_0,M_0)d\theta_{ij}d\mu_j
+\end{equation}
+
+is computationally intractable due to the coupling between $\theta_{ij}$ and $\mu_j$.
+
+Instead of attempting to directly compute the posterior distribution, we instead sample it using a Metropolis-Hastings within Gibbs scheme as discribed in Metropolis-within-Gibbs section.
+
+\section{Inference algorithm and variant calling}
+\subsection{Model parameter estimation}\
+
+Method of moments is used to find the optimal model parameters and hyperparameters. From the feature of beta distribution
+The estimate of 
+
+The estimated error probability is calculated from the observed sample
+\begin{equation}
+ \theta_{ij}=\frac{r_{ij}}{n_{ij}}
+\end{equation}
+
+The estimate of parameter $\mu_j$ is obtained using the expected value of $\theta_{ij}$, while $M_j$ is estimated using the moment esitmates for the variance of $\theta_{ij}$.
+\begin{equation}
+ \mu_j=E(\theta_{ij}|\mu_j,M_j)
+\end{equation}
+\begin{equation}
+ M_j=\frac{\mu_j(1-\mu_j)}{Var(\theta_{ij}|\mu_j,M_j)}-1
+\end{equation}
+
+Likewise,the estimate of hyperparameters $\mu_o$ and $M_0$ are
+\begin{equation}
+ \mu_0=E(\mu_j|\mu_0,M_0)
+\end{equation}
+\begin{equation}
+ M_0=\frac{\mu_0(1-\mu_0)}{Var(\mu_j|\mu_0,M_0)}-1
+\end{equation}
+
+\subsection{Metropolis-within-Gibbs sampling}\
+
+Because of the computation complexition of the nomalization factor in the posterior probability, A Markov Chain Monte Carlo (MCMC) sampling approch is employed to approximate the posterior distribution $p(\theta, \mu | r,n; \mu_0,M_0,M)$. Specifically Metropo-within-Gibbs algorithm is used to obtain the posterior distribution of each latent variable.
+
+\begin{algorithm}[ht]
+\caption{Metropolis within Gibbs Algorithm}
+\label{alg:metro_gibbs}
+\begin{algorithmic}[1]
+\REPEAT
+\FOR {j = 1 to J}
+  \FOR {i =1 to N}
+	\STATE Draw 1 samples from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$ using Gibbs sampling
+  \ENDFOR
+\ENDFOR
+
+\FOR {j = 1 to J}
+	\STATE Draw T samples from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$ using M--H
+	\STATE Set $mu_j$ to the sample median
+\ENDFOR
+\UNTIL {sample size is sufficient}
+
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Bayesian Hypothesis Testing}
+
+\section{Result}
+Figure 1 Overall of the process
+\subsection{Simulation Results}
+\subsection{Comparison Results on Synthetic DNA}
+Figure 3 ROC comparison with other methods: varscan/samtools/rvd
+\subsection{Empirical Results on Multiple Sclerosis Data}
+We tested our method on sequence data from clinical Multiple Sclerosis samples. We expect to see that 
+
+Table: Table of Variants
+\subsection{Performance with read depth}
+Figure 4 ROC by read depth
+picard to thin segment data, showing performance as read depth decreasing
+
+
+\bibliographystyle{apalike}
+\bibliography{bioinfo}
+\end{document}  
