@@ -2,10 +2,14 @@
 \usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
 \geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
 \usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
-\usepackage{algorithm, algorithmic}
+%\usepackage{algorithm, algorithmic}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
 \usepackage{graphicx}
 
-
+\usepackage{verbatim}
 \usepackage{amssymb}
 \usepackage{amsmath}
 %\usepackage{epstopdf}
@@ -36,9 +40,9 @@ Consider the following hierarchical model as the generative process for RVD2 mod
 r_{ij}|\theta_{ij},n_{ij} &\thicksim \text{Binomial}(\theta_{ij}, n_{ij})
 \end{align}
 
-For each genomic location,  $j=1,\ldots,J$, and each repilcate  $i=1,\ldots,N$, $n_{ij}$ is the total counts, while $r_{ij}$ stands for the non-reference read counts. Variable $r_{ij}$ is drawn from a binomial distribution with probability parameter $\theta_{ij}$ and total count $n_{ij}$.  The error probability $\theta_{ij}$ has a prior beta distribution with position -specific rate parameter $mu_j$ and precision parameter $M_j$.
+For each genomic location,  $j=1,\ldots,J$, and each replicate  $i=1,\ldots,N$, $n_{ij}$ is the total counts, while $r_{ij}$ stands for the non-reference read counts. Variable $r_{ij}$ is drawn from a binomial distribution with probability parameter $\theta_{ij}$ and total count $n_{ij}$.  The error probability $\theta_{ij}$ has a prior beta distribution with position -specific rate parameter $mu_j$ and precision parameter $M_j$.
 
-The position error rate $\mu_j$ has a beta distribution as hypoprior distribution with parameter $\mu_0$ and $M_0$. This is to ensure that the error rate is between 0 and 1. The prior is useful for situations when there is a significant minor allele. 
+The average positional error rate $\mu_j$ across replicates has a beta distribution as hyperprior distribution with parameter $\mu_0$ and $M_0$. This is to ensure that the error rate is between 0 and 1. The prior is useful for situations when there is a significant minor allele. 
 
 This model only addresses error/reference positions  and does not model individual nucleotide frequencies.
 
@@ -59,7 +63,7 @@ However, the normalization factor in the posterior distribution,
 
 is computationally intractable due to the coupling between $\theta_{ij}$ and $\mu_j$.
 
-Instead of attempting to directly compute the posterior distribution, we instead sample it using a Metropolis-Hastings within Gibbs scheme as discribed in Metropolis-within-Gibbs section.
+Instead of attempting to directly compute the posterior distribution, we instead sample it using a Metropolis-Hastings within Gibbs scheme as described in Metropolis-within-Gibbs section.
 
 \section{Inference algorithm and variant calling}
 \subsection{Model parameter estimation}\
@@ -72,7 +76,7 @@ The estimated error probability is calculated from the observed sample
  \theta_{ij}=\frac{r_{ij}}{n_{ij}}
 \end{equation}
 
-The estimate of parameter $\mu_j$ is obtained using the expected value of $\theta_{ij}$, while $M_j$ is estimated using the moment esitmates for the variance of $\theta_{ij}$.
+The estimate of parameter $\mu_j$ is obtained using the expected value of $\theta_{ij}$, while $M_j$ is estimated using the moment estimates for the variance of $\theta_{ij}$.
 \begin{equation}
  \mu_j=E(\theta_{ij}|\mu_j,M_j)
 \end{equation}
@@ -90,30 +94,70 @@ Likewise,the estimate of hyperparameters $\mu_o$ and $M_0$ are
 
 \subsection{Metropolis-within-Gibbs sampling}\
 
-Because of the computation complexition of the nomalization factor in the posterior probability, A Markov Chain Monte Carlo (MCMC) sampling approch is employed to approximate the posterior distribution $p(\theta, \mu | r,n; \mu_0,M_0,M)$. Specifically Metropo-within-Gibbs algorithm is used to obtain the posterior distribution of each latent variable.
+Because of the computation complexities of the normalization factor in the posterior probability, A Markov Chain Monte Carlo (MCMC) sampling approach is employed to approximate the posterior distribution $p(\theta, \mu | r,n; \mu_0,M_0,M)$. Specifically Metropolis-within-Gibbs algorithm is used to obtain the posterior distribution of each latent variable.
 
 \begin{algorithm}[ht]
 \caption{Metropolis within Gibbs Algorithm}
 \label{alg:metro_gibbs}
 \begin{algorithmic}[1]
-\REPEAT
-\FOR {j = 1 to J}
-  \FOR {i =1 to N}
-	\STATE Draw 1 samples from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$ using Gibbs sampling
-  \ENDFOR
-\ENDFOR
+\Repeat
+\For {j = 1 to J}
+  \For {i =1 to N}
+	\State Draw 1 samples from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$ using Gibbs; sampling
+  \EndFor
+\EndFor
 
-\FOR {j = 1 to J}
-	\STATE Draw T samples from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$ using M--H
-	\STATE Set $mu_j$ to the sample median
-\ENDFOR
-\UNTIL {sample size is sufficient}
+\For {j = 1 to J}
+	\State Draw T samples from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$ using M--H;
+	\State Set $mu_j$ to the sample median;
+\EndFor
+\Until {sample size is sufficient}
 
 \end{algorithmic}
 \end{algorithm}
 
+\subsection{Statistic Inference}\
 
-\subsection{Bayesian Hypothesis Testing}
+Full Bayesian Hypothesis Testing is done to test rare variants in the model.
+
+\subsubsection{Posterior distribution difference sampling}\
+
+Using MCMC sampling, we can obtain the posterior distribution $p \left( \mu |\theta,\mu_0,M_0\right)$ for reference sample and testing sample. In order to compare the difference of position error rate $\mu$ between reference sample and testing sample , a random sampling of posterior distribution is done 
+\begin{algorithm}
+\caption{Posterior distribution difference sampling}
+\begin{algorithmic}[1]
+\Procedure{}{}
+\Repeat
+\State  Randomly  draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0, M_0\right)$ from reference samples
+\State  Randomly draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0,M_0\right) $ from testing samples
+\State Subtract the former from the later to get one sample for the posterior difference distribution 
+\Until {Sample size is sufficient}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+With the posterior difference distribution of position error rate $\mu$ across replicates obtained, Bayesian inference can be done to summarize the difference. 
+
+$p \left( \mu_{testing}-\mu_{ref} |r,n; \mu_0,M_0\right)$
+
+\subsubsection{Bayesian Hypothesis Testing}
+To detect a mutation in a specific position, a threshold $\tau$ is set for the posterior difference distribution testing.
+\begin{align}
+ H_1: \mu_{testing}-\mu_{ref}\geq\tau \\
+ H_2: \mu_{testing}-\mu_{ref}<\tau
+\end{align}
+
+We can calculate the posterior probability of the hypothesis $H_1$ being true by integrating the posterior density over the correct region:
+
+\begin{equation}
+ p(H1:\mu_{testing}-\mu_{ref}\geq\tau)=\int_\tau^\infty p(\mu_{diff} |r,n; \mu_0,M_0)d\mu_{diff}
+\end{equation}
+
+We accept the hypothesis $H_1$ if this posterior probability is no lower than 95\%, which means we are 95\% sure that there is a mutation in this position.
+
+ROC curve is plotted to evaluate the performance of the detection algorithm with different threshold for different mutation rate. 
+
+\subsubsection{Uniformity Testing}
 
 \section{Result}
 Figure 1 Overall of the process
