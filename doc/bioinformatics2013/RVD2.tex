@@ -18,7 +18,7 @@
 \newcommand{\RR}{I\!\!R} %real numbers
 \DeclareMathOperator{\diag}{diag}
 
-\title{RVD2}
+\title{RVD2: An ultra-sensitive variant detection model for heterogeneous population sequencing}
 \author{}
 %\date{}                                           % Activate to display a given date or no date
 
@@ -27,45 +27,66 @@
 
 \section{Introduction}
 
-\section{Materials and Methods}
+\section{Model structure}\
 
-\subsection{Materials}
-\subsection{Model structure}\
+Given a data matrix $r \in \RR^{J \times N}$ where the element $r_{ji}$ is the count of the reads that contain a non-reference base at position $j$ in experimental replicate $i$. The total count of reads at position $i$ in replicate $i$ is $n_{ji}$. A typical data set is comprised of case and control data sets, $\{ r^{\text{case}} , n^{\text{case}} \}$ and  $\{ r^{\text{control}} , n^{\text{control}} \}$. 
 
-Consider the following hierarchical model as the generative process for RVD2 model
+We have developed a hierarchical Bayesian model for this data set because of the nested structure of noise in the data. There is sampling error due to the fact that only a finite number of reads aligned and mapped for each location. There is inter-replicate errors due to experimental protocol and reproducibility. Finally there is sequence context error due to the fidelity of the DNA polymerase enzymes in synthesizing a base. These errors have been shown to depend heavily on the neighboring DNA bases and whether the base is at the end of a molecule or at the center of a molecule.
 
-\begin{align}
-\mu_j|\mu_0,M_0 &\thicksim \text{Beta}(a, b)\\
-\theta_{ij}|\mu_j,M_j &\thicksim \text{Beta}(\mu_j,M_j)\\
-r_{ij}|\theta_{ij},n_{ij} &\thicksim \text{Binomial}(\theta_{ij}, n_{ij})
-\end{align}
+\subsection{Generative Process} We have codified the statistical structure of these errors in the following generative process (we have used the mean-precision parameterized of the beta distribution): 
 
-For each genomic location,  $j=1,\ldots,J$, and each replicate  $i=1,\ldots,N$, $n_{ij}$ is the total counts, while $r_{ij}$ stands for the non-reference read counts. Variable $r_{ij}$ is drawn from a binomial distribution with probability parameter $\theta_{ij}$ and total count $n_{ij}$.  The error probability $\theta_{ij}$ has a prior beta distribution with position -specific rate parameter $mu_j$ and precision parameter $M_j$.
+\begin{enumerate}
+	\item Choose a baseline error rate parameter $\mu_0$ and a inter-location precision parameter $M_0$.
+	\item For each location $j$:
+	\begin{enumerate}
+		\item Sample a location specific error rate parameter $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$
+		\item Choose an inter-replicate precision parameter $M_j$
+		\item For each replicate $i$:
+		\begin{enumerate}
+			\item Sample an error rate $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$ for location $j$ in sequencing replicate $i$
+			\item Sample the non-reference read count $r_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$
+		\end{enumerate}
+	\end{enumerate}
+\end{enumerate}
 
-The average positional error rate $\mu_j$ across replicates has a beta distribution as hyperprior distribution with parameter $\mu_0$ and $M_0$. This is to ensure that the error rate is between 0 and 1. The prior is useful for situations when there is a significant minor allele. 
+This model has three levels of sampling. First the baseline error rate across all locations and all replicates is chosen once and for all for the entire data set. Then, based on that baseline error rate, location-specific error rates are sampled. Based on the location specific error rate, replicate-specific error rates are selected. Finally, the observable data, the count of the non-reference reads is sampled.
 
-This model only addresses error/reference positions  and does not model individual nucleotide frequencies.
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=40mm]{pdf_figs/RVD2_model.pdf}
+\caption{RVD2 Graphical Model}
+\label{fig:graphical_model}
+\end{center}
+\end{figure}
 
-Given this model, the inferential object of interest here is the joint posterior distribution over the latent variable $p(\theta,\mu|r,n)$.
+% Describe graphical model framework here
 
-The joint posterior distribution is
-\begin{equation}
-\begin{split}
- p(\theta, \mu | r,n; \mu_0,M_0,M) &= \frac{p(r,\theta,\mu;\mu_0,M_0,M)}{p(r;\mu_0,M_0,M)}\\
- & = \prod_{i=1}^N\prod_{j=1}^J\frac{p(r_{ij}|\theta_{ij},n_{ij})p(\theta_{ij}|\mu_j,M_j)p(\mu_j|\mu_0,M_0)}{p(r_{ij};n_{ij},M,\mu_0,M_0)}
-\end{split} 
+Given this model structure, the joint distribution over the latent and observed variables for data at location $j$ in replicate $i$ given the parameters is
+
+\begin{equation}\label{eqn:jointpdf}
+p \left( r_{ji}, \theta_{ji}, \mu_j | n_{ji}; \mu_0, M_0, M_j \right) = p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right)
 \end{equation}
 
-However, the normalization factor in the posterior distribution,
+\begin{gather}
+= \frac{ \Gamma(M_0) } { \Gamma(\mu_0 M_0) \Gamma(M_0 (1-\mu_0)) } \mu_j^{M_0\mu_0 -1} (1 - \mu_j)^{M_0 ( 1 - \mu_0) - 1} \\
+\cdot \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) } \theta_{ji}^{M_j\mu_j -1} (1 - \theta_{ji})^{M_j ( 1 - \mu_j) - 1} \\
+\cdot \frac{ \Gamma(n_{ji}+1) } { \Gamma(r_{ji}+1) \Gamma( n_{ji} - r_{ji} + 1 ) } \theta_{ji}^{r_{ji}} (1 - \theta_{ji})^{n_{ji} - r_{ji}}
+\end{gather}
+
+Integrating over the latent variables $\theta_{ji}$ and $\mu_j$ yields the marginal distribution of the data at location $j$ in replicate $i$, 
 \begin{equation}
- {p(r_{ij};n_{ij},M,\mu_0,M_0)}=\int_{\theta_{ij}}\int_{\mu_j}p(r_{ij}\theta_{ij},n_{ij})p(\theta_{ij}|\mu_j,M_j)p(\mu_j|\mu_0,M_0)d\theta_{ij}d\mu_j
+p \left( r_{ji} | n_{ji} ; \mu_0, M_0, M_j \right) = \int_{\mu_j} \int_{\theta_{ji}}  p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right) d\theta_{ji} d\mu_j
 \end{equation}
 
-is computationally intractable due to the coupling between $\theta_{ij}$ and $\mu_j$.
+Finally, assuming the conditional independence structure in the graphical model in Figure~\ref{fig:graphical_model}, the likelihood of the data set is
+
+\begin{equation}
+p \left( r ; \mu_0, M_0, M \right) = \prod_{j=1}^J p\left( \mu_j; \mu_0, M_0 \right) \prod_{i=1}^N p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) 
+\end{equation}
 
 Instead of attempting to directly compute the posterior distribution, we instead sample it using a Metropolis-Hastings within Gibbs scheme as described in Metropolis-within-Gibbs section.
 
-\section{Inference algorithm and variant calling}
+\section{Inference and Hypthesis Testing}
 \subsection{Model parameter estimation}\
 
 Method of moments is used to find the optimal model parameters and hyperparameters. From the feature of beta distribution
