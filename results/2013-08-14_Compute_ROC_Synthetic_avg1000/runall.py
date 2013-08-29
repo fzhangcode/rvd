@@ -11,7 +11,7 @@ import pandas as pd
 import h5py
 import multiprocessing as mp
 import logging
-
+import pdb
 # <codecell>
 
 logging.basicConfig(level=logging.DEBUG,
@@ -22,7 +22,7 @@ rvddir = os.path.join('../../src/python/rvd27')
 sys.path.insert(0, rvddir)
 import rvd27
 
-
+##pool =None
 pool = mp.Pool(processes=48)
 tocfilename = "synthetic_toc_p1.txt"
 toc = pd.read_table(tocfilename)
@@ -42,10 +42,10 @@ try:
 except IOError as e:
     controlFileList = ["../2013-08-06_Downsample_Read_Depth/depth_chart/1000/%s" % filename for filename in toc.Filename[toc.isRef=='Y']]
     (r, n, loc, refb) = rvd27.load_depth(controlFileList)
-    phi, theta_s, mu_s = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
+    phi, theta_s, mu_s,t = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
     logging.debug("Saving model in %s" % h5FileName)
     rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
-           refb=refb)
+           refb=refb, t=t)
 
 # Estimate the model for the cases
 for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
@@ -59,7 +59,8 @@ for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
     except IOError as e:
         caseFileList = ["../2013-08-06_Downsample_Read_Depth/depth_chart/1000/%s" % filename for filename in toc.Filename[toc.Dilution==dilution]]
         (r, n, loc, refb) = rvd27.load_depth(caseFileList)
-        phi, theta_s, mu_s = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
+        phi, theta_s, mu_s, t = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
         rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n,loc=loc,
-           refb=refb)
+           refb=refb, t=t)
+
