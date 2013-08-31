@@ -144,41 +144,66 @@ Full Bayesian Hypothesis Testing is done to test rare variants in the model.
 \subsubsection{Posterior distribution difference sampling}\
 
 Using MCMC sampling, we can obtain the posterior distribution $p \left( \mu |\theta,\mu_0,M_0\right)$ for reference sample and testing sample. In order to compare the difference of position error rate $\mu$ between reference sample and testing sample , a random sampling of posterior distribution is done 
-\begin{algorithm}
-\caption{Posterior distribution difference sampling}
-\begin{algorithmic}[1]
-\Procedure{}{}
-\Repeat
-\State  Randomly  draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0, M_0\right)$ from reference samples
-\State  Randomly draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0,M_0\right) $ from testing samples
-\State Subtract the former from the later to get one sample for the posterior difference distribution 
-\Until {Sample size is sufficient}
-\EndProcedure
-\end{algorithmic}
-\end{algorithm}
+
+\begin{enumerate}
+ \item Randomly  draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0, M_0\right)$ from reference samples
+ \item Randomly draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0,M_0\right) $ from testing samples
+ \item Subtract the former from the later to get one sample for the posterior difference distribution 
+\end{enumerate}
+Repeat the above three steps until sample size is sufficient.
 
 With the posterior difference distribution of position error rate $\mu$ across replicates obtained, Bayesian inference can be done to summarize the difference. 
-
-$p \left( \mu_{testing}-\mu_{ref} |r,n; \mu_0,M_0\right)$
 
 \subsubsection{Bayesian Hypothesis Testing}
 To detect a mutation in a specific position, a threshold $\tau$ is set for the posterior difference distribution testing.
 \begin{align}
- H_1: \mu_{testing}-\mu_{ref}\geq\tau \\
- H_2: \mu_{testing}-\mu_{ref}<\tau
+ H_1: \mu_{case}-\mu_{control}\geq\tau \\
+ H_2: \mu_{case}-\mu_{control}<\tau
 \end{align}
 
 We can calculate the posterior probability of the hypothesis $H_1$ being true by integrating the posterior density over the correct region:
 
 \begin{equation}
- p(H1:\mu_{testing}-\mu_{ref}\geq\tau)=\int_\tau^\infty p(\mu_{diff} |r,n; \mu_0,M_0)d\mu_{diff}
+ p(H1:\mu_{case}-\mu_{control}\geq\tau)=\int_\tau^\infty p(\mu_{diff} |r,n; \mu_0,M_0)d\mu_{diff}
 \end{equation}
 
 We accept the hypothesis $H_1$ if this posterior probability is no lower than 95\%, which means we are 95\% sure that there is a mutation in this position.
 
 ROC curve is plotted to evaluate the performance of the detection algorithm with different threshold for different mutation rate. 
 
-\subsubsection{Uniformity Testing}
+\subsubsection{Goodness of fit Testing for Uniformity}\
+
+We assume that at one position in one experimental replicate, the non-reference reads follows multinomial distribution of $k = 3$ categories, with probability vector $p = (p_1, p_2, p_3)$ where $p_i \geq 0$ for $i =1, 2, 3$ and $\sum_{i=1}^3 p_i = 1$.
+
+The non-reference reads can be because of either mutation or various errors including sampling error, inter-replicated error, $etc$. In theory, the non-reference read counts caused by non-oriented errors should be uniformly distributed among three non-reference categories, namely $p_1=p_2=p_3=1/3$. However, the distribution of non-reference read counts among three non-reference categories caused by mutation theoretically is biased. 
+
+The null hypothesis can be denoted as
+\begin{align}
+ H_0: p=p_0
+\end{align}
+where
+\begin{align} 
+ p_0=(p_1,p_2,p_3), p_1=p_2=p_3=1/3
+\end{align}
+
+The null hypothesis is tested using power-divergence family of statistics proposed by Cressie and Read (1984). Considering observed frequencies $\{r_i; i=1,...,k\}$ and expected frequencies $\{E_i; i=1,...,k\}$, by definition the power-divergence family of statistcs indexed by real parameter $\lambda$ is 
+\begin{equation}
+ 2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{i=1}^k r_i \left[\left(\frac{r_i}{E_i}\right)^\lambda-1\right];\lambda \in R
+\end{equation}
+
+Person's $X^2 (\lambda = 1)$ statistics, the log likelih ratio statistics $(\lambda = 0)$, the Freeman-Tukey statistics $(\lambda = -1/2)$ the Neyman modified $X^2 (\lambda = -2)$ are special cases of the family. Cressie and Read (1984) also proposed that when the $\lambda =2/3$, the new power-divergence statistics outcompete the traditional power-divergence statistics. 
+
+Particulaly in our case, Let $(r_1,r_2,r_3)$ denotes the non-reference base frequencies and $\sum_{i=1}^3 r_i = r$. The expected frquencies are $(rp_1, rp_2, rp_3)$. Then the power-divergence statistics can be written as
+
+\begin{equation}
+ 2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{i=1}^3 r_i \left[\left(\frac{r_i}{rp_i}\right)^\lambda-1\right];\lambda \in R
+\end{equation}
+
+We use $\lambda =2/3$ for the goodness of fit testing.
+
+For each position we have six power-divergence statistics from 6 experimental replicates. We use Fisher's method to combines the six statistics into a single one for inference. Bonferroni correction is applied to maintaining the familywise error rate (FWER). The significance level is chosen as 0.05.
+
+Finally, if read counts in one position passes the Bayesian Hypothesis Testing and fails the Goodness-of-fit Testing, the position will be called.
 
 \section{Result}
 Figure 1 Overall of the process
