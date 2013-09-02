@@ -269,7 +269,7 @@ def load_model(h5Filename):
     
     
 
-def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, refb=None, t=None):
+def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, refb=None):
     """ Save the RVD2.7 model samples and parameters """
     
     # TODO add attributes to hdf5 file
@@ -307,10 +307,6 @@ def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, r
     if refb is not None:
         h5file.create_dataset('refb', data=refb)
 
-    # Save the running time
-    if t is not None:
-        h5file.create_dataset('t', data=t, 
-                      chunks=True, fletcher32=True, compression='gzip')
     h5file.close()
 
 
@@ -452,7 +448,6 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
     h5file['phi'].create_dataset('M', (J,), dtype='f')
     h5file.create_dataset('theta_s', (N, J, gibbs_nsample), dtype='f')
     h5file.create_dataset('mu_s', (J, gibbs_nsample), dtype='f')
-    h5file.create_dataset('t',(gibbs_nsample,),dtype='f')
     # Initialize estimates using MoM
     phi, mu, theta = estimate_mom(r, n)
     logging.debug("MoM: mu0 = %0.3e; M0 = %0.3e." % (phi['mu0'], phi['M0']) )
@@ -461,13 +456,11 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
     mu[mu < np.finfo(np.float).eps*1e4] = phi['mu0']
     theta[theta < np.finfo(np.float).eps*1e4] = phi['mu0']
     phi['M'][phi['M'] < np.finfo(np.float).eps *1e4] = 1
-    # Sample theta, mu, M and update parameter estiamtes
+    
+    # Sample theta, mu by gibbs sampling
     theta_s = np.zeros( (N, J, gibbs_nsample) )
     mu_s = np.zeros( (J, gibbs_nsample) )
-
-    t=np.zeros((gibbs_nsample,))
-    t0=time.time()
-    for i in xrange(0, gibbs_nsample):
+    for i in xrange(gibbs_nsample):
         if i % 100 == 0 and i > 0: logging.debug("Gibbs Iteration %d" % i)
             
         # Draw samples from p(theta | r, mu, M) by Gibbs
@@ -485,11 +478,6 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
         # phi['mu0'] = np.mean(mu)
         # phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
         # TODO update for M
-
-        if i==0:
-            t[i]=time.time()-t0
-        else:
-            t[i]=time.time()-sum(t)-t0
         
         # Store the current model
         h5file['phi']['mu0'][0] = phi['mu0']
@@ -497,9 +485,8 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
         h5file['phi']['M'][...] = phi['M']
         h5file['theta_s'][:,:,i] = theta
         h5file['mu_s'][:,i] = mu
-        h5file['t'][i] = t[i]
         h5file.flush()
-        
+    
     # Apply the burn-in and thinning
     if burnin > 0.0:
         mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*gibbs_nsample):], 1)
@@ -509,7 +496,7 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
         theta_s = np.delete(theta_s, np.s_[::thin], 2)
     
     h5file.close()
-    return (phi, theta_s, mu_s,t)
+    return (phi, theta_s, mu_s)
 
 def beta_log_pdf(x, a, b):
     return gammaln(a+b) - gammaln(a) - gammaln(b) \
