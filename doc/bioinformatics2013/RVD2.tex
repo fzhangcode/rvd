@@ -18,7 +18,16 @@
 \newcommand{\RR}{I\!\!R} %real numbers
 \DeclareMathOperator{\diag}{diag}
 
-\title{RVD2: An ultra-sensitive variant detection model for heterogeneous population sequencing}
+\algnewcommand{\Inputs}[1]{%
+  \State \textbf{Inputs:}
+  \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
+}
+\algnewcommand{\Initialize}[1]{%
+  \State \textbf{Initialize:}
+  \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
+}
+
+\title[RVD2]{RVD2: An ultra-sensitive variant detection model for heterogeneous population sequencing}
 \author{}
 %\date{}                                           % Activate to display a given date or no date
 
@@ -84,13 +93,44 @@ Finally, assuming the conditional independence structure in the graphical model 
 p \left( r ; \mu_0, M_0, M \right) = \prod_{j=1}^J p\left( \mu_j; \mu_0, M_0 \right) \prod_{i=1}^N p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) 
 \end{equation}
 
-Instead of attempting to directly compute the posterior distribution, we instead sample it using a Metropolis-Hastings within Gibbs scheme as described in Metropolis-within-Gibbs section.
+Instead of attempting to directly compute the posterior distribution, we sample it using a Metropolis-Hastings within Gibbs scheme as described in Section~\ref{sec:algorithm}.
 
-\section{Inference and Hypthesis Testing}
-\subsection{Model parameter estimation}\
+\section{Inference and Hypothesis Testing}
 
-Method of moments is used to find the optimal model parameters and hyperparameters. From the feature of beta distribution
-The estimate of 
+The primary object of inference in this model the joint posterior distribution function over the latent variables,
+\begin{equation}
+	p(\mu, \theta | r, n; \phi)  = \frac{ p(\mu, \theta, r | n; \phi) } {p ( r | n; \phi)},
+\end{equation}
+where the parameters are $\phi \triangleq \{\mu_0, M_0, M\}$.
+
+We use a Metropolis-within-Gibbs sampling approach shown in Algorithm~\ref{alg:metro_gibbs} to approximate the posterior distribution. The model parameters are initialized using method-of-moments. Given those parameter estimates we first sample from the marginal posterior distribution for $\mu_j$ given it's Markov blanket using Metropolis Hasting. Then, we sample from the marginal posterior distribution for $\theta_{ji}$ given it's Markov blanket.
+
+\begin{algorithm}[ht]
+\caption{Metropolis-within-Gibbs Algorithm}
+\label{alg:metro_gibbs}
+\begin{algorithmic}[1]
+
+\State Initialize $\theta$, $\mu$, $M$, $\mu_0$, $M_0$
+\Repeat
+\For {each position j} \Comment{Sample $\mu_j$}
+  \State Draw T samples from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$ using M--H
+  \State Set $\mu_j$ to the sample median for the T samples
+  
+  
+  \For {each replicate i} \Comment{Sample $\theta_{ji}$}
+	\State Sample from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$
+  \EndFor
+
+\EndFor
+\Until {convergence and sample size sufficient}
+\end{algorithmic}
+\end{algorithm}
+
+Once we have obtained an estimate of the posterior distribution, we test the hypothesis that there is a sub-population of DNA molecules in the pool with a non-reference base at position $j, \forall j \in 1, \ldots, J$. First, we test the hypothesis that the error rate in the case data, $\mu_j^{\text{case}}$ is greater than the error rate in the control data, $\mu_j^{\text{control}}$. If so, then we test the hypothesis that the high error rate is due to excess reads with a particular non-reference base rather than a uniform distribution over all possible non-reference bases.
+
+\subsection{Initialization}
+
+The initial values of the model parameters and latent variables is obtained by a method-of-moments procedure. Essentially, we set the parameter value (population moment) equal to the sample moment. In some cases, the method-of-moments estimate is outside the parameter space. Then, we XXX.
 
 The estimated error probability is calculated from the observed sample
 \begin{equation}
@@ -113,48 +153,16 @@ Likewise,the estimate of hyperparameters $\mu_o$ and $M_0$ are
  M_0=\frac{\mu_0(1-\mu_0)}{Var(\mu_j|\mu_0,M_0)}-1
 \end{equation}
 
-\subsection{Metropolis-within-Gibbs sampling}\
 
-Because of the computation complexities of the normalization factor in the posterior probability, A Markov Chain Monte Carlo (MCMC) sampling approach is employed to approximate the posterior distribution $p(\theta, \mu | r,n; \mu_0,M_0,M)$. Specifically Metropolis-within-Gibbs algorithm is used to obtain the posterior distribution of each latent variable.
+\subsection{Sampling from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$}
 
-\begin{algorithm}[ht]
-\caption{Metropolis within Gibbs Algorithm}
-\label{alg:metro_gibbs}
-\begin{algorithmic}[1]
-\Repeat
-\For {j = 1 to J}
-  \For {i =1 to N}
-	\State Draw 1 samples from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$ using Gibbs; sampling
-  \EndFor
-\EndFor
+We are able to draw samples from $p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j)$ analytically because of the Bayesian conjugacy between the prior $p(\theta_{ji} | \mu_j, M_j) \thicksim \text{Beta}(\mu_j, M_j)$ and the likelihood $p(r_{ji} | n_{ji}, \theta_{ji}) \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$. 
 
-\For {j = 1 to J}
-	\State Draw T samples from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$ using M--H;
-	\State Set $mu_j$ to the sample median;
-\EndFor
-\Until {sample size is sufficient}
 
-\end{algorithmic}
-\end{algorithm}
+\subsection{Sampling from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$}
 
-\subsection{Statistic Inference}\
+\subsection{Bayesian hypothesis test for high error rate}
 
-Full Bayesian Hypothesis Testing is done to test rare variants in the model.
-
-\subsubsection{Posterior distribution difference sampling}\
-
-Using MCMC sampling, we can obtain the posterior distribution $p \left( \mu |\theta,\mu_0,M_0\right)$ for reference sample and testing sample. In order to compare the difference of position error rate $\mu$ between reference sample and testing sample , a random sampling of posterior distribution is done 
-
-\begin{enumerate}
- \item Randomly  draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0, M_0\right)$ from reference samples
- \item Randomly draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0,M_0\right) $ from testing samples
- \item Subtract the former from the later to get one sample for the posterior difference distribution 
-\end{enumerate}
-Repeat the above three steps until sample size is sufficient.
-
-With the posterior difference distribution of position error rate $\mu$ across replicates obtained, Bayesian inference can be done to summarize the difference. 
-
-\subsubsection{Bayesian Hypothesis Testing}
 To detect a mutation in a specific position, a threshold $\tau$ is set for the posterior difference distribution testing.
 \begin{align}
  H_1: \mu_{case}-\mu_{control}\geq\tau \\
@@ -171,7 +179,8 @@ We accept the hypothesis $H_1$ if this posterior probability is no lower than 95
 
 ROC curve is plotted to evaluate the performance of the detection algorithm with different threshold for different mutation rate. 
 
-\subsubsection{Goodness of fit Testing for Uniformity}\
+
+\subsection{$\chi^2$ test for non-uniform base distribution}
 
 We assume that at one position in one experimental replicate, the non-reference reads follows multinomial distribution of $k = 3$ categories, with probability vector $p = (p_1, p_2, p_3)$ where $p_i \geq 0$ for $i =1, 2, 3$ and $\sum_{i=1}^3 p_i = 1$.
 
@@ -205,7 +214,22 @@ For each position we have six power-divergence statistics from 6 experimental re
 
 Finally, if read counts in one position passes the Bayesian Hypothesis Testing and fails the Goodness-of-fit Testing, the position will be called.
 
-\section{Result}
+
+\subsubsection{Posterior distribution difference sampling}\
+
+Using MCMC sampling, we can obtain the posterior distribution $p \left( \mu |\theta,\mu_0,M_0\right)$ for reference sample and testing sample. In order to compare the difference of position error rate $\mu$ between reference sample and testing sample , a random sampling of posterior distribution is done 
+
+\begin{enumerate}
+ \item Randomly  draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0, M_0\right)$ from reference samples
+ \item Randomly draw one Gibbs sample from $p \left( \mu |r, n, M, \mu_0,M_0\right) $ from testing samples
+ \item Subtract the former from the later to get one sample for the posterior difference distribution 
+\end{enumerate}
+Repeat the above three steps until sample size is sufficient.
+
+With the posterior difference distribution of position error rate $\mu$ across replicates obtained, Bayesian inference can be done to summarize the difference. 
+
+
+\section{Results}
 Figure 1 Overall of the process
 \subsection{Simulation Results}
 \subsection{Comparison Results on Synthetic DNA}
