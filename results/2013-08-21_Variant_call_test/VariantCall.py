@@ -18,25 +18,25 @@ logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(message)s')
 
 def main():
-    dilutionList = (1.0,)    
-    folder = '2013-08-19_Compute_ROC_Synthetic_avg10000'
+    dilutionList = (0.3,)    
+    folder = '2013-08-14_Compute_ROC_Synthetic_avg100000'
     N=1000 # Z sampling size  
-    (n_gibbs, nmh) = (4000, 50)
-    controlFile = "Control.hdf5"
+
+    controlFile = "../%s/Control.hdf5" %folder
+  
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
         caseFile = "Case%s.hdf5" % str(d).replace(".","_")
-        T=0.0005
-        [Loc, caseMu, controlMu, postP, chi2P, call] = rvd27.test(controlFile, caseFile, T=0.00, N=1000, outputFile='test1')
+        caseFile = "../%(folder)s/%(file)s"%{'folder':folder,'file':caseFile}  
+        [Loc, caseMu, controlMu, postP, chi2P, call] = rvd27.test(controlFile, caseFile, T=0.00195, N=10000,outputFile=None,chi2=False)
 
     Loc = Loc.compress(call,axis=0)
+    pdb.set_trace()
 
     if len(Loc) is not 0:
         CallCaseMu = caseMu.compress(call,axis=0)
         CallControlMu = controlMu.compress(call,axis=0)
-        
 
-        
         ind = np.arange(CallCaseMu.shape[0])
         width=0.35
 
@@ -48,7 +48,7 @@ def main():
         ax.set_ylabel('Minor Allele Frequency')
         ax.set_xlabel('Called Locations')
         ax.set_xticks(ind+width)
-        ax.set_xticklabels( [str(x) for x in ind] )
+        ax.set_xticklabels( [str(x)[8:] for x in Loc] )
         ax.set_ylim
         ax.legend( (rects1[0], rects2[0]), ('Control', 'Case') )
         
