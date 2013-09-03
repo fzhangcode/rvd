@@ -129,14 +129,12 @@ We use a Metropolis-within-Gibbs sampling approach shown in Algorithm~\ref{alg:m
 Once we have obtained an estimate of the posterior distribution, we test the hypothesis that there is a sub-population of DNA molecules in the pool with a non-reference base at position $j, \forall j \in 1, \ldots, J$. First, we test the hypothesis that the error rate in the case data, $\mu_j^{\text{case}}$ is greater than the error rate in the control data, $\mu_j^{\text{control}}$. If so, then we test the hypothesis that the high error rate is due to excess reads with a particular non-reference base rather than a uniform distribution over all possible non-reference bases.
 
 \subsection{Initialization}
-
 The initial values of the model parameters and latent variables is obtained by a method-of-moments procedure. Essentially, we set the parameter value (population moment) equal to the sample moment. In some cases, the method-of-moments estimate is outside the parameter space. Then, we XXX.
 
 The estimated error probability is calculated from the observed sample
 \begin{equation}
  \theta_{ij}=\frac{r_{ij}}{n_{ij}}
 \end{equation}
-
 The estimate of parameter $\mu_j$ is obtained using the expected value of $\theta_{ij}$, while $M_j$ is estimated using the moment estimates for the variance of $\theta_{ij}$.
 \begin{equation}
  \mu_j=E(\theta_{ij}|\mu_j,M_j)
@@ -241,6 +239,60 @@ Table: Table of Variants
 \subsection{Performance with read depth}
 Figure 4 ROC by read depth
 picard to thin segment data, showing performance as read depth decreasing
+
+\section{Appendix}
+\subsection{Moments derivation}
+The probability density function of beta distribution, for $x\in[0,1]$, and shape real parameter $\alpha>1$ and $\beta>1$ is 
+\begin{equation}
+\begin{split}
+  f(x;\alpha,\beta) &= \frac{x^{\alpha-1}(1-x)^{\beta-1}}{\int_0^1x^{\alpha-1}(1-x)^{\beta-1}dx}\\ &=\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}x^{\alpha-1}(1-x)^{\beta-1}\\ &=\frac{1}{B(\alpha,\beta)}x^{\alpha-1}(1-x)^{\beta-1}
+\end{split}
+\end{equation}
+where $\Gamma(z)$ is the Gammma function, $B(\alpha,\beta)$ is the beta function, and
+\begin{equation}
+\begin{split}
+ B(\alpha,\beta) &=\int_0^1x^{\alpha-1}(1-x)^{\beta-1}dx\\  &= \frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}
+\end{split}
+\end{equation}
+
+The expected value (mean) of a Beta distribution random variable X with parameter $\alpha$ and $\beta$ is 
+\begin{equation}
+\begin{split}
+  E[X] &= \int_0^1xf(x;\alpha,\beta)dx\\ &= \int_0^1x\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha,\beta)}dx\\ &= \frac{\int_0^1x^{\alpha}(1-x)^{\beta-1}dx}{B(\alpha,\beta)}\\ &= \frac{B(\alpha+1,\beta)}{B(\alpha,\beta)}\\ &= \frac{\Gamma(\alpha+1)\Gamma(\beta)}{\Gamma(\alpha+\beta+1)}\cdot\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}\\ &= \frac{\alpha\Gamma(\alpha)\Gamma(\beta)}{(\alpha+\beta)\Gamma(\alpha+\beta)}\cdot\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}\\ &= \frac{\alpha}{\alpha+\beta}
+\end{split}
+\end{equation}
+Note that Gamma function satisfies the functional equation
+\begin{equation}
+ \Gamma(z) = z\Gamma(z)
+\end{equation}
+
+The variance of a Beta distribution random variable X with parameter $\alpha$ and $\beta$ is 
+\begin{equation}
+\begin{split}
+  var(X) &= E[(X-E(X))^2]\\ &= E(X^2)-[E(x)]^2\\ &=\int_0^1x^2\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha,\beta)}dx-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{\int_0^1x^{\alpha+1}(1-x)^{\beta-1}dx}{B(\alpha,\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{B(\alpha+2,\beta)}{B(\alpha,\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{\Gamma(\alpha+2)\Gamma(\beta)}{\Gamma(\alpha+\beta+2)}\cdot\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{(\alpha+1)\alpha\Gamma(\alpha)\Gamma(\beta)}{(\alpha+\beta+1)(\alpha+\beta)\Gamma(\alpha+\beta)}\cdot\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{(\alpha+1)\alpha}{(\alpha+\beta+1)(\alpha+\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{\alpha\beta}{(\alpha+\beta+1)(\alpha+\beta)^2}
+\end{split}
+\end{equation}
+
+Instead of the standard scale parameter $\alpha$ and $\beta$, we use the mean $\mu$ and sample-size paramenter $M$ for the Beta distribution in our hierarchical model.
+\begin{equation}
+\begin{split}
+  f(x;\mu,M) &=\frac{\Gamma(M)}{\Gamma(M\mu)\Gamma(M(1-\mu))}x^{M\mu-1}(1-x)^{M(1-\mu)-1}\\ &= \frac{1}{B(M\mu,M(1-\mu))}x^{M\mu-1}(1-x)^{M(1-\mu)-1}
+\end{split}
+\end{equation}
+where 
+\begin{equation}
+ \mu = \frac{\alpha}{\alpha+\beta}
+\end{equation}
+\begin{equation}
+ M = \alpha+\beta
+\end{equation}
+From Equation 24 and Equation 26 it can be seen that
+\begin{equation}
+ E(x|\mu,M) = \mu
+\end{equation}
+\begin{equation}
+ Var(x|\mu,M) = \frac{\mu(1-\mu)}{M+1}
+\end{equation}
 
 
 \bibliographystyle{apalike}
