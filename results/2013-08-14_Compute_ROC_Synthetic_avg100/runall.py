@@ -42,10 +42,10 @@ try:
 except IOError as e:
     controlFileList = ["../2013-08-06_Downsample_Read_Depth/depth_chart/100/%s" % filename for filename in toc.Filename[toc.isRef=='Y']]
     (r, n, loc, refb) = rvd27.load_depth(controlFileList)
-    phi, theta_s, mu_s,t = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
+    phi, theta_s, mu_s = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
     logging.debug("Saving model in %s" % h5FileName)
     rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
-           refb=refb, t=t)
+           refb=refb)
 
 # Estimate the model for the cases
 for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
@@ -59,8 +59,8 @@ for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
     except IOError as e:
         caseFileList = ["../2013-08-06_Downsample_Read_Depth/depth_chart/100/%s" % filename for filename in toc.Filename[toc.Dilution==dilution]]
         (r, n, loc, refb) = rvd27.load_depth(caseFileList)
-        phi, theta_s, mu_s, t = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
+        phi, theta_s, mu_s = rvd27.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
         logging.debug("Saving model in %s" % h5FileName)
         rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n,loc=loc,
-           refb=refb, t=t)
+           refb=refb)
 
