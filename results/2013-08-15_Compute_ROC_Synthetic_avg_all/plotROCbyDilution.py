@@ -26,7 +26,7 @@ def main():
     
     N=1000 # Z sampling size  
     fig=plt.figure(figsize=(10, 9))
-    chi2=True
+    chi2=False
     plt.suptitle('Comparing ROC plot for different read depth' )
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
@@ -42,7 +42,8 @@ def main():
             
             ax.plot(fpr,tpr, label='%d' % cov)
 
-        ax.legend(loc=4,prop={'size':9})
+        l = ax.legend(loc=4,prop={'size':9},title='Read depth')
+        l.get_title().set_fontsize(9)
         ax.plot([0,1],[0,1],color='k',linestyle='dashed')
         ax.set_title('%0.1f%% Mutant Mixture' % d)
         ax.set_xlim((-0.01,1.01))
@@ -50,8 +51,8 @@ def main():
                  
         ax.set_xlabel('False Positive Rate')
         ax.set_ylabel('True Positive Rate')
-        title = 'dilution%0.1f' % d
-        ax.set_title(title.replace('.','_',1))
+        title = 'Dilution%0.1f%%' % d
+        ax.set_title(title, fontsize=10)
     if chi2:
         title='ROC_with_chi2'
     else:
@@ -101,7 +102,7 @@ def ROCpoints(controlFile,caseFile,N=1000,P=0.95,chi2=False):
         for j in xrange(J):
                 chi2Prep[j,:] = np.array([rvd27.chi2test( caseR[i,j,:] ) for i in xrange(nRep)] )
                 if np.any(np.isnan(chi2Prep[j,:])):
-                    chi2P[j] = 0
+                    chi2P[j] = 1
                 else:
                    chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
         

@@ -30,7 +30,7 @@ def main():
     
     N=1000 # Z sampling size  
     fig=plt.figure(figsize=(10, 9))
-    chi2=False
+    chi2=True
     plt.suptitle('Comparing ROC plot for different read depth' )
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
@@ -49,7 +49,8 @@ def main():
             
             ax.plot(fpr,tpr, label='%d' % cov)
 
-        ax.legend(loc=4,prop={'size':9})
+        l = ax.legend(loc=4,prop={'size':9},title='Read depth')
+        l.get_title().set_fontsize(9)
         ax.plot([0,1],[0,1],color='k',linestyle='dashed')
         ax.set_title('%0.1f%% Mutant Mixture' % d)
         ax.set_xlim((-0.01,1.01))
@@ -57,8 +58,8 @@ def main():
                  
         ax.set_xlabel('False Positive Rate')
         ax.set_ylabel('True Positive Rate')
-        title = 'dilution%0.1f' % d
-        ax.set_title(title.replace('.','_',1))
+        title = 'Dilution%0.1f%%' % d
+        ax.set_title(title, fontsize=10)
         
     plt.sca(ax)
     if chi2:
@@ -151,13 +152,8 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,optimalT,title):
         ax.set_xticklabels( [str(x)[8:] for x in Loc] )
         ax.set_ylim
         ax.legend( (rects1[0], rects2[0]), ('Control', 'Case') )
-##        ax.text(0.1, 0.8,
-##                'Optimal Threshold = %0.5f'%optimalT ,
-##                horizontalalignment='center',
-##                verticalalignment='center',
-##                transform = ax.transAxes)
         fig.suptitle('Optimal Threshold = %0.5f'%optimalT )
-        plt.savefig(title)
+        plt.savefig(title.replace('.','_',1))
     else:
         print 'No variant is called'
 

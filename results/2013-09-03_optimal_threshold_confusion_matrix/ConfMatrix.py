@@ -65,8 +65,8 @@ def main():
                  
         ax.set_xlabel('False Positive Rate')
         ax.set_ylabel('True Positive Rate')
-        title = 'dilution%0.1f' % d
-        ax.set_title(title.replace('.','_',1))
+        title = 'Dilution%0.1f%%' % d
+        ax.set_title(title, fontsize=10)
         
     plt.sca(ax)
     if chi2:
