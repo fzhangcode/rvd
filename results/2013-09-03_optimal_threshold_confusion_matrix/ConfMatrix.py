@@ -186,7 +186,7 @@ def Conf_Matrix(predList,trueList,title):
             for j in i:
                     tmp_arr.append(float(j)/float(a))
             norm_conf.append(tmp_arr)
-    label_conf=[['TNR','TPR'],['FNR','TPR']]
+    label_conf=[['TNR','FPR'],['FNR','TPR']]
     plt.close()
     fig = plt.figure()
     ax = fig.add_subplot(111)
