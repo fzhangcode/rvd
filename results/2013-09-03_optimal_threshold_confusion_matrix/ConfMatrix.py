@@ -30,14 +30,12 @@ def main():
     
     N=1000 # Z sampling size  
     fig=plt.figure(figsize=(10, 9))
-    chi2=False
+    chi2=True
     plt.suptitle('Comparing ROC plot for different read depth' )
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
-
         ax = fig.add_subplot(2,2,dilutionList.index(d)+1)
         label=[]
-        
         for f in folderList:            
             controlFile = "../%s/Control.hdf5" %f
             caseFile = "Case%s.hdf5" % str(d).replace(".","_")
@@ -187,7 +185,6 @@ def Conf_Matrix(predList,trueList,title):
                     tmp_arr.append(float(j)/float(a))
             norm_conf.append(tmp_arr)
     label_conf=[['TNR','FPR'],['FNR','TPR']]
-    plt.close()
     fig = plt.figure()
     ax = fig.add_subplot(111)
     res = ax.imshow(np.array(norm_conf), cmap=plt.cm.jet, interpolation='nearest')
