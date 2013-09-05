@@ -62,7 +62,7 @@ This model has three levels of sampling. First the baseline error rate across al
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=40mm]{pdf_figs/RVD2_model.pdf}
+%\includegraphics[width=40mm]{pdf_figs/RVD2_model.pdf}
 \caption{RVD2 Graphical Model}
 \label{fig:graphical_model}
 \end{center}
@@ -129,40 +129,56 @@ We use a Metropolis-within-Gibbs sampling approach shown in Algorithm~\ref{alg:m
 Once we have obtained an estimate of the posterior distribution, we test the hypothesis that there is a sub-population of DNA molecules in the pool with a non-reference base at position $j, \forall j \in 1, \ldots, J$. First, we test the hypothesis that the error rate in the case data, $\mu_j^{\text{case}}$ is greater than the error rate in the control data, $\mu_j^{\text{control}}$. If so, then we test the hypothesis that the high error rate is due to excess reads with a particular non-reference base rather than a uniform distribution over all possible non-reference bases.
 
 \subsection{Initialization}
-The initial values of the model parameters and latent variables is obtained by a method-of-moments procedure. Method- parameter value (population moment) equal to the sample moment. In some cases, the method-of-moments estimate is outside the parameter space. Then, we XXX.
+The initial values of the model parameters and latent variables is obtained by a method-of-moments procedure. Essentially, we set the parameter value (population moment) equal to the sample moment. In some cases, the method-of-moments estimate is outside the parameter space. Then, we XXX.
 
 The estimated error probability is calculated from the observed sample
 \begin{equation}
- \tilde{\theta}_{ij}=\frac{r_{ij}}{n_{ij}}
-\end{equation}
-The estimate of parameter $\mu_j$ is obtained using the expected value of $\theta_{ij}$, while $M_j$ is estimated using the moment estimates for the variance of $\theta_{ij}$.
-\begin{equation}
- \mu_j=E(\theta_{ij}|\mu_j,M_j)
-\end{equation}
-\begin{equation}
- \tilde{\mu}_j =\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
+ \tilde{\theta}_{ji}=\frac{r_{ji}}{n_{ji}}
 \end{equation}
 
+In our model, $\theta_{ji}$ is follows beta distribution with parameters $\mu_j$ and $M_j$
+\begin{align}
+ \theta_{ji}|\mu_j,M_j\thicksim \text{Beta}(\mu_j,M_j)
+\end{align}
+
+The first polulation moment (mean) is 
 \begin{equation}
- M_j=\frac{\mu_j(1-\mu_j)}{Var(\theta_{ij}|\mu_j,M_j)}-1
+ \mu_j=E(\theta_{ij})
 \end{equation}
+By definition of Method of Moments, 
 \begin{equation}
- \tilde{M}_j = \frac{\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^N\left(\frac{r_{ji}}{n_{ji}}-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}
-\end{equation}
-Likewise,the estimate of hyperparameters $\mu_o$ and $M_0$ are
-\begin{equation}
- \mu_0=E(\mu_j|\mu_0,M_0)
-\end{equation}
-\begin{equation}
- \tilde{\mu}_0 =\frac{1}{N-1}\sum_{i=1}^N\tilde{\mu}_j
+ \tilde{\mu}_j = E(\tilde{\theta}_{ij}) = \frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
 \end{equation}
 
+The second population moment centered around mean (variance) is
 \begin{equation}
- M_0=\frac{\mu_0(1-\mu_0)}{Var(\mu_j|\mu_0,M_0)}-1
+ Var(\theta_{ji}) = \frac{\mu_j(1-\mu_j)}{M_j+1}
+\end{equation}
+while the sample variance is
+\begin{equation}
+ \begin{split}
+  Var(\tilde{\theta}_{ji}) &= \frac{1}{N-1}\sum_{i=1}^N(\tilde{\theta}_{ji}-\text{E}[\tilde{\theta}_{ji}])^2\\ &= \frac{1}{N-1}\sum_{i=1}^N(\tilde{\theta}_{ji}-\tilde{\mu}_j)^2
+ \end{split}
+\end{equation}
+Equating polulation variance to sample variance we have
+\begin{equation}
+ \begin{split}
+  \tilde{M}_j &=\frac{\mu_j(1-\mu_j)}{\text{Var}(\tilde{\theta}_{ji})}-1\\ &= \frac{\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^N\left(\frac{r_{ji}}{n_{ji}}-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1
+ \end{split}
+\end{equation}
+
+$\mu_j$ is modeled as a Beta distribution random variable with paprameters $\mu_o$ and $M_0$. Likewise,
+\begin{equation}
+\begin{split}
+ \tilde{\mu}_0 &= E(\mu_j)\\ &= \frac{1}{N-1}\sum_{i=1}^N\tilde{\mu}_j\\ &= \frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
+\end{split}
 \end{equation}
 \begin{equation}
- \tilde{M}_0 = \frac{\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^J\left(\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}-\frac{1}{J-1}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1
+\begin{split}
+ \tilde{M}_0 &=\frac{\tilde{\mu}_0(1-\tilde{\mu}_0)}{Var(\tilde{\mu}_j)}-1\\ &= \frac{\left(\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)\cdot\left(1-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^J\left(\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}-\frac{1}{J-1}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1
+\end{split}
 \end{equation}
+
 
 \subsection{Sampling from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$}
 
@@ -205,10 +221,12 @@ where
  p_0=(p_1,p_2,p_3), p_1=p_2=p_3=1/3
 \end{align}
 
-The null hypothesis is tested using power-divergence family of statistics proposed by Cressie and Read (1984). Considering observed frequencies $\{r_i; i=1,...,k\}$ and expected frequencies $\{E_i; i=1,...,k\}$, by definition the power-divergence family of statistcs indexed by real parameter $\lambda$ is 
+The null hypothesis is tested using power-divergence family of statistics proposed by Cressie and Read (1984). By definition, the power-divergence family of statistcs parameterized with $\lambda$ is 
 \begin{equation}
- 2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{i=1}^k r_i \left[\left(\frac{r_i}{E_i}\right)^\lambda-1\right];\lambda \in R
+ 2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{i=1}^k r_i \left[\left(\frac{r_i}{E_i}\right)^\lambda-1\right];\lambda \in R,
 \end{equation}
+
+where $\{r_i; i=1,...,k\}$ denote observed frequencies and $\{E_i; i=1,...,k\}$ denote the expected frequencies.
 
 Person's $X^2 (\lambda = 1)$ statistics, the log likelih ratio statistics $(\lambda = 0)$, the Freeman-Tukey statistics $(\lambda = -1/2)$ the Neyman modified $X^2 (\lambda = -2)$ are special cases of the family. Cressie and Read (1984) also proposed that when the $\lambda =2/3$, the new power-divergence statistics outcompete the traditional power-divergence statistics. 
 
@@ -252,17 +270,20 @@ Table: Table of Variants
 Figure 4 ROC by read depth
 picard to thin segment data, showing performance as read depth decreasing
 
-\appendix
-\subsection{Parameter initialization derivation}
-The model parameters and latent variables are initialized using method of moments by equating population moment to sample moment. 
+\section{Appendix}
+\subsection{Parameter initialization derivation}\
+
+The model parameters and latent variables are initialized using Method of Moments.
+\subsubsection{$\theta_{ji}$}\
 
 The estimated error probability is calculated from the observed sample
-\subsubsection{$\theta_{ji}$}\
 \begin{equation}
  \tilde{\theta}_{ji}=\frac{r_{ji}}{n_{ji}}
 \end{equation}
 
 \subsubsection{$\mu_j$ and $M_j$}\
+
+$\theta_{ji}$ is modeled as beta distribution random variable with parameter $\mu_j$ and $M_j$
 \begin{align}
  \theta_{ji}|\mu_j,M_j\thicksim \text{Beta}(\mu_j,M_j)
 \end{align}
@@ -305,18 +326,16 @@ By definition of Method of moments,
 so,
 \begin{equation}
 \begin{split}
- \tilde{M}_j &= (N-1)\cdot\frac{\tilde{\mu}_j(1-\tilde{\mu}_j)}{\sum_{i=1}^N(\tilde{\theta}_{ji}-\tilde{\mu}_j)^2}-1\\ &= (N-1)\cdot\frac{\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^N\left(\frac{r_{ji}}{n_{ji}}-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}\\ &= \frac{\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^N\left(\frac{r_{ji}}{n_{ji}}-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}
+ \tilde{M}_j &= (N-1)\cdot\frac{\tilde{\mu}_j(1-\tilde{\mu}_j)}{\sum_{i=1}^N(\tilde{\theta}_{ji}-\tilde{\mu}_j)^2}-1\\ &= (N-1)\cdot\frac{\left(\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)\cdot\left(1-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^N\left(\frac{r_{ji}}{n_{ji}}-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}\\ &= \frac{\left(\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)\cdot\left(1-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^N\left(\frac{r_{ji}}{n_{ji}}-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}
 \end{split}
 \end{equation}
 
-\subsubsection{$\mu_0$ and $M_0$}
+\subsubsection{$\mu_0$ and $M_0$}\
+
+We set a hyperprior distribution $Beta(\mu_0,M_0)$ on $\mu_j$ based on our belief that $\mu_j\in[0,1]$
 \begin{align}
- \mu_j|\mu_0,M_0\thicksim \text{Beta}(\mu_0,M_0)
+ \mu_j|\mu_0,M_0\thicksim \text{Beta}(\mu_0,M_0).
 \end{align}
-Likewise,
-\begin{equation}
- \tilde{\mu}_0 =\frac{1}{N-1}\sum_{i=1}^N\tilde{\mu}_j
-\end{equation}
 
 The expected value ($\mu_0$) is
 \begin{equation}
@@ -331,7 +350,7 @@ while the first sample moment
 
 Using Methond of Moment
 \begin{equation}
-  \tilde{\mu}_0 = \frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
+  \tilde{\mu}_0 = \text{E}[\tilde{\mu}_j] = \frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
 \end{equation}
 
 The second population moment centered around mean (variance) is
@@ -351,7 +370,7 @@ By definition of Method of moments,
 so,
 \begin{equation}
 \begin{split}
- \tilde{M}_0 &= (J-1)\cdot\frac{\tilde{\mu}_0(1-\tilde{\mu}_0)}{\sum_{i=1}^J(\tilde{\mu}_j-\tilde{\mu}_0)^2}-1\\ &= (J-1)\cdot\frac{\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^J\left(\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1\\ &= \frac{\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^J\left(\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}-\frac{1}{J-1}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1
+ \tilde{M}_0 &= (J-1)\cdot\frac{\tilde{\mu}_0(1-\tilde{\mu}_0)}{\sum_{i=1}^J(\tilde{\mu}_j-\tilde{\mu}_0)^2}-1\\ &= (J-1)\cdot\frac{\left(\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)\cdot\left(1-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^J\left(\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1\\ &= \frac{\left(\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)\cdot\left(1-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^J\left(\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}-\frac{1}{J-1}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1
 \end{split}
 \end{equation}
 \bibliographystyle{apalike}
