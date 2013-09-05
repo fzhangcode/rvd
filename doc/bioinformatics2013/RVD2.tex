@@ -133,24 +133,36 @@ The initial values of the model parameters and latent variables is obtained by a
 
 The estimated error probability is calculated from the observed sample
 \begin{equation}
- \theta_{ij}=\frac{r_{ij}}{n_{ij}}
+ \tilde{\theta}_{ij}=\frac{r_{ij}}{n_{ij}}
 \end{equation}
 The estimate of parameter $\mu_j$ is obtained using the expected value of $\theta_{ij}$, while $M_j$ is estimated using the moment estimates for the variance of $\theta_{ij}$.
 \begin{equation}
  \mu_j=E(\theta_{ij}|\mu_j,M_j)
 \end{equation}
 \begin{equation}
- M_j=\frac{\mu_j(1-\mu_j)}{Var(\theta_{ij}|\mu_j,M_j)}-1
+ \tilde{\mu}_j =\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
 \end{equation}
 
+\begin{equation}
+ M_j=\frac{\mu_j(1-\mu_j)}{Var(\theta_{ij}|\mu_j,M_j)}-1
+\end{equation}
+\begin{equation}
+ \tilde{M}_j = \frac{\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^N\left(\frac{r_{ji}}{n_{ji}}-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}
+\end{equation}
 Likewise,the estimate of hyperparameters $\mu_o$ and $M_0$ are
 \begin{equation}
  \mu_0=E(\mu_j|\mu_0,M_0)
 \end{equation}
 \begin{equation}
- M_0=\frac{\mu_0(1-\mu_0)}{Var(\mu_j|\mu_0,M_0)}-1
+ \tilde{\mu}_0 =\frac{1}{N-1}\sum_{i=1}^N\tilde{\mu}_j
 \end{equation}
 
+\begin{equation}
+ M_0=\frac{\mu_0(1-\mu_0)}{Var(\mu_j|\mu_0,M_0)}-1
+\end{equation}
+\begin{equation}
+ \tilde{M}_0 = \frac{\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^J\left(\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}-\frac{1}{J-1}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1
+\end{equation}
 
 \subsection{Sampling from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$}
 
@@ -241,60 +253,107 @@ Figure 4 ROC by read depth
 picard to thin segment data, showing performance as read depth decreasing
 
 \section{Appendix}
-\subsection{Moments derivation}
-The probability density function of beta distribution, for $x\in[0,1]$, and shape real parameter $\alpha>1$ and $\beta>1$ is 
+\subsection{Parameter initialization derivation}
+The model parameters and latent variables are initialized using method of moments by equating population moment to sample moment. 
+
+The estimated error probability is calculated from the observed sample
+\subsubsection{$\theta_{ji}$}\
+\begin{equation}
+ \tilde{\theta}_{ji}=\frac{r_{ji}}{n_{ji}}
+\end{equation}
+
+\subsubsection{$\mu_j$ and $M_j$}\
+\begin{align}
+ \theta_{ji}|\mu_j,M_j\thicksim \text{Beta}(\mu_j,M_j)
+\end{align}
+
+The probability density function of beta distribution parameterized with the mean $\mu_j$ and sample-size paramenter $M_j$ is
 \begin{equation}
 \begin{split}
-  f(x;\alpha,\beta) &= \frac{x^{\alpha-1}(1-x)^{\beta-1}}{\int_0^1x^{\alpha-1}(1-x)^{\beta-1}dx}\\ &=\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}x^{\alpha-1}(1-x)^{\beta-1}\\ &=\frac{1}{B(\alpha,\beta)}x^{\alpha-1}(1-x)^{\beta-1}
+  f(\theta_{ji};\mu_j,M_j) = \frac{1}{B(M_j\mu_j,M_j(1-\mu_j))}\theta_{ji}^{M_j\mu_j-1}(1-\theta_{ji})^{M_j(1-\mu_j)-1}.
 \end{split}
 \end{equation}
-where $\Gamma(z)$ is the Gammma function, $B(\alpha,\beta)$ is the beta function, and
+The first polulation moment (mean) is
+\begin{equation}
+ \mu_j=\text{E}[\theta_{ji}],
+\end{equation}
+while the first sample moment
 \begin{equation}
 \begin{split}
- B(\alpha,\beta) &=\int_0^1x^{\alpha-1}(1-x)^{\beta-1}dx\\  &= \frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}
+ \text{E}[\tilde{\theta}_{ji}] &= \frac{1}{N-1}\sum_{i=1}^N\tilde{\theta}_{ji}\\ &=\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
+\end{split}
+\end{equation}
+Equat the population mean to sample mean we have
+\begin{equation}
+ \tilde{\mu}_j =\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
+\end{equation}
+
+The second population moment centered around mean (variance) is
+\begin{equation}
+ Var(\theta_{ji}) = \frac{\mu_j(1-\mu_j)}{M_j+1}
+\end{equation}
+while the sample variance is
+\begin{equation}
+ \begin{split}
+  Var(\tilde{\theta}_{ji}) &= \frac{1}{N-1}\sum_{i=1}^N(\tilde{\theta}_{ji}-\text{E}[\tilde{\theta}_{ji}])^2\\ &= \frac{1}{N-1}\sum_{i=1}^N(\tilde{\theta}_{ji}-\tilde{\mu}_j)^2
+ \end{split}
+\end{equation}
+By definition of Method of moments,
+\begin{equation}
+  \frac{\tilde{\mu}_j(1-\tilde{\mu}_j)}{\tilde{M}_j+1} = \frac{1}{N-1}\sum_{i=1}^N(\tilde{\theta}_{ji}-\tilde{\mu}_j)^2,
+\end{equation}
+so,
+\begin{equation}
+\begin{split}
+ \tilde{M}_j &= (N-1)\cdot\frac{\tilde{\mu}_j(1-\tilde{\mu}_j)}{\sum_{i=1}^N(\tilde{\theta}_{ji}-\tilde{\mu}_j)^2}-1\\ &= (N-1)\cdot\frac{\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^N\left(\frac{r_{ji}}{n_{ji}}-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}\\ &= \frac{\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^N\left(\frac{r_{ji}}{n_{ji}}-\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}
 \end{split}
 \end{equation}
 
-The expected value (mean) of a Beta distribution random variable X with parameter $\alpha$ and $\beta$ is 
+\subsubsection{$\mu_0$ and $M_0$}
+\begin{align}
+ \mu_j|\mu_0,M_0\thicksim \text{Beta}(\mu_0,M_0)
+\end{align}
+Likewise,
+\begin{equation}
+ \tilde{\mu}_0 =\frac{1}{N-1}\sum_{i=1}^N\tilde{\mu}_j
+\end{equation}
+
+The expected value ($\mu_0$) is
+\begin{equation}
+ \mu_0=\text{E}[\mu_j],
+\end{equation}
+while the first sample moment
 \begin{equation}
 \begin{split}
-  E[X] &= \int_0^1xf(x;\alpha,\beta)dx\\ &= \int_0^1x\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha,\beta)}dx\\ &= \frac{\int_0^1x^{\alpha}(1-x)^{\beta-1}dx}{B(\alpha,\beta)}\\ &= \frac{B(\alpha+1,\beta)}{B(\alpha,\beta)}\\ &= \frac{\Gamma(\alpha+1)\Gamma(\beta)}{\Gamma(\alpha+\beta+1)}\cdot\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}\\ &= \frac{\alpha\Gamma(\alpha)\Gamma(\beta)}{(\alpha+\beta)\Gamma(\alpha+\beta)}\cdot\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}\\ &= \frac{\alpha}{\alpha+\beta}
+\text{E}[\tilde{\mu}_j] &= \frac{1}{J-1}\sum_{i=1}^J\tilde{\mu}_j\\ &=  \frac{1}{J-1}\sum_{i=1}^J\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\\ &=\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
 \end{split}
 \end{equation}
-Note that Gamma function satisfies the functional equation
+
+Using Methond of Moment
 \begin{equation}
- \Gamma(z) = z\Gamma(z)
+  \tilde{\mu}_0 = \frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}
 \end{equation}
 
-The variance of a Beta distribution random variable X with parameter $\alpha$ and $\beta$ is 
+The second population moment centered around mean (variance) is
+\begin{equation}
+ Var(\mu_j) = \frac{\mu_0(1-\mu_0)}{M_0+1}
+\end{equation}
+while the sample variance is
+\begin{equation}
+ \begin{split}
+  Var(\tilde{\mu}_j) &= \frac{1}{J-1}\sum_{i=1}^J(\tilde{\mu}_j-\text{E}[\tilde{\mu}_j])^2\\ &= \frac{1}{J-1}\sum_{i=1}^J(\tilde{\mu}_j-\tilde{\mu}_0)^2
+ \end{split}
+\end{equation}
+By definition of Method of moments,
+\begin{equation}
+  \frac{\tilde{\mu}_0(1-\tilde{\mu}_0)}{\tilde{M}_0+1} = \frac{1}{J-1}\sum_{i=1}^J(\tilde{\mu}_j-\tilde{\mu}_0)^2,
+\end{equation}
+so,
 \begin{equation}
 \begin{split}
-  var(X) &= E[(X-E(X))^2]\\ &= E(X^2)-[E(x)]^2\\ &=\int_0^1x^2\frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha,\beta)}dx-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{\int_0^1x^{\alpha+1}(1-x)^{\beta-1}dx}{B(\alpha,\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{B(\alpha+2,\beta)}{B(\alpha,\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{\Gamma(\alpha+2)\Gamma(\beta)}{\Gamma(\alpha+\beta+2)}\cdot\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{(\alpha+1)\alpha\Gamma(\alpha)\Gamma(\beta)}{(\alpha+\beta+1)(\alpha+\beta)\Gamma(\alpha+\beta)}\cdot\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{(\alpha+1)\alpha}{(\alpha+\beta+1)(\alpha+\beta)}-\left(\frac{\alpha}{\alpha+\beta}\right)^2\\ &= \frac{\alpha\beta}{(\alpha+\beta+1)(\alpha+\beta)^2}
+ \tilde{M}_0 &= (J-1)\cdot\frac{\tilde{\mu}_0(1-\tilde{\mu}_0)}{\sum_{i=1}^J(\tilde{\mu}_j-\tilde{\mu}_0)^2}-1\\ &= (J-1)\cdot\frac{\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^J\left(\frac{1}{N-1}\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1\\ &= \frac{\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\cdot\left(1-\frac{1}{(J-1)(N-1)}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)}{\sum_{i=1}^J\left(\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}-\frac{1}{J-1}\sum_{i=1}^J\sum_{i=1}^N\frac{r_{ji}}{n_{ji}}\right)^2}-1
 \end{split}
 \end{equation}
-
-Instead of the standard scale parameter $\alpha$ and $\beta$, we use the mean $\mu$ and sample-size paramenter $M$ for the Beta distribution in our hierarchical model.
-\begin{equation}
-\begin{split}
-  f(x;\mu,M) &=\frac{\Gamma(M)}{\Gamma(M\mu)\Gamma(M(1-\mu))}x^{M\mu-1}(1-x)^{M(1-\mu)-1}\\ &= \frac{1}{B(M\mu,M(1-\mu))}x^{M\mu-1}(1-x)^{M(1-\mu)-1}
-\end{split}
-\end{equation}
-where 
-\begin{equation}
- \mu = \frac{\alpha}{\alpha+\beta}
-\end{equation}
-\begin{equation}
- M = \alpha+\beta
-\end{equation}
-From Equation 24 and Equation 26 it can be seen that
-\begin{equation}
- E(x|\mu,M) = \mu
-\end{equation}
-\begin{equation}
- Var(x|\mu,M) = \frac{\mu(1-\mu)}{M+1}
-\end{equation}
-
-
 \bibliographystyle{apalike}
 \bibliography{bioinfo}
 \end{document}  
