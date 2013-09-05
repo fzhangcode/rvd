@@ -129,7 +129,7 @@ We use a Metropolis-within-Gibbs sampling approach shown in Algorithm~\ref{alg:m
 Once we have obtained an estimate of the posterior distribution, we test the hypothesis that there is a sub-population of DNA molecules in the pool with a non-reference base at position $j, \forall j \in 1, \ldots, J$. First, we test the hypothesis that the error rate in the case data, $\mu_j^{\text{case}}$ is greater than the error rate in the control data, $\mu_j^{\text{control}}$. If so, then we test the hypothesis that the high error rate is due to excess reads with a particular non-reference base rather than a uniform distribution over all possible non-reference bases.
 
 \subsection{Initialization}
-The initial values of the model parameters and latent variables is obtained by a method-of-moments procedure. Essentially, we set the parameter value (population moment) equal to the sample moment. In some cases, the method-of-moments estimate is outside the parameter space. Then, we XXX.
+The initial values of the model parameters and latent variables is obtained by a method-of-moments procedure. Method- parameter value (population moment) equal to the sample moment. In some cases, the method-of-moments estimate is outside the parameter space. Then, we XXX.
 
 The estimated error probability is calculated from the observed sample
 \begin{equation}
@@ -252,7 +252,7 @@ Table: Table of Variants
 Figure 4 ROC by read depth
 picard to thin segment data, showing performance as read depth decreasing
 
-\section{Appendix}
+\appendix
 \subsection{Parameter initialization derivation}
 The model parameters and latent variables are initialized using method of moments by equating population moment to sample moment. 
 
