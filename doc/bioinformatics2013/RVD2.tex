@@ -58,7 +58,9 @@ We have developed a hierarchical Bayesian model for this data set because of the
 	\end{enumerate}
 \end{enumerate}
 
-This model has three levels of sampling. First the baseline error rate across all locations and all replicates is chosen once and for all for the entire data set. Then, based on that baseline error rate, location-specific error rates are sampled. Based on the location specific error rate, replicate-specific error rates are selected. Finally, the observable data, the count of the non-reference reads is sampled.
+This model has three levels of sampling that capture three scales of resolution in the data. First the genome-wide baseline error rate across all locations, $\mu_0$,  is chosen once for the entire data set. The precision parameter $M_0$ measures the variability of the location-specific error rates, $\mu_j$ across positions. Then, based on that genome-wide parameters, location-specific error rates, $\mu_j$ and precisions $M_j$ are sampled for each position. The precision parameter $M_j$ measures the variability between replicates at a particular position. Based on the location specific parameters, replicate-specific error rates, $\theta_{ji}$ are selected. Finally, the observable data, the count of the non-reference reads  $r_{ji}$ is sampled.
+
+It is important to note that this model partitions noise in the data hierarchically. The sampling error, represented by the binomial random variable, can be reduced by increasing the read depth $n_{ji}$. In contrast, increasing the read depth does not influence the parameter for the error rate variability between replicates $M_j$ and the error rate variability across positions $M_0$. The former parameter is influenced by the experimental protocol and the latter parameter is influenced by the DNA sequence itself and the fidelity of the base call based on it's sequence context.
 
 \begin{figure}[h]
 \begin{center}
@@ -68,9 +70,9 @@ This model has three levels of sampling. First the baseline error rate across al
 \end{center}
 \end{figure}
 
-% Describe graphical model framework here
+Figure~\ref{fig:graphical_model} shows a graphical representation of the RVD2 statistical model. In this graphical model framework~\cite{} a shaded node represents an observed random variable, an unshaded node represents an unobserved or latent random variable and a directed edge represents a functional dependency between the two connected nodes. A rounded box or ``plate" represents replication of the nodes within the plate. This graphical model framework connects graph theory and probability theory in a way that facilitates algorithmic methods for statistical inference.
 
-Given this model structure, the joint distribution over the latent and observed variables for data at location $j$ in replicate $i$ given the parameters is
+Given the model structure shown in Figure~\ref{fig:graphical_model}, the joint distribution over the latent and observed variables for data at location $j$ in replicate $i$ given the parameters is
 
 \begin{equation}\label{eqn:jointpdf}
 p \left( r_{ji}, \theta_{ji}, \mu_j | n_{ji}; \mu_0, M_0, M_j \right) = p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right)
@@ -138,6 +140,9 @@ We present the initial parameter estimates here and provide the derivations in A
 
 The method-of-moments is known to have the potential to give estimates that are outside the true parameter bounds. For example, the MoM estimate $\tilde{M}_j$ may be negative while $M_j$ must be non-negative. We have not encounter such pathological behavior of the estimates in this application. 
 
+%%%%%%%%%%%%%%%%%%
+% Sampling theta
+%%%%%%%%%%%%%%%%%%
 \subsection{Sampling from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$}
 
 Samples from the posterior distribution $p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j)$ are drawn analytically because of the Bayesian conjugacy between the prior $p(\theta_{ji} | \mu_j, M_j) \thicksim \text{Beta}(\mu_j, M_j)$ and the likelihood $p(r_{ji} | n_{ji}, \theta_{ji}) \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$. The posterior distribution is 
@@ -145,14 +150,29 @@ Samples from the posterior distribution $p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, 
 \begin{equation}
 	p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j) \thicksim \text{Beta}\left( \frac{r_{ji} + M_j \mu_j}{n_{ji} + M_j} , n_{ji} + M_j\right),
 \end{equation}
-where we have used the mean-precision parameterization of the beta distribution.
+where we have used the mean-precision parameterization of the beta distribution. We note p-th sample as $\theta^{(p+1)}_{ji}$.
 
+%%%%%%%%%%%%%%%%%%
+% Sampling mu
+%%%%%%%%%%%%%%%%%%
 \subsection{Sampling from $p \left( \mu_j |\theta_{ji},\mu_0,M_0\right)$}
-
-The posterior distribution for $\mu_j$ is
+The posterior distribution over $\mu_j$ given it's Markov blanket is 
 \begin{equation}
-	p \left( \mu_j |\theta_{ij},\mu_0,M_0\right) = 
+	p( \mu_j | \theta_{ji}, M_j, \mu_0, M_0 ) \propto p(\mu_j | \mu_0, M_0) p(\theta_{ji} | \mu_j, M_j)
 \end{equation}
+
+Since the prior, $p(\mu_j | \mu_0, M_0)$, is not conjugate to the likelihood, $p(\theta_{ji} | \mu_j, M_j)$, we cannot write an analytical form for the posterior distribution. Instead, we sample from the posterior distribution using the Metropolis-Hastings algorithm.
+
+A candidate sample is generated from the symmetric proposal distribution $Q(\mu_j^* | \mu_j^{(p)}) \thicksim $. The acceptance probability is then
+\begin{equation}
+	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
+\end{equation}
+
+Since, each position $j$ is exchangeable given the genome-wide parameters $\mu_0$ and $M_0$ this algorithm can be distributed across $J$ processors which increases the speed considerably. 
+
+%%%%%%%%%%%%%%%%%%
+% Posterior Density Test
+%%%%%%%%%%%%%%%%%%
 \subsection{Bayesian hypothesis test for high error rate}
 
 To detect a mutation in a specific position, a threshold $\tau$ is set for the posterior difference distribution testing.
