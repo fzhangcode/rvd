@@ -58,9 +58,7 @@ We have developed a hierarchical Bayesian model for this data set because of the
 	\end{enumerate}
 \end{enumerate}
 
-This model has three levels of sampling that capture three scales of resolution in the data. First the genome-wide baseline error rate across all locations, $\mu_0$,  is chosen once for the entire data set. The precision parameter $M_0$ measures the variability of the location-specific error rates, $\mu_j$ across positions. Then, based on that genome-wide parameters, location-specific error rates, $\mu_j$ and precisions $M_j$ are sampled for each position. The precision parameter $M_j$ measures the variability between replicates at a particular position. Based on the location specific parameters, replicate-specific error rates, $\theta_{ji}$ are selected. Finally, the observable data, the count of the non-reference reads  $r_{ji}$ is sampled.
-
-It is important to note that this model partitions noise in the data hierarchically. The sampling error, represented by the binomial random variable, can be reduced by increasing the read depth $n_{ji}$. In contrast, increasing the read depth does not influence the parameter for the error rate variability between replicates $M_j$ and the error rate variability across positions $M_0$. The former parameter is influenced by the experimental protocol and the latter parameter is influenced by the DNA sequence itself and the fidelity of the base call based on it's sequence context.
+This model has three levels of sampling. First the baseline error rate across all locations and all replicates is chosen once and for all for the entire data set. Then, based on that baseline error rate, location-specific error rates are sampled. Based on the location specific error rate, replicate-specific error rates are selected. Finally, the observable data, the count of the non-reference reads is sampled.
 
 \begin{figure}[h]
 \begin{center}
@@ -70,9 +68,9 @@ It is important to note that this model partitions noise in the data hierarchica
 \end{center}
 \end{figure}
 
-Figure~\ref{fig:graphical_model} shows a graphical representation of the RVD2 statistical model. In this graphical model framework~\cite{} a shaded node represents an observed random variable, an unshaded node represents an unobserved or latent random variable and a directed edge represents a functional dependency between the two connected nodes. A rounded box or ``plate" represents replication of the nodes within the plate. This graphical model framework connects graph theory and probability theory in a way that facilitates algorithmic methods for statistical inference.
+% Describe graphical model framework here
 
-Given the model structure shown in Figure~\ref{fig:graphical_model}, the joint distribution over the latent and observed variables for data at location $j$ in replicate $i$ given the parameters is
+Given this model structure, the joint distribution over the latent and observed variables for data at location $j$ in replicate $i$ given the parameters is
 
 \begin{equation}\label{eqn:jointpdf}
 p \left( r_{ji}, \theta_{ji}, \mu_j | n_{ji}; \mu_0, M_0, M_j \right) = p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right)
@@ -140,51 +138,40 @@ We present the initial parameter estimates here and provide the derivations in A
 
 The method-of-moments is known to have the potential to give estimates that are outside the true parameter bounds. For example, the MoM estimate $\tilde{M}_j$ may be negative while $M_j$ must be non-negative. We have not encounter such pathological behavior of the estimates in this application. 
 
-%%%%%%%%%%%%%%%%%%
-% Sampling theta
-%%%%%%%%%%%%%%%%%%
-\subsection{Sampling from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$}
+\subsection{Sampling from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$}\
 
 Samples from the posterior distribution $p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j)$ are drawn analytically because of the Bayesian conjugacy between the prior $p(\theta_{ji} | \mu_j, M_j) \thicksim \text{Beta}(\mu_j, M_j)$ and the likelihood $p(r_{ji} | n_{ji}, \theta_{ji}) \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$. The posterior distribution is 
 
 \begin{equation}
 	p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j) \thicksim \text{Beta}\left( \frac{r_{ji} + M_j \mu_j}{n_{ji} + M_j} , n_{ji} + M_j\right),
 \end{equation}
-where we have used the mean-precision parameterization of the beta distribution. We note p-th sample as $\theta^{(p+1)}_{ji}$.
+where we have used the mean-precision parameterization of the beta distribution.
 
-%%%%%%%%%%%%%%%%%%
-% Sampling mu
-%%%%%%%%%%%%%%%%%%
 \subsection{Sampling from $p \left( \mu_j |\theta_{ji},\mu_0,M_0\right)$}
-The posterior distribution over $\mu_j$ given it's Markov blanket is 
+
+The posterior distribution for $\mu_j$ is
 \begin{equation}
-	p( \mu_j | \theta_{ji}, M_j, \mu_0, M_0 ) \propto p(\mu_j | \mu_0, M_0) p(\theta_{ji} | \mu_j, M_j)
+	p \left( \mu_j |\theta_{ij},\mu_0,M_0\right) = 
 \end{equation}
-
-Since the prior, $p(\mu_j | \mu_0, M_0)$, is not conjugate to the likelihood, $p(\theta_{ji} | \mu_j, M_j)$, we cannot write an analytical form for the posterior distribution. Instead, we sample from the posterior distribution using the Metropolis-Hastings algorithm.
-
-A candidate sample is generated from the symmetric proposal distribution $Q(\mu_j^* | \mu_j^{(p)}) \thicksim $. The acceptance probability is then
-\begin{equation}
-	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
-\end{equation}
-
-Since, each position $j$ is exchangeable given the genome-wide parameters $\mu_0$ and $M_0$ this algorithm can be distributed across $J$ processors which increases the speed considerably. We have found that the algorithm performance improves when we take the median of ten or more M-H samples as a single Gibbs step for each position. This computational effort only minimally increases run time when run on a parallel computing platform. In the experiments in the remainder, we use a XX sample burn-in to allow the Markov chain to approach its stationary distribution and we thin the chain by a factor of 2 to reduce autocorrelation among samples.
-
-%%%%%%%%%%%%%%%%%%
-% Posterior Density Test
-%%%%%%%%%%%%%%%%%%
 \subsection{Bayesian hypothesis test for high error rate}
-The Metropolis-within-Gibbs (M-w-G) sampling algorithm provides samples from the posterior distribution of $\mu_j$ for both the control and case data. For notational simplicity in this section, we define the random variables associated with these two distributions $\mu_j^{\text{case}}$ and $\mu_j^{\text{control}}$.
 
-A variant is called if the data indicate that $\mu_j^{\text{case}} > \mu_j^{\text{control}}$ with high confidence,
+To detect a mutation in a specific position, a threshold $\tau$ is set for the posterior difference distribution testing.
+\begin{align}
+ H_1: \mu_{case}-\mu_{control}\geq\tau \\
+ H_2: \mu_{case}-\mu_{control}<\tau
+\end{align}
+
+We can calculate the posterior probability of the hypothesis $H_1$ being true by integrating the posterior density over the correct region:
+
 \begin{equation}
-	\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} \geq \tau ) > 1-\alpha,
+ p(H1:\mu_{case}-\mu_{control}\geq\tau)=\int_\tau^\infty p(\mu_{diff} |r,n; \mu_0,M_0)d\mu_{diff}
 \end{equation}
-where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. While analytical forms for the posterior distributions are not available, hthe M-w-G algorithm does provide samples from those distributions. So, we sample from the posterior distribution $\mu_j^{\Delta} \triangleq \mu_j^{\text{case}} - \mu_j^{\text{control}}$ by randomly sampling with replacement from the samples of $\mu_j^{\text{case}}$ and$\mu_j^{\text{control}}$ and calculating samples from $\mu_j^{\Delta}$ directly.
 
-%%%%%%%%%%%%%%%%%%
-% Chi^2 Test
-%%%%%%%%%%%%%%%%%%
+We accept the hypothesis $H_1$ if this posterior probability is no lower than 95\%, which means we are 95\% sure that there is a mutation in this position.
+
+ROC curve is plotted to evaluate the performance of the detection algorithm with different threshold for different mutation rate. 
+
+
 \subsection{$\chi^2$ test for non-uniform base distribution}
 
 We assume that at one position in one experimental replicate, the non-reference reads follows multinomial distribution of $k = 3$ categories, with probability vector $p = (p_1, p_2, p_3)$ where $p_i \geq 0$ for $i =1, 2, 3$ and $\sum_{i=1}^3 p_i = 1$.
@@ -235,17 +222,66 @@ With the posterior difference distribution of position error rate $\mu$ across r
 
 
 \section{Results}
-Figure 1 Overall of the process
-\subsection{Simulation Results}
-\subsection{Comparison Results on Synthetic DNA}
+
+\subsection{Overall of the process}
+Figure 1 
+
+\subsection{Performance with read depth}\
+Figure 2 ROC plot showing performance with different read depth
+
+picard to thin segment data, showing performance as read depth decreasing
+
+\begin{figure}[h]
+\begin{center}
+%\includegraphics[width=160mm]{eps_figs/ROC_without_chi2.eps}
+\caption{ROC curve varying read depth showing detection performance of model with Bayesian Hypothesis Test.}
+\label{fig:ROC_without_chi2}
+\end{center}
+\end{figure}
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=160mm]{pdf_figs/ROC_without_chi2.pdf}
+\caption{ROC curve varying read depth showing detection performance of model with Bayesian Hypothesis Test.}
+\label{fig:ROC_without_chi2}
+\end{center}
+\end{figure}
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=160mm]{pdf_figs/MuBarPlot.pdf}
+\caption{ROC curve varying read depth showing detection performance of model with Bayesian Hypothesis Test.}
+\label{fig:ROC_without_chi2}
+\end{center}
+\end{figure}
+
+We tested the mutation detection power of our graphical model on synthetic dataset with dilution rates $0.1\%$, $0.3\%$, $1.0\%$, $10.0\%$ and read depth varying from $10^2$ to $10^5$.Different read depth dataset was achieve by thining dataset with read depth up to $10^6$ using Picard.The model had high detection power when the read depth was at $10^5$ level. At dilution rate at $0.1\%$, the model achieved performance with sensitivity at 99.74\% and specificity at 92.86\%. We missed one mutation at position 205 and had one false positive at position 8. The threshold was chosen at 0.022\% which achieved the optimal sensitivity and specificity in the ROC curve. As expected, the detection power of the graphical model decreased when the read depth was reduced. 
+
+\begin{figure}[h] %needs to go to supplementary document.
+\begin{center}
+\includegraphics[width=160mm]{pdf_figs/ROC_subplots_with_chi2.pdf}
+\caption{ROC curve varying read depth showing method performance with Bayesian baHypothesis Testing and Chi-Square Test}
+\label{fig:R}
+\end{center}
+\end{figure}
+We also evaluateed the performance of the graphical model with Chi-square test included in the hypothesis testing. 
+
+Low read depth limited the False positive rate. we are confident in the callings
+
+High read depth Not much influence. do not bring about bad influence
+
+
+\subsection{Comparison Results on Synthetic DNA}\
+
 Figure 3 ROC comparison with other methods: varscan/samtools/rvd
-\subsection{Empirical Results on Multiple Sclerosis Data}
+
+
+\subsection{Empirical Results on Multiple Sclerosis Data}\
 We tested our method on sequence data from clinical Multiple Sclerosis samples. We expect to see that 
 
 Table: Table of Variants
-\subsection{Performance with read depth}
-Figure 4 ROC by read depth
-picard to thin segment data, showing performance as read depth decreasing
+
+
 
 \appendix
 \section{Parameter Initialization}\label{sec:appendix_mom}

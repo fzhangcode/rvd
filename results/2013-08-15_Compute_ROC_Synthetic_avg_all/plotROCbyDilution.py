@@ -21,13 +21,13 @@ def main():
     folderList = ('2013-08-14_Compute_ROC_Synthetic_avg10',\
                   '2013-08-14_Compute_ROC_Synthetic_avg100',\
                   '2013-08-14_Compute_ROC_Synthetic_avg1000',\
-                  '2013-08-14_Compute_ROC_Synthetic_avg10000',\
-                  '2013-08-14_Compute_ROC_Synthetic_avg100000')
+                  '2013-08-14_Compute_ROC_Synthetic_avg10000')
     
     N=1000 # Z sampling size  
     fig=plt.figure(figsize=(10, 9))
     chi2=False
-    plt.suptitle('Comparing ROC plot for different read depth' )
+##    lstyle=('-','--','-.',':')
+    lcolor=('c','r','g','b')
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
         ax = fig.add_subplot(2,2,dilutionList.index(d)+1)
@@ -37,27 +37,26 @@ def main():
             caseFile = "Case%s.hdf5" % str(d).replace(".","_")
             caseFile = "../%(folder)s/%(file)s" %{'folder':f,'file':caseFile}
              # ROC
-            
             [fpr,tpr,cov, T] = ROCpoints(controlFile,caseFile,P=0.95,chi2=chi2)
-            
-            ax.plot(fpr,tpr, label='%d' % cov)
-
+            ax.plot(fpr,tpr, color=lcolor[folderList.index(f)], label='%d' % cov)
+##            ax.plot(fpr,tpr,linestyle=lstyle[folderList.index(f)], color=lcolor[folderList.index(f)], label='%d' % cov)
+##            ax.plot(fpr[0],tpr[0],marker='o',markerfacecolor=lcolor[folderList.index(f)])
         l = ax.legend(loc=4,prop={'size':9},title='Read depth')
         l.get_title().set_fontsize(9)
         ax.plot([0,1],[0,1],color='k',linestyle='dashed')
-        ax.set_title('%0.1f%% Mutant Mixture' % d)
-        ax.set_xlim((-0.01,1.01))
-        ax.set_ylim((-0.01,1.01))
+        ax.set_title('%0.1f%% Mutant Mixture' % d, fontsize=10)
+        ax.set_xlim((-0.03,1.03))
+        ax.set_ylim((-0.03,1.03))
                  
         ax.set_xlabel('False Positive Rate')
         ax.set_ylabel('True Positive Rate')
-        title = 'Dilution%0.1f%%' % d
-        ax.set_title(title, fontsize=10)
+        
     if chi2:
         title='ROC_with_chi2'
     else:
         title='ROC_without_chi2'
-    plt.savefig(title)
+    figformat='.eps'
+    plt.savefig(title+figformat)
 
 def ROCpoints(controlFile,caseFile,N=1000,P=0.95,chi2=False):
     # Load the model samples

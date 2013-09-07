@@ -23,14 +23,10 @@ def main():
                   '2013-08-14_Compute_ROC_Synthetic_avg1000',\
                   '2013-08-14_Compute_ROC_Synthetic_avg10000',\
                   '2013-08-14_Compute_ROC_Synthetic_avg100000')
-##    dilutionList = (1.0,)
-##
-##    folderList = ('2013-08-14_Compute_ROC_Synthetic_avg100000',)
-
     
     N=1000 # Z sampling size  
     fig=plt.figure(figsize=(10, 9))
-    chi2=True
+    chi2=False
     plt.suptitle('Comparing ROC plot for different read depth' )
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
@@ -42,13 +38,13 @@ def main():
             caseFile = "../%(folder)s/%(file)s" %{'folder':f,'file':caseFile}
             
             [fpr,tpr, cov, optimalT, CalledCaseMu, CalledControlMu, CalledLoc, predList, trueList] = ROCpoints(controlFile,caseFile,P=0.95,chi2=chi2)
-            title='MuBarPlot_Dilution%(dilution)0.1f_Depth%(depth)d.png'%{'dilution':d,'depth':cov}
+            title='MuBarPlot_Dilution%(dilution)0.1f_Depth%(depth)d.pdf'%{'dilution':d,'depth':cov}
             
             #MuBarPlot
             MuBarPlot(CalledControlMu,CalledCaseMu,CalledLoc,optimalT,title)
             
             #Confusion Matrix
-            title='ConfusionMatrix_Dilution%(dilution)0.1f_Depth%(depth)d.png'%{'dilution':d,'depth':cov}
+            title='ConfusionMatrix_Dilution%(dilution)0.1f_Depth%(depth)d.pdf'%{'dilution':d,'depth':cov}
             Conf_Matrix(predList,trueList,title)
 
             # ROC curve
@@ -163,7 +159,7 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,optimalT,title):
         ax.set_xticklabels( [str(x)[8:] for x in Loc] )
         ax.set_ylim
         ax.legend( (rects1[0], rects2[0]), ('Control', 'Case') )
-        fig.suptitle('Optimal Threshold = %0.5f'%optimalT )
+##        fig.suptitle('Optimal Threshold = %0.5f'%optimalT )
         plt.savefig(title.replace('.','_',1))
     else:
         print 'No variant is called'
