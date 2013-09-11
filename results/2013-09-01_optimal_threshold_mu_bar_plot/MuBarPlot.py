@@ -45,7 +45,6 @@ def main():
             [fpr,tpr, cov, optimalT, caseMu1, controlMu1, loc1] = ROCpoints(controlFile,caseFile,P=0.95,chi2=chi2)
             title='Dilution%(dilution)0.1f_Depth%(depth)d_Variant_Call.png'%{'dilution':d,'depth':cov}
             MuBarPlot(controlMu1,caseMu1,loc1,optimalT,title)
-            print loc1
             
             ax.plot(fpr,tpr, label='%d' % cov)
 
@@ -137,15 +136,26 @@ def ROCpoints(controlFile,caseFile,N=1000,P=0.95,chi2=False):
     return fpr,tpr, cov, optimalT, caseMu1, controlMu1, loc1
 
 def MuBarPlot(CallControlMu,CallCaseMu,Loc,optimalT,title):
+    # 95% credible interval
+    alpha = 0.05
+    pos = int(CallControlMu.shape[1]*alpha/2)
+    #pdb.set_trace()
+    # sort along Gibbs samples
+    ControlMu = np.sort(CallControlMu,axis=1)
+    Control_yerr = np.array([np.mean(CallControlMu,1)-ControlMu[:,pos], ControlMu[:,CallControlMu.shape[1]-pos]-np.mean(CallControlMu,1)])
+
+    CaseMu = np.sort(CallCaseMu,axis=1)
+    Case_yerr = np.array([np.mean(CallCaseMu,1)-CaseMu[:,pos], CaseMu[:,CallCaseMu.shape[1]-pos]-np.mean(CallCaseMu,1)])
+    
     if len(Loc) is not 0:
         ind = np.arange(CallCaseMu.shape[0])
         width=0.35
 
         fig, ax = plt.subplots()
-        rects1 = ax.bar(ind, np.mean(CallControlMu,1), width, color='0.8', yerr=np.std(CallControlMu,1))
-        rects2 = ax.bar(ind+width, np.mean(CallCaseMu,1), width, color='0.5', yerr=np.std(CallCaseMu,1))
+        rects1 = ax.bar(ind, np.mean(CallControlMu,1), width, color='0.8', yerr=Control_yerr,ecolor='k')
+        rects2 = ax.bar(ind+width, np.mean(CallCaseMu,1), width, color='0.5', yerr=Case_yerr,ecolor='k')
 
-        # add some
+        #
         ax.set_ylabel('Minor Allele Frequency')
         ax.set_xlabel('Called Locations')
         ax.set_xticks(ind+width)
