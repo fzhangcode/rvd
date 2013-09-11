@@ -187,12 +187,13 @@ where
  p_0=(p_1,p_2,p_3), p_1=p_2=p_3=1/3
 \end{align}
 
-The null hypothesis is tested using power-divergence family of statistics proposed by Cressie and Read (1984). Considering observed frequencies $\{r_i; i=1,...,k\}$ and expected frequencies $\{E_i; i=1,...,k\}$, by definition the power-divergence family of statistcs indexed by real parameter $\lambda$ is 
+The null hypothesis is tested using power-divergence family of statistics proposed by Cressie and Read (1984).By definition, the power-divergence family of statistcs parameterized with $\lambda$ is 
 \begin{equation}
- 2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{i=1}^k r_i \left[\left(\frac{r_i}{E_i}\right)^\lambda-1\right];\lambda \in R
+ 2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{i=1}^k r_i \left[\left(\frac{r_i}{E_i}\right)^\lambda-1\right];\lambda \in R,
 \end{equation}
+where $\{r_i; i=1,...,k\}$ are the observed frequencies and $\{E_i; i=1,...,k\}$ are the  expected frequencies.
 
-Person's $X^2 (\lambda = 1)$ statistics, the log likelih ratio statistics $(\lambda = 0)$, the Freeman-Tukey statistics $(\lambda = -1/2)$ the Neyman modified $X^2 (\lambda = -2)$ are special cases of the family. Cressie and Read (1984) also proposed that when the $\lambda =2/3$, the new power-divergence statistics outcompete the traditional power-divergence statistics. 
+Person's $\chi^2 (\lambda = 1)$ statistics, the log likelih ratio statistics $(\lambda = 0)$, the Freeman-Tukey statistics $(\lambda = -1/2)$ the Neyman modified $X^2 (\lambda = -2)$ are special cases of the family. Cressie and Read (1984) also proposed that when the $\lambda =2/3$, the new power-divergence statistics outcompete the traditional power-divergence statistics. 
 
 Particulaly in our case, Let $(r_1,r_2,r_3)$ denotes the non-reference base frequencies and $\sum_{i=1}^3 r_i = r$. The expected frquencies are $(rp_1, rp_2, rp_3)$. Then the power-divergence statistics can be written as
 
@@ -204,10 +205,7 @@ We use $\lambda =2/3$ for the goodness of fit testing.
 
 For each position we have six power-divergence statistics from 6 experimental replicates. We use Fisher's method to combines the six statistics into a single one for inference. Bonferroni correction is applied to maintaining the familywise error rate (FWER). The significance level is chosen as 0.05.
 
-Finally, if read counts in one position passes the Bayesian Hypothesis Testing and fails the Goodness-of-fit Testing, the position will be called.
-
-
-\subsubsection{Posterior distribution difference sampling}\
+\subsection{Posterior distribution difference sampling}\
 
 Using MCMC sampling, we can obtain the posterior distribution $p \left( \mu |\theta,\mu_0,M_0\right)$ for reference sample and testing sample. In order to compare the difference of position error rate $\mu$ between reference sample and testing sample , a random sampling of posterior distribution is done 
 
@@ -229,16 +227,6 @@ Figure 1
 \subsection{Performance with read depth}\
 Figure 2 ROC plot showing performance with different read depth
 
-picard to thin segment data, showing performance as read depth decreasing
-
-\begin{figure}[h]
-\begin{center}
-%\includegraphics[width=160mm]{eps_figs/ROC_without_chi2.eps}
-\caption{ROC curve varying read depth showing detection performance of model with Bayesian Hypothesis Test.}
-\label{fig:ROC_without_chi2}
-\end{center}
-\end{figure}
-
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=160mm]{pdf_figs/ROC_without_chi2.pdf}
@@ -255,21 +243,21 @@ picard to thin segment data, showing performance as read depth decreasing
 \end{center}
 \end{figure}
 
-We tested the mutation detection power of our graphical model on synthetic dataset with dilution rates $0.1\%$, $0.3\%$, $1.0\%$, $10.0\%$ and read depth varying from $10^2$ to $10^5$.Different read depth dataset was achieve by thining dataset with read depth up to $10^6$ using Picard.The model had high detection power when the read depth was at $10^5$ level. At dilution rate at $0.1\%$, the model achieved performance with sensitivity at 99.74\% and specificity at 92.86\%. We missed one mutation at position 205 and had one false positive at position 8. The threshold was chosen at 0.022\% which achieved the optimal sensitivity and specificity in the ROC curve. As expected, the detection power of the graphical model decreased when the read depth was reduced. 
+We tested the mutation detection power of our graphical model on synthetic dataset using a two-stage test scheme with dilution rates $0.1\%$, $0.3\%$, $1.0\%$, $10.0\%$ and read depth varying from $10^2$ to $10^5$.Different read depth dataset was achieve by thining dataset with read depth up to $10^6$ using Picard. $\chi^2$ test, the second stage test can be optionally included based on average read depth.
+
+Excluding $\chi^2$ test, the ROC curves of our graphical model using Bayesian Hypothesis Testing with different threshold $\tau$ is shown in Figure??. The model had high detection power when the read depth was at $10^5$ level. At dilution rate at $0.1\%$, the model achieved performance with sensitivity at 99.74\% and specificity at 92.86\%. We missed one mutation at position 205 and had one false positive at position 8. The threshold was chosen at 0.022\% which achieved the optimal sensitivity and specificity in the ROC curve. As expected, the detection power of the graphical model decreased when the read depth was reduced. 
 
 \begin{figure}[h] %needs to go to supplementary document.
 \begin{center}
 \includegraphics[width=160mm]{pdf_figs/ROC_subplots_with_chi2.pdf}
-\caption{ROC curve varying read depth showing method performance with Bayesian baHypothesis Testing and Chi-Square Test}
+\caption{ROC curve varying read depth showing method performance with Bayesian Hypothesis Testing and Chi-Square Testing}
 \label{fig:R}
 \end{center}
 \end{figure}
-We also evaluateed the performance of the graphical model with Chi-square test included in the hypothesis testing. 
 
-Low read depth limited the False positive rate. we are confident in the callings
+Figure ?? shows the ROC curves when both Bayesian Hypothesis Testing and $\chi^2$ testing are carried out for variant calling. Comparing with Figure ??, it can be seen that when read depth is low (from $10$ to $10^3$), the false positive rate is severely limited to zero, which means we are very confident in our variant callings. However, the low false positve rate can be achieved at a sacrifice of low true postive rate especially when the dilution rate and read depth are low. The $\chi^2$ test is a stringent test when the read depth is low.
 
-High read depth Not much influence. do not bring about bad influence
-
+However, if the read depth is high enough (up to $10^4$ or higher), the $\chi^2$ test can limit the false positive rate in a slight degree but no longer at a sacrifice of True Positive Rate. Actually the performance is not much influenced by $\chi_2$ testing with high read depth.
 
 \subsection{Comparison Results on Synthetic DNA}\
 

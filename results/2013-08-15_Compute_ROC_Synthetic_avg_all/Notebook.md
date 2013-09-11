@@ -11,6 +11,8 @@ For dilution rate as low as 0.1%, our graphical model using Bayesian Hypothesis 
 
 Background
 -----------------
+We use a two-stage test for variant at each position. First, we test whether the error rate in the case sample is significantly greater than the error rate in the control data for each position. Then, we test the hypothesis that the error rate is high is due to excess reads with a particular non-reference base. We accomplish the first test with a Bayesian posterior density test and the second with a chi-square goodness-of-fit test to a uniform distribution.
+
 We tested the mutation detection power of our graphical model on synthetic dataset with dilution rates 0.1%, 0.3%, 1.0%, 10.0% and read depth varying from 10^2 to 10^5.Different read depth dataset was achieve by thining dataset with read depth up to 10^6 using Picard.
 
 #### Bayesian Hypothesis Testing
@@ -42,7 +44,7 @@ The null hypothesis is tested using power-divergence family of statistics propos
 
 For each position we have six chi-square statistics from 6 experimental replicates. We use Fisher's method to combines the six statistics into a single one for inference. Bonferroni correction is applied to maintaining the familywise error rate (FWER). The significance level is chosen as 0.05.
 
-It is optional whether to include Chi-square Testing for variant calling. But on condition it is,if read counts in one position fail to reject Bayesian Hypothesis H1 and do reject Chi-square test H0, the position will be called.
+It is optional whether to include Chi-square Testing for variant calling.If the read counts distribution across replicates accept the Bayesian hypothesis H1 and reject the chi-square hypothesis H0 in one position, a variant will be called in that position.
 
 
 Materials and Equipment
