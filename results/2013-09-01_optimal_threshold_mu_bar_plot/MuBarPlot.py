@@ -23,10 +23,6 @@ def main():
                   '2013-08-14_Compute_ROC_Synthetic_avg1000',\
                   '2013-08-14_Compute_ROC_Synthetic_avg10000',\
                   '2013-08-14_Compute_ROC_Synthetic_avg100000')
-##    dilutionList = (1.0,)
-##
-##    folderList = ('2013-08-14_Compute_ROC_Synthetic_avg100000',)
-
     
     N=1000 # Z sampling size  
     fig=plt.figure(figsize=(10, 9))
@@ -40,10 +36,9 @@ def main():
             controlFile = "../%s/Control.hdf5" %f
             caseFile = "Case%s.hdf5" % str(d).replace(".","_")
             caseFile = "../%(folder)s/%(file)s" %{'folder':f,'file':caseFile}
-             # ROC
-            
+             # ROC          
             [fpr,tpr, cov, optimalT, caseMu1, controlMu1, loc1] = ROCpoints(controlFile,caseFile,P=0.95,chi2=chi2)
-            title='Dilution%(dilution)0.1f_Depth%(depth)d_Variant_Call.png'%{'dilution':d,'depth':cov}
+            title='Dilution%(dilution)0.1f_Depth%(depth)d_Variant_Call.pdf'%{'dilution':d,'depth':cov}
             MuBarPlot(controlMu1,caseMu1,loc1,optimalT,title)
             
             ax.plot(fpr,tpr, label='%d' % cov)
@@ -162,7 +157,6 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,optimalT,title):
         ax.set_xticklabels( [str(x)[8:] for x in Loc] )
         ax.set_ylim
         ax.legend( (rects1[0], rects2[0]), ('Control', 'Case') )
-        fig.suptitle('Optimal Threshold = %0.5f'%optimalT )
         plt.savefig(title.replace('.','_',1))
     else:
         print 'No variant is called'
