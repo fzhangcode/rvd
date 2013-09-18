@@ -180,7 +180,7 @@ A variant is called if the data indicate that $\mu_j^{\text{case}} > \mu_j^{\tex
 \begin{equation}
 	\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} \geq \tau ) > 1-\alpha,
 \end{equation}
-where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. While analytical forms for the posterior distributions are not available, hthe M-w-G algorithm does provide samples from those distributions. So, we sample from the posterior distribution $\mu_j^{\Delta} \triangleq \mu_j^{\text{case}} - \mu_j^{\text{control}}$ by randomly sampling with replacement from the samples of $\mu_j^{\text{case}}$ and$\mu_j^{\text{control}}$ and calculating samples from $\mu_j^{\Delta}$ directly.
+where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. We draw a sample from the posterior distribution $\mu_j^{\Delta} \triangleq \mu_j^{\text{case}} - \mu_j^{\text{control}}$ by randomly sampling with replacement from the samples of $\mu_j^{\text{case}}$ and$\mu_j^{\text{control}}$ and calculating samples from $\mu_j^{\Delta}$ directly.
 
 %%%%%%%%%%%%%%%%%%
 
@@ -189,26 +189,26 @@ where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. Whil
 %%%%%%%%%%%%%%%%%%
 \subsection{$\chi^2$ test for non-uniform base distribution}
 
-We assume that at one position in one experimental replicate, the non-reference read count follows a multinomial distribution of $k = 3$ categories, with probability vector $p = (p_1, p_2, p_3)$ where $p_i \geq 0$ for $i =1, 2, 3$ and $\sum_{i=1}^3 p_i = 1$.
+We assume the counts for the non-reference bases at poisiuton $j$ in replicate $i$ follow a multinomial distribution with parameter  $p = (p_1, p_2, p_3)$ where $p_k \geq 0$ for $k =1, 2, 3$ and $\sum_{k=1}^3 p_k = 1$.
 
-The non-reference reads can be because of either mutation or various errors including sampling error or inter-replicated error. We assume, non-reference read counts caused by these random mechanisms should be uniformly distributed among three non-reference categories, giving $p_1=p_2=p_3=1/3$. In contrast, the distribution of non-reference read counts among three non-reference categories caused by mutation would be biased to one base. 
+The non-reference reads may be due to a true mutation or due to a random sequencing error. We assume, non-reference read counts caused by a random mechanism results in a uniform distributed among three non-reference categories, giving $p_1=p_2=p_3=1/3$. In contrast, the distribution of non-reference read counts among three non-reference categories caused by mutation would be biased to one base. 
 
 We use a $\chi^2$ goodness-of-fit test to distinguish these two possible scenarios. The null hypothesis is $H_0: p = (p_1, p_2, p_3)$ where $p_1=p_2=p_3=1/3$. Cressie and Read (1984) identified a power-divergence family of statistics, indexed by $\lambda$, that includes as special cases Pearson's $\chi^2 (\lambda = 1)$ statistics, the log likelihood ratio statistics $(\lambda = 0)$, the Freeman-Tukey statistics $(\lambda = -1/2)$ the Neyman modified $X^2 (\lambda = -2)$. The test statistic is
+
 \begin{equation}
  2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{k=1}^3 r_{ji}^{(k)} \left[\left(\frac{r_{ji}^{(k)}}{E_{ji}^{(k)}}\right)^\lambda-1\right];\lambda \in R,
 \end{equation}
+
 where $r_{ji}^{(k)}$ is the observed frequency for non-reference base $k$ at position $j$ in replicate $i$ and $E_{ji}^{(k)}$ is the corresponding expected frequency under the null hypothesis. Cressie and Read (1984) proved that when $\lambda = 2/3$ this statistic is XXX.
 
-For each position, there are $N$ power-divergence statistics for each experimental replicate. We use Fisher's combined probability test to combine the p-values from each replicates into a single one for each position. 
+For each position, there are $N$ power-divergence statistics for each experimental replicate. We use Fisher's combined probability test to combine the p-values from each replicates into a single one for each position,
+
 \begin{equation}
-	X^2 = -2 \sum_{i=1}^N \ln(p_i)
+	X^2 = -2 \sum_{i=1}^N \ln(p_i).
 \end{equation}
+This gives a test statistic that follows a $\chi^2$ distribution with $2*N$ degrees of freedom when the null hypothesis is true.
 
-To control for Bonferroni correction is applied to maintaining the familywise error rate (FWER). The significance level is chosen as 0.05.
-
-Finally, if read counts in one position passes the Bayesian Hypothesis Testing and fails the Goodness-of-fit Testing, the position will be called.
-
-For each position we have six power-divergence statistics from 6 experimental replicates. We use Fisher's method to combines the six statistics into a single one for inference. Bonferroni correction is applied to maintaining the familywise error rate (FWER). The significance level is chosen as 0.05.
+While Fisher's combined probability test collapses the p-values across replicates, we still have $J$ tests across positions. We use the Bejamini-Hochberg method to control the family-wise error rate (FWER) across positions.
 
 \subsubsection{Posterior distribution difference sampling}\
 
