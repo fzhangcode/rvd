@@ -7,8 +7,9 @@ BAMDIR=../../data/Synthetic_BAM_files
 FASTAFILE=../../data/Synthetic_BAM_files/plasmid.fa
 BAMFILE=$BAMDIR/*.bam
 
-DRATE=1
-DFRAC=100000
+DRATE=$1
+MAXDEPTH=100000
+DFRAC=$(echo $DRATE $MAXDEPTH | awk '{printf "%4.0f\n",$1*$2}')
 
 # Preprocessing
 echo Preprocessing----------------------
@@ -42,8 +43,12 @@ do
 
 
 	echo Sorting------------------------------
+	
 	SortOutput=${DownOutput//bam/sorted}	
+	echo $f
+	echo ------
 	echo Sorting $filename
+	echo 
 	if [ -f $SortOutput.bam ]
 		then
 			echo File $SortOutput.bam exists already
@@ -54,14 +59,13 @@ do
 
 	echo format read group using picard-------
 	FormatOutput=$FORMATDIR/$filename
-	FormatOutput=${Formatoutput//bam/sorted.fixed.bam}
-	echo $FormatOutput
+	FormatOutput=${FormatOutput//bam/sorted.fixed.bam}
 	if [ -f $FormatOutput ]
 		then
 			echo File $FormatOutput exists already
 		else
 			java -jar $PICARD/AddOrReplaceReadGroups.jar \
-				I=$SortOutput \
+				I=$SortOutput.bam \
 				O=$FormatOutput \
 				SORT_ORDER=coordinate \
 				RGID=H1N1 \
@@ -102,7 +106,7 @@ do
 done
 
 Realign0_1=$(ls $FORMATDIR/20100916_c1_p?.07*.realign.bam  $FORMATDIR/20100916_c1_p?.12*.realign.bam $FORMATDIR/20100916_c1_p?.14*.realign.bam)
-Realign0_3=$(ls $FORMATDIR/20100916_c2_p?.02*.realign.bam  $FORMATDIR/20100916_c2_p?.04.realign.bam $FORMATDIR/20100916_c2_p?.05*.realign.bam)
+Realign0_3=$(ls $FORMATDIR/20100916_c2_p?.02*.realign.bam  $FORMATDIR/20100916_c2_p?.04*.realign.bam $FORMATDIR/20100916_c2_p?.05*.realign.bam)
 Realign1_0=$(ls $FORMATDIR/20100916_c2_p?.07*.realign.bam  $FORMATDIR/20100916_c2_p?.12*.realign.bam $FORMATDIR/20100916_c2_p?.14*.realign.bam)
 Realign10_0=$(ls $FORMATDIR/20100916_c3_p?.02*.realign.bam  $FORMATDIR/20100916_c3_p?.04*.realign.bam $FORMATDIR/20100916_c3_p?.05*.realign.bam)
 Realign100_0=$(ls $FORMATDIR/20100916_c3_p?.07*.realign.bam  $FORMATDIR/20100916_c3_p?.12*.realign.bam $FORMATDIR/20100916_c3_p?.14*.realign.bam)
@@ -114,16 +118,24 @@ REALIGN=($Realign0_1 $Realign0_3 $Realign1_0 $Realign10_0 $Realign100_0)
 VCF=(vcf0_1 vcf0_3 vcf1_0 vcf10_0 vcf100_0)
 echo ---------------------------------------
 N=(0 1 2 3 4)
-echo ${N[@]:0:5}
 for i in ${N[@]:0:5}
 do
-	let h=6\*i
-	echo ${REALIGN[@]:$h:6}
-	echo ---------------------------------------------
-	java -jar $GATK \
-		-R $FASTAFILE \
-		-T UnifiedGenotyper \
-		-I ${REALIGN[@]:$h:6} \
-		-o  $VCFDIR/${VCF[$i]}.vcf \
-		--output_mode EMIT_VARIANTS_ONLY \
+	if [ -f $VCFDIR/${VCF[$i]}.vcf ]
+		then
+			echo File  $VCFDIR/${VCF[$i]}.vcf exists already
+		else
+			let h=6\*i
+			echo ---------------------------------------------
+			java -jar $GATK \
+			-R $FASTAFILE \
+			-T UnifiedGenotyper \
+			-I ${REALIGN[@]:$h:1} \
+			-I ${REALIGN[@]:$h+1:1} \
+			-I ${REALIGN[@]:$h+2:1} \
+			-I ${REALIGN[@]:$h+3:1} \
+			-I ${REALIGN[@]:$h+4:1} \
+			-I ${REALIGN[@]:$h+5:1} \
+			-o $VCFDIR/${VCF[$i]}.vcf \
+			--output_mode EMIT_VARIANTS_ONLY
+	fi
 done

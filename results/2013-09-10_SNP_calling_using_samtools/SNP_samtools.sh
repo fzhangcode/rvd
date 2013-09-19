@@ -5,18 +5,12 @@ BAMFILE=$BAMDIR/*.bam
 PICARD=/usr/local/pjf/picard-tools-1.96
 FASTAFILE=../../data/Synthetic_BAM_files/plasmid.fa
 
-echo $BAM0_1
-echo $BAM0_3
-echo $BAM1_0
-echo $BAM10_0
-echo $BAM100_0
+DRATE=$1
+MAXDEPTH=100000
+DFRAC=$(echo $DRATE $MAXDEPTH | awk '{printf "%4.0f\n",$1*$2}')
 
-DRATE=1
-DFRAC=100000
-
-echo -------------------------------------------------------------------
+echo -------------------------------------------------------------
 echo Start Downsampling and sorting
-
 
 DOWNDIR=downsample/$DFRAC
 mkdir -p $DOWNDIR
@@ -34,7 +28,6 @@ do
 		else
 			echo Downsampling $filename
 			java -Xmx2g -jar $PICARD/DownsampleSam.jar INPUT=$Input OUTPUT=$DownOutput RANDOM_SEED=null PROBABILITY=$DRATE VALIDATION_STRINGENCY=SILENT
-			samtools sort $Output
 	fi
 	
 	if [ -f $SortOutput.bam ]
@@ -52,8 +45,6 @@ SORTBAM1_0=$(ls $DOWNDIR/20100916_c2_p?.07*.sorted.bam  $DOWNDIR/20100916_c2_p?.
 SORTBAM10_0=$(ls $DOWNDIR/20100916_c3_p?.02*.sorted.bam  $DOWNDIR/20100916_c3_p?.04*.sorted.bam $DOWNDIR/20100916_c3_p?.05*.sorted.bam)
 SORTBAM100_0=$(ls $DOWNDIR/20100916_c3_p?.07*.sorted.bam  $DOWNDIR/20100916_c3_p?.12*.sorted.bam $DOWNDIR/20100916_c3_p?.14*sorted.bam)
 
-echo $SORTBAM0_1
-
 VCFDIR=vcf/$DFRAC
 mkdir -p $VCFDIR
 SORT=($SORTBAM0_1 $SORTBAM0_3 $SORTBAM1_0 $SORTBAM10_0 $SORTBAM100_0)
@@ -67,6 +58,11 @@ do
 	echo ${SORT[@]:$h:6}
 	echo ---------------------------------------
 	echo SNP Calling
-	samtools mpileup -uf $FASTAFILE ${SORT[@]:$h:6} | bcftools view -bvcg - > $VCFDIR/${VCF[$i]}.bcf
-	bcftools view VCFDIR/${VCF[$i]}.bcf > $VCFDIR/${VCF[$i]}.vcf 
+	if [ -f $VCFDIR/${VCF[$i]}.vcf ]
+		then
+			echo File  $VCFDIR/${VCF[$i]}.vcf exists already
+		else
+			samtools mpileup -uf $FASTAFILE ${SORT[@]:$h:6} | bcftools view -bvcg - > $VCFDIR/${VCF[$i]}.bcf
+			bcftools view $VCFDIR/${VCF[$i]}.bcf > $VCFDIR/${VCF[$i]}.vcf
+	fi 
 done
