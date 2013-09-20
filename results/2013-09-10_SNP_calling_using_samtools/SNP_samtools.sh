@@ -5,9 +5,14 @@ BAMFILE=$BAMDIR/*.bam
 PICARD=/usr/local/pjf/picard-tools-1.96
 FASTAFILE=../../data/Synthetic_BAM_files/plasmid.fa
 
-DRATE=$1
+DRATELIST=(0.1 0.01 0.001 0.0001)
+J=(0 1 2 3)
 MAXDEPTH=100000
-DFRAC=$(echo $DRATE $MAXDEPTH | awk '{printf "%4.0f\n",$1*$2}')
+
+for j in ${J[@]:0:4}
+do
+DRATE=${DRATELIST[$j]}
+DFRAC=$(echo $DRATE $MAXDEPTH | awk '{printf "%2.0f\n",$1*$2}')
 
 echo -------------------------------------------------------------
 echo Start Downsampling and sorting
@@ -65,4 +70,5 @@ do
 			samtools mpileup -uf $FASTAFILE ${SORT[@]:$h:6} | bcftools view -bvcg - > $VCFDIR/${VCF[$i]}.bcf
 			bcftools view $VCFDIR/${VCF[$i]}.bcf > $VCFDIR/${VCF[$i]}.vcf
 	fi 
+done
 done

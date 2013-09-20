@@ -32,12 +32,15 @@ def main():
         logging.debug("Processing dilution: %0.1f%%" % d)
         ax = fig.add_subplot(2,2,dilutionList.index(d)+1)
         label=[]
-        for f in folderList:            
+        for f in folderList:
+            path='vcf/%s' % str(10**(folderList.index(f)+1))
+            if not os.path.exists(path):
+                os.makedirs(path)
             controlFile = "../%s/Control.hdf5" %f
             caseFile = "Case%s.hdf5" % str(d).replace(".","_")
             caseFile = "../%(folder)s/%(file)s" %{'folder':f,'file':caseFile}
              # ROC
-            [fpr,tpr,cov, T] = ROCpoints(controlFile,caseFile,P=0.95,chi2=chi2)
+            [fpr,tpr,cov, T] = ROCpoints(controlFile,caseFile, path, d, P=0.95,chi2=chi2)
             ax.plot(fpr,tpr, color=lcolor[folderList.index(f)], label='%d' % cov)
 ##            ax.plot(fpr,tpr,linestyle=lstyle[folderList.index(f)], color=lcolor[folderList.index(f)], label='%d' % cov)
 ##            ax.plot(fpr[0],tpr[0],marker='o',markerfacecolor=lcolor[folderList.index(f)])
@@ -58,7 +61,7 @@ def main():
     figformat='.eps'
     plt.savefig(title+figformat)
 
-def ROCpoints(controlFile,caseFile,N=1000,P=0.95,chi2=False):
+def ROCpoints(controlFile,caseFile, path, d,N=1000, P=0.95, chi2=False):
     # Load the model samples
     (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = rvd27.load_model(controlFile)
     
@@ -116,6 +119,38 @@ def ROCpoints(controlFile,caseFile,N=1000,P=0.95,chi2=False):
     tpr = np.array([float(sum(clsList[i,np.array(posidx)]))/len(posidx) for i in xrange(clsList.shape[0])])
 
     cov = np.median(caseN)
+
+    # return information for mu bar plot at called positions under optimal threshold.
+    distance=np.sum(np.power([fpr,tpr-1],2),0)
+    Tidx=distance.argmin()
+
+    outputFile=os.path.join(path,'vcf%s.vcf' %str(d).replace('.','_'))
+    
+    with h5py.File(controlFile, 'r') as f:
+        refb = f['/refb'][...]
+        f.close()
+    refb = refb[controlLocIdx]
+    
+    altb = []
+    call=[]
+    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+    for i in xrange(J):
+        r = np.squeeze(caseR[:,i,:]) # replicates x bases
+        
+        # Make a list of the alternate bases for each replicate
+        acgt_r = ['A','C','G','T']
+        del acgt_r[ acgt[refb[i]] ]
+
+        altb_r = [acgt_r[x] for x in np.argmax(r, axis=1)]
+
+        if clsList[Tidx,i]==1:
+            call.append(True)
+            altb.append(altb_r[0])
+        else:
+            altb.append(None)
+            call.append(False)
+            
+    rvd27.write_vcf(outputFile, loc, call, refb, altb, np.mean(caseMu, axis=1))
     return fpr,tpr, cov, T
 
 if __name__ == '__main__':
