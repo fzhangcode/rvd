@@ -8,21 +8,19 @@ BAMFILE := $(wildcard $(addprefix $(BAMDIR)/, 20100916_c?_p?.*.bam)) # all pair1
 
 DRATE = 1
 DFRAC = 1
-DOWNSAMPLEDIR = ./bam
+DOWNSAMPLEDIR = ./bam/$(DFRAC)
 DOWNSAMPLEBAM := $(addprefix $(DOWNSAMPLEDIR)/, $(notdir $(BAMFILE) ) )
 # := enforces wildcard expansion
 
 DOWNSAMPLESORTEDBAM := $(patsubst %.bam, %.sorted.bam, $(DOWNSAMPLEBAM) )
 
-PILEUPDIR = ./pileup
+PILEUPDIR = ./pileup/$(DFRAC)
 PILEUPFILE := $(addprefix $(PILEUPDIR)/, $(addsuffix .pileup, $(basename $(notdir $(DOWNSAMPLEBAM) ) ) ) )
 REGION = chr1:1-400
 FASTAFILE = ../../data/Synthetic_BAM_files/plasmid.fa
 
 DEPTHDIR = ./depth_chart/$(DFRAC)
 DEPTHFILE := $(addprefix $(DEPTHDIR)/, $(addsuffix .dc, $(basename $(notdir $(PILEUPFILE) ) ) ) )
-
-.INTERMEDIATE: %.sorted.bam %.pileup
 
 all: $(DEPTHFILE)
 
@@ -38,7 +36,7 @@ $(DOWNSAMPLEBAM): $(BAMFILE)
 	$(PICARD) \
 		INPUT=$(addprefix $(BAMDIR)/, $(@F) ) \
 		OUTPUT=$@ \
-		RANDOM_SEED=null \
+		RANDOM_SEED=10241978 \
 		PROBABILITY=$(DRATE) \
 		VALIDATION_STRINGENCY=SILENT
 
