@@ -497,3 +497,188 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
     
     h5file.close()
     return (phi, theta_s, mu_s)
+
+def beta_log_pdf(x, a, b):
+    return gammaln(a+b) - gammaln(a) - gammaln(b) \
+            + (a-1)*np.log(x+np.finfo(np.float).eps) \
+            + (b-1)*np.log(1-x)
+
+
+def ll(phi, r):
+    """ Return the log-likelihood of the data, r, under the model, phi.
+    """
+    pass
+
+def make_pileup(bamFileName, fastaFileName, region):
+    """ Creates a pileup file using samtools mpileup in /pileup directory.
+    """
+    
+    # Check that BAM file exists
+    assert os.path.isfile(bamFileName), "BAM file does not exist: %s" % bamFileName
+    
+    # Check that FASTA reference file exists
+    assert os.path.isfile(fastaFileName), "FASTA file does not exist: %s" % fastaFileName
+    
+    # Create pileup directory if it doesn't exist
+    if not os.path.isdir("pileup"):
+        os.makedirs("pileup")
+    
+    # Format the samtools call
+    callString = ["samtools", "mpileup", "-d", "1000000", "-r", "%s" % region,
+                  "-f", "%s" % fastaFileName, "%s" % bamFileName]
+                  
+    # Remove the extension from the bam filename and replace with .pileup
+    pileupFileName = bamFileName.split("/")[-1]
+    pileupFileName = os.path.join("pileup", 
+                                  "%s.pileup" % pileupFileName.split(".", 1)[0])
+    
+    # Run samtools pileup only if the file doesn't already exist.
+    #try:
+    #    with open(pileupFileName, 'r'):
+    #        logging.debug("Pileup file exists: %s" % pileupFileName)
+    #except IOError:
+    logging.debug("[call] %s", " ".join(callString))
+    with open(pileupFileName, 'w') as fout:
+        subprocess.call(callString, stdout=fout)
+    return pileupFileName
+
+def make_depth(pileupFileName):
+    """ Generates a depth chart file for each pileup file and stores it in the
+        /depth_chart directory. The folder will be created if it doesn't exist.
+    """
+    
+    if not os.path.isdir("depth_chart"):
+        os.makedirs("depth_chart")
+    
+    # TODO replace this with a python version.
+    callString = ["../../bin/pileup2dc", "%s" % pileupFileName]
+
+    dcFileName = pileupFileName.split("/")[-1]
+    dcFileName = os.path.join("depth_chart", 
+                                  "%s.dc" % dcFileName.split(".", 1)[0])
+    #try:
+    #    with open(dcFileName, 'r'):
+#		logging.debug("Depth chart file exists: %s" % dcFileName) 
+    #except IOError:
+    logging.debug("Converting %s to depth chart." % pileupFileName)
+    with open(dcFileName, 'w') as fout:
+        subprocess.call(callString, stdout=fout)
+    return dcFileName
+
+def load_depth(dcFileNameList):
+    """ Return (r, n, location, reference base) for a list of depth charts. The
+        variable r is the error read depth and n is the total read depth.
+    """
+    r=[]; n=[]
+    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+    
+    loc = []
+    refb = {}
+    cd = []
+    for dcFileName in dcFileNameList:
+        with open(dcFileName, 'r') as dcFile:
+            header = dcFile.readline().strip()
+            dc = dcFile.readlines()
+            dc = [x.strip().split("\t") for x in dc]
+            
+            loc1 = [x[1]+':'+str(x[2]).strip('\000') for x in dc if x[4] in acgt.keys()]
+	    loc.append( loc1 )
+            
+            refb1 = dict(zip(loc1, [x[4] for x in dc if x[4] in acgt.keys()]))
+            refb.update(refb1)
+            cd.append( dict(zip(loc1, [map(int, x[5:9]) for x in dc if x[4] in acgt.keys()])) )
+            
+    loc = list(reduce(set.intersection, map(set, loc)))
+
+    def stringSplitByNumbers(x):
+        r = re.compile('(\d+)')
+        l = r.split(x)
+        return [int(y) if y.isdigit() else y for y in l]
+
+    loc = sorted(loc,key = stringSplitByNumbers)
+    logging.debug(loc)
+    refb = [refb[k] for k in loc]
+    
+    J = len(loc)
+    N = len(dcFileNameList)
+    for i in xrange(0, N):
+        logging.debug("Processing %s" % dcFileNameList[i])
+        c = np.array( [cd[i][k] for k in loc] )
+        n1 = np.sum(c, 1)
+        #r1 = np.zeros(J)
+        refIdx=np.zeros(J)
+
+        for j in xrange(0,J):
+            #r1[j] = n1[j] - c[j, acgt[refb[j]]]
+            refIdx[j] = 4*j+acgt[refb[j]]
+        c = np.delete(c, refIdx, None)
+        c = np.reshape(c, (J, 3) )
+        #r.append(r1)
+        n.append(n1)
+        r.append(c)
+    r = np.array(r)
+    n = np.array(n)
+
+    return (r, n, loc, refb)
+
+def chi2test(X, lamda=2.0/3, pvector=np.array([1.0/3]*3)):
+    """ Do chi2 test to decide how well the error reads fits uniform multinomial distribution. P-value returned.
+        lamda=1 Pearson's chi-square
+        lamda=0 the log likelihood ratio statistic/ G^2
+        lamda=-1/2 Freeman-Tukey's F^2
+        lamda=-1  Neyman modified chi-square
+        lamda=-2  modified G^2
+    """
+    X=np.array(X)
+
+    nsum=np.sum(X)
+    if nsum == 0: return np.nan # return NaN if there are no counts
+    E=nsum*pvector
+
+
+    if lamda==0 or lamda==-1:
+        C=2.0*np.sum(X*np.log(X*1.0/E))
+    else:
+        C=2.0/(lamda*(lamda+1))*np.sum(X*((X*1.0/E)**lamda-1))
+        
+    df=len(pvector)-1
+    #p=scipy.special.gammainc(C,df)
+    # p=1-gammainc(df/2,C/2)
+    p = 1 - ss.chi2.cdf(C, df) 
+    return(p)
+ 
+def sample_post_diff(muCaseG, muControlG, N):
+    """ Return N samples from the posterior distribution for 
+         u_j|r_case - u_j|r_control. """
+    
+    nCase = muCaseG.shape[1]
+    nControl = muControlG.shape[1]
+    
+    caseSample = np.random.choice(nCase, size=N, replace=True)
+    controlSample = np.random.choice(nControl, size=N, replace=True)
+    
+    muCaseS = muCaseG[:, caseSample]
+    muControlS = muControlG[:, controlSample]
+
+    Z = muCaseS - muControlS
+
+    return (Z, muCaseS, muControlS)
+ 
+def bayes_test(Z, roi):
+    """ Return posterior probabilities in regions defined in list of tuples (roi)
+        from samples in columns of Z. """
+
+    (J,N)=np.shape(Z)
+    
+    nTest = len(roi) # get the number of regions to compute probabilities 
+    
+    p = np.zeros((J,nTest))
+    for i in xrange(nTest):
+        for j in xrange(J):
+		p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] >= roi[i][0]), (Z[j,:] < roi[i][1]) ) ) ) / N
+
+    return p
+    
+if __name__ == '__main__':
+    main()
+    
