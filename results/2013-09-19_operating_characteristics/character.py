@@ -21,9 +21,12 @@ def main():
     sheet2.write(0, 0, "Dilution")
     sheet2.write(0, 1, "Depth")
     
-    method = {'rvd2':'../2013-08-15_Compute_ROC_Synthetic_avg_all/vcf', 'samtools':'../2013-09-10_SNP_calling_using_samtools/vcf','GATK':'../2013-09-13_SNP_calling_using_GATK/vcf'}
+    method = {'rvd2':'../2013-08-15_Compute_ROC_Synthetic_avg_all/vcf',
+              'samtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
+              'GATK':'../2013-09-13_SNP_calling_using_GATK/vcf',
+              'VarScan2':'../2013-09-20_SNP_calling_using_varscan2/vcf'}
     
-    DilutionList = (0.1, 0.3, 1.0, 10.0)
+    DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
     DepthList = (10, 100, 1000, 10000)
     i=0
     
