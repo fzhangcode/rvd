@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(message)s')
 
 def main():
-    dilutionList = (0.1,0.3,1.0,10.0)
+    dilutionList = (0.1,0.3,1.0,10.0,100.0)
 
     folderList = ('2013-08-14_Compute_ROC_Synthetic_avg10',\
                   '2013-08-14_Compute_ROC_Synthetic_avg100',\
@@ -30,7 +30,7 @@ def main():
     lcolor=('c','r','g','b')
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
-        ax = fig.add_subplot(2,2,dilutionList.index(d)+1)
+        ax = fig.add_subplot(3,2,dilutionList.index(d)+1)
         label=[]
         for f in folderList:
             path='vcf/%s' % str(10**(folderList.index(f)+1))

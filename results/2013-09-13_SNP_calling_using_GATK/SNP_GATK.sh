@@ -13,64 +13,31 @@ MAXDEPTH=100000
 
 for j in ${J[@]:0:4}
 do
-DRATE=${DRATELIST[$j]}
-DFRAC=$(echo $DRATE $MAXDEPTH | awk '{printf "%2.0f\n",$1*$2}')
+	DRATE=${DRATELIST[$j]}
+	DFRAC=$(echo $DRATE $MAXDEPTH | awk '{printf "%2.0f\n",$1*$2}')
 
-# Preprocessing
-echo Preprocessing----------------------
+	# Preprocessing
+	echo Preprocessing----------------------
 
-DOWNDIR=downsample/$DFRAC
-mkdir -p $DOWNDIR
+	BAMDIR=../2013-08-06_Downsample_Read_Depth/bam/$DFRAC
+	BAMFILE=$BAMDIR/*.sorted.bam
 
-FORMATDIR=format/$DFRAC
-mkdir -p $FORMATDIR
 
-for f in $BAMFILE
-do
+	FORMATDIR=format/$DFRAC
+	mkdir -p $FORMATDIR
+
+	for f in $BAMFILE
+	do
 		filename=${f##*/}
-		Input=$f
-		DownOutput=${DOWNDIR%%/}/$filename
-	
-		echo Downsampling-------------------------
-		echo Downsampling $filename
-		if [ -f $DownOutput ]
-			then 
-				echo File $filename exists already
-			else
-				echo Downsampling $filename
-				java -Xmx2g -jar $PICARD/DownsampleSam.jar \
-					INPUT=$Input \
-					OUTPUT=$DownOutput \
-					RANDOM_SEED=null \
-					PROBABILITY=$DRATE \
-					VALIDATION_STRINGENCY=SILENT
-		fi
-
-
-		echo Sorting------------------------------
-	
-		SortOutput=${DownOutput//bam/sorted}	
-		echo $f
-		echo ------
-		echo Sorting $filename
-		echo 
-		if [ -f $SortOutput.bam ]
-			then
-				echo File $SortOutput.bam exists already
-			else
-				samtools sort $DownOutput $SortOutput
-		fi
-
-
 		echo format read group using picard-------
 		FormatOutput=$FORMATDIR/$filename
-		FormatOutput=${FormatOutput//bam/sorted.fixed.bam}
+		FormatOutput=${FormatOutput//sorted.bam/sorted.fixed.bam}
 		if [ -f $FormatOutput ]
 			then
 				echo File $FormatOutput exists already
 			else
 				java -jar $PICARD/AddOrReplaceReadGroups.jar \
-					I=$SortOutput.bam \
+					I=$f \
 					O=$FormatOutput \
 					SORT_ORDER=coordinate \
 					RGID=H1N1 \
