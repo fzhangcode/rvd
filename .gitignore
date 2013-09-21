@@ -17,6 +17,13 @@ Thumbs.db
 *.eps
 .DS_Store
 *.vcf
+*.fa
+*.fai
+*.bcf
+*.bai
+*.idx
+*.intervals
+
 doc/bioinformatics2013/manuscript-formatted.synctex.gz(busy)
 doc/bioinformatics2013/RVD2.aux
 doc/bioinformatics2013/RVD2.log
