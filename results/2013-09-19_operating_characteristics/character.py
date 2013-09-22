@@ -1,4 +1,3 @@
-
 import sys
 import os
 import numpy as np
@@ -10,6 +9,10 @@ import scipy.stats as ss
 import vcf
 import xlwt
 
+# Insert the src/python/rvd27 directory at front of the path
+rvddir = os.path.join('../../src/python/rvd27')
+sys.path.insert(0, rvddir)
+import rvd27
 
 def main():
     book=xlwt.Workbook(encoding="utf-8")
@@ -21,7 +24,8 @@ def main():
     sheet2.write(0, 0, "Dilution")
     sheet2.write(0, 1, "Depth")
     
-    method = {'rvd2':'../2013-08-15_Compute_ROC_Synthetic_avg_all/vcf',
+    method = {'rvd2_optimalT':'../2013-08-15_Compute_ROC_Synthetic_avg_all/vcf',
+              'rvd2_half_dilution':'../2013-09-21_SNP_calling_RVD2_half_dilution/vcf',
               'samtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
               'GATK':'../2013-09-13_SNP_calling_using_GATK/vcf',
               'VarScan2':'../2013-09-20_SNP_calling_using_varscan2/vcf'}
@@ -29,6 +33,7 @@ def main():
     DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
     DepthList = (10, 100, 1000, 10000)
     i=0
+    
     
     for k, v in method.iteritems():
         i=i+1
@@ -42,27 +47,42 @@ def main():
                 sheet1.write(DilutionList.index(d)*len(DepthList)+1,0,"%0.1f%%" %d)
                 sheet2.write(DilutionList.index(d)*len(DepthList)+2,0,"%0.1f%%" %d)
             for r in DepthList:
+                # read in the median coverage
+                hdf5Dir='../2013-08-14_Compute_ROC_Synthetic_avg%s' %str(r)
+                caseFile = 'Case%s.hdf5' %str(d).replace('.','_')
+                caseFile = "%(dir)s/%(file)s" %{'dir':hdf5Dir,'file':caseFile}
+                (_, _, _, _, _, caseN) = rvd27.load_model(caseFile)
+                cov = int(np.median(caseN))
+
+
+                # print the median coverage
                 if i==1:
-                    sheet1.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1, 1, "%s" % str(r))
-                    sheet2.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+2, 1, "%s" % str(r))
+                    sheet1.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1, 1, "%s" % str(cov))
+                    sheet2.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+2, 1, "%s" % str(cov))
                     print DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1
+
+                # read in called positions from vcf files
                 vcfFile=os.path.join(v,"%s" %r,
                                      "vcf%s.vcf" %str(d).replace('.','_'))
                 vcf_reader = vcf.Reader(open(vcfFile, 'r'))
                 callpos=np.array([record.POS for record in vcf_reader])
-                
+
+                # prediction classification
+                PredictClass = np.zeros(400)
+                if len(callpos) != 0:
+                    PredictClass[callpos-1] = np.ones_like(callpos)
+                    
+                # actual classification
                 RefClass = np.zeros(400)
                 pos = np.arange(85,346,20)
                 RefClass[pos-1] = np.ones_like(pos)
 
-                PredictClass = np.zeros(400)
-               # pdb.set_trace()
-                if len(callpos) != 0:
-                    PredictClass[callpos-1] = np.ones_like(callpos)
-                
+                # characteristics computation
                 [TPR, TNR, FPR, FNR, PPV, NPV, FDR, ACC, MCC]=characteristics(RefClass, PredictClass)
                 ncharacter=(TPR, TNR, FPR, FNR, PPV, NPV, FDR, ACC, MCC)
                 sheet1.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1,i+1,"%(TPR)0.2f/%(TNR)0.2f" %{'TPR':TPR,'TNR':TNR})
+
+                # print characteristics
                 for j in xrange(9):
                     if np.isnan(ncharacter[j]):
                         sheet2.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+2,9*(i-1)+j+2,'NaN')
@@ -80,8 +100,6 @@ def characteristics(RefClass = None, PredictClass = None):
         PredictClass = np.copy(RefClass)
         pos = np.arange(85,246,20)
         PredictClass[pos-1] = np.zeros_like(pos)
-
-
 
     #True Positive
     TP = len([i for i in range(len(RefClass)) if RefClass[i]==1 and PredictClass[i]==1])
