@@ -152,6 +152,87 @@ The result seems reasonable, with 21 called somatic. **However**, if I ran this 
 	0 were called Variant
 
 
+**Approach 5.**`SNP_varscan2_somatic5.sh` 
+
+mpile only one sorted control bam file and one sorted case bam file to `control.pileup` and `case100_0.pileup` and then feed the two pileup files into varscan2 somatic.
+
+Data:
+
+	control: ../2013-08-06_Downsample_Read_Depth/bam/10000/20100916_c1_p1.02_ACT.bam
+	case: 100% dilution: ../2013-08-06_Downsample_Read_Depth/bam/10000/20100916_c3_p1.07_CGT.bam
+
+Result:
+
+	Normal Pileup: pileup5/10000/control.pileup
+	Tumor Pileup: pileup5/10000/case100_0.pileup
+	Min coverage:   8x for Normal, 6x for Tumor
+	Min reads2:     2
+	Min strands2:   1
+	Min var freq:   1.0E-5
+	Min freq for hom:       0.75
+	Normal purity:  1.0
+	Tumor purity:   1.0
+	Min avg qual:   15
+	P-value thresh: 0.99
+	Somatic p-value:        0.05
+	400 positions in tumor
+	400 positions shared in normal
+	396 had sufficient coverage for comparison
+	8 were called Reference
+	6 were mixed SNP-indel calls and filtered
+	102 were called Germline
+	104 were called LOH
+	0 were called Somatic
+	176 were called Unknown
+	0 were called Variant
+
+
+**Approach 6.**`SNP_varscan2_somatic6.sh` 
+
+mpile only one sorted control bam file and one sorted case bam file together to `control_case100_0.pileup` the pileup file into varscan2 somatic.
+
+Data:
+
+	control: ../2013-08-06_Downsample_Read_Depth/bam/10000/20100916_c1_p1.02_ACT.bam
+	case: 100% dilution: ../2013-08-06_Downsample_Read_Depth/bam/10000/20100916_c3_p1.07_CGT.bam
+
+Result:
+
+
+**Approach 7.**`SNP_varscan2_somatic7.sh` 
+
+Same process as **Approach 5.** but with undownsampled data
+
+Data:
+
+	control: ../../data/Synthetic_BAM_files/20100916_c1_p1.02_ACT.bam
+	case 100% dilution: ../../data/Synthetic_BAM_files/20100916_c3_p1.07_CGT.bam
+
+Result:
+
+	Normal Pileup: pileup7/10000/control.pileup
+	Tumor Pileup: pileup7/10000/case100_0.pileup
+	Min coverage:   8x for Normal, 6x for Tumor
+	Min reads2:     2
+	Min strands2:   1
+	Min var freq:   1.0E-5
+	Min freq for hom:       0.75
+	Normal purity:  1.0
+	Tumor purity:   1.0
+	Min avg qual:   15
+	P-value thresh: 0.99
+	Somatic p-value:        0.05
+	400 positions in tumor
+	400 positions shared in normal
+	395 had sufficient coverage for comparison
+	3 were called Reference
+	11 were mixed SNP-indel calls and filtered
+	131 were called Germline
+	73 were called LOH
+	2 were called Somatic
+	175 were called Unknown
+	0 were called Variant
+
 
 Results
 -----------
