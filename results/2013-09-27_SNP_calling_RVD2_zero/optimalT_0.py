@@ -35,8 +35,7 @@ def main():
             
             outputFile='%(path)s/vcf%(dilution)s' %{'path':path,'dilution':str(d).replace('.','_')}
            
-            rvd27.test(controlFile,caseFile,T=d/2,N=1000,outputFile=outputFile)
-            
+            rvd27.test(controlFile,caseFile,T=0,N=1000,outputFile=outputFile)
 if __name__ == '__main__':
     main()
 
