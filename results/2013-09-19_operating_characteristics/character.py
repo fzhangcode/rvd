@@ -26,6 +26,8 @@ def main():
     
     method = {'rvd2_optimalT':'../2013-08-15_Compute_ROC_Synthetic_avg_all/vcf',
               'rvd2_half_dilution':'../2013-09-21_SNP_calling_RVD2_half_dilution/vcf',
+              'rvd2_zero':'../2013-09-27_SNP_calling_RVD2_zero/vcf',
+              'VarScan2_somatic':'../2013-09-23_SNP_calling_using_varscan2_somatic/vcf',
               'samtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
               'GATK':'../2013-09-13_SNP_calling_using_GATK/vcf',
               'VarScan2':'../2013-09-20_SNP_calling_using_varscan2/vcf'}
@@ -59,6 +61,7 @@ def main():
                 if i==1:
                     sheet1.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1, 1, "%s" % str(cov))
                     sheet2.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+2, 1, "%s" % str(cov))
+                    #pdb.set_trace()
                     print DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1
 
                 # read in called positions from vcf files
@@ -98,7 +101,7 @@ def characteristics(RefClass = None, PredictClass = None):
         RefClass[pos-1] = np.ones_like(pos)
     if PredictClass is None:
         PredictClass = np.copy(RefClass)
-        pos = np.arange(85,246,20)
+        pos = np.arange(85,346,20)
         PredictClass[pos-1] = np.zeros_like(pos)
 
     #True Positive

@@ -52,7 +52,7 @@ def main():
             pos=np.array([int(pos[i]) for i in idx])
             ref=np.array([ref[i] for i in idx])
             var=np.array([var[i] for i in idx])
-
+            
             # write vcf file
             outputFile='%(vcfpath)s/vcf%(dilution)s.vcf' %{'vcfpath':vcfpath,'dilution':str(d).replace('.','_')}
             
@@ -62,9 +62,9 @@ def main():
             print("##fileformat=VCFv4.1", file=vcfF)            
             print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)            
             print("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele Frequency\">", file=vcfF)
-            print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER", file=vcfF)
+            print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tAF", file=vcfF)
             for i in xrange(len(pos)):
-                    print("%s\t%d\t.\t%c\t%s\t.\tPASS" % (chrom[i], pos[i], ref[i], var[i]), file=vcfF)            
+                    print("%s\t%d\t.\t%c\t%s\t.\tPASS\t%0.1f" % (chrom[i], pos[i], ref[i], var[i], 0), file=vcfF)            
             vcfF.close()
 
 if __name__ == '__main__':
