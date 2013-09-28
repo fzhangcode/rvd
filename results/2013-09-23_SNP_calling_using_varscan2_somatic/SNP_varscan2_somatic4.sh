@@ -7,12 +7,11 @@ VARSCAN2=../../bin/VarScan.v2.3.4.jar
 
 DRATELIST=(0.1 0.01 0.001 0.0001)
 J=(0 1 2 3)
-MAXDEPTH=100000
 
 for j in ${J[@]:0:1}
 do
 	DRATE=${DRATELIST[$j]}
-	DFRAC=$(echo $DRATE $MAXDEPTH | awk '{printf "%2.0f\n",$1*$2}')
+	DFRAC=$(echo $DRATE| awk '{printf "%2.0f\n",1/$1}')
 
 	echo -------------------------------------------------------
 
@@ -25,27 +24,27 @@ do
 	SORTBAM10_0=$(ls $DOWNDIR/20100916_c3_p?.02*.sorted.bam  $DOWNDIR/20100916_c3_p?.04*.sorted.bam $DOWNDIR/20100916_c3_p?.05*.sorted.bam)
 	SORTBAM100_0=$(ls $DOWNDIR/20100916_c3_p?.07*.sorted.bam  $DOWNDIR/20100916_c3_p?.12*.sorted.bam $DOWNDIR/20100916_c3_p?.14*sorted.bam)
 
-	VCFDIR=vcf4/$DFRAC
+	VCFDIR=snp4/$DFRAC
 	mkdir -p $VCFDIR
 	PILEUPDIR=pileup4/$DFRAC
 	mkdir -p $PILEUPDIR
 
 	echo -------------------------------------------------------
 	echo merge control bam files
-	if [ -f $PILEUPDIR/control.bam ]
+	if [ -f $PILEUPDIR/control.sorted.bam ]
 		then
-			echo File $PILEUPDIR/control.bam exists already
+			echo File $PILEUPDIR/control.sorted.bam exists already
 		else
-			samtools merge $PILEUPDIR/control.bam $SORTCONTROL
+			samtools merge -u $PILEUPDIR/control.sorted.bam $SORTCONTROL
 	fi
  
 	echo -------------------------------------------------------
 	echo merge case bam files
-	if [ -f $PILEUPDIR/case100_0.bam ]
+	if [ -f $PILEUPDIR/case100_0.sorted.bam ]
 		then
-			echo File $PILEUPDIR/case100_0.bam exists already
+			echo File $PILEUPDIR/case100_0.sorted.bam exists already
 		else
-			samtools merge $PILEUPDIR/case100_0.bam $SORTBAM100_0
+			samtools merge -u $PILEUPDIR/case100_0.sorted.bam $SORTBAM100_0
 	fi
 
 	echo -------------------------------------------------------
@@ -54,7 +53,7 @@ do
 		then
 			echo File $PILEUPDIR/control_case100_0.pileup exists already
 		else
-			samtools mpileup -C 50 -d 100000 -f $FASTAFILE $PILEUPDIR/control.bam $PILEUPDIR/case100_0.bam  > $PILEUPDIR/control_case100_0.pileup 
+			samtools mpileup -C 50 -d 100000 -f $FASTAFILE $PILEUPDIR/control.sorted.bam $PILEUPDIR/case100_0.sorted.bam  > $PILEUPDIR/control_case100_0.pileup 
 	fi
 
 	echo -------------------------------------------------------
