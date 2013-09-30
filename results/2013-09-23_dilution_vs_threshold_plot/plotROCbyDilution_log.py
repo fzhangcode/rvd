@@ -83,7 +83,7 @@ def main():
             ax.set_ylabel('Optimal Threshold')
         title=figtitleopt[m]
        
-        #plt.savefig(title)
+        plt.savefig(title)
         
         
         # plot the two dimensional figure

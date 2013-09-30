@@ -7,9 +7,11 @@ To compare varscan2 with rvd2 across coverage depths and dilutions.
 
 Conclusions
 -----------------
+VarScan2 mpileup2snp is only able to call 100% snps.
 
 Background
 ----------------
+Please go to [VarScan2 mpileup2snp manual page](http://varscan.sourceforge.net/using-varscan.html#v2.3_mpileup2snp) for more information.
 
 Materials and Equipment
 ------------------------------
@@ -33,8 +35,22 @@ This uses the somatic version of varscan
 This only looks for 100% snps
 `java -jar ../../bin/VarScan.v2.3.4.jar mpileup2snp case0_1.pileup --output-vcf 1 > case0_1.vcf`
 
+
+The `SNP_varscan2` applies `mpileup2snp` across all datasets for variant calling.
+
 Results
 -----------
+The program generates vcf files which saves variant calling results. They are available in the same directory.
+
+Using the characer.py in `../2013-09-19_operating_characteristics` it is possible to generate a summarizing table showing the sensitivity/specificity for variant calling using VarScan2 mpileup2snp. A screenshot is shown as follows:
+
+![](http://i.imgur.com/KMgF7rx.png)
+
+Figure 1. Sensitivity/specificity achieved using VarScan2 mpileup2snp for variant calling.
+
+
+It can be seen that VarScan2 mpileup2snp is only able to call 100% snps. The sensitity and specificity achieve is 1.00 and 1.00 across all coverage options. 
+
 
 
 Archived Samples

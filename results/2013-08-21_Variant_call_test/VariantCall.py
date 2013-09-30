@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 def main():
     dilutionList = (0.3,)    
-    folder = '2013-08-14_Compute_ROC_Synthetic_avg100000'
+    folder = '2013-08-14_Compute_ROC_Synthetic_avg10'
     N=1000 # Z sampling size  
 
     controlFile = "../%s/Control.hdf5" %folder
@@ -28,10 +28,9 @@ def main():
         logging.debug("Processing dilution: %0.1f%%" % d)
         caseFile = "Case%s.hdf5" % str(d).replace(".","_")
         caseFile = "../%(folder)s/%(file)s"%{'folder':folder,'file':caseFile}  
-        [Loc, caseMu, controlMu, postP, chi2P, call] = rvd27.test(controlFile, caseFile, T=0.00195, N=10000,outputFile=None,chi2=False)
+        [Loc, caseMu, controlMu, postP, chi2P, call] = rvd27.test(controlFile, caseFile, T=0.00195, N=10000,outputFile=None)
 
     Loc = Loc.compress(call,axis=0)
-    pdb.set_trace()
 
     if len(Loc) is not 0:
         CallCaseMu = caseMu.compress(call,axis=0)
@@ -40,7 +39,7 @@ def main():
         ind = np.arange(CallCaseMu.shape[0])
         width=0.35
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(11,8))
         rects1 = ax.bar(ind, np.mean(CallControlMu,1), width, color='0.8', yerr=np.std(CallControlMu,1))
         rects2 = ax.bar(ind+width, np.mean(CallCaseMu,1), width, color='0.5', yerr=np.std(CallCaseMu,1))
 
