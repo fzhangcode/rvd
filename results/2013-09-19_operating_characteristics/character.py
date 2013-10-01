@@ -33,7 +33,7 @@ def main():
               'VarScan2':'../2013-09-20_SNP_calling_using_varscan2/vcf'}
     
     DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
-    DepthList = (10, 100, 1000, 10000)
+    DepthList = (10000, 1000, 100, 10)
     i=0
     
     

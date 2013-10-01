@@ -7,10 +7,6 @@ VARSCAN2=../../bin/VarScan.v2.3.4.jar
 
 DRATELIST=(0.1 0.01 0.001 0.0001)
 J=(0 1 2 3)
-MAXDEPTH=100000
-
-DRATELIST=(0.1 0.01 0.001 0.0001)
-J=(0 1 2 3)
 
 for j in ${J[@]:0:1}
 do
