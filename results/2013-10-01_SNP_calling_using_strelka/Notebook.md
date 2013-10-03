@@ -7,7 +7,7 @@ To compare strelka with rvd2 on variant calling
 
 Conclusions
 -----------------
-This approach is not able to run on our dataset for certain reason.
+Working experiment.
 
 Background
 ----------------
@@ -22,26 +22,14 @@ Materials and Equipment
 
 Experimental Protocol
 ---------------------------
-A sample experiment is implemented in `SNP_strelka.sh`
+To avoid the trouble caused by a redundant line in bam files header, please run `header_convert.sh` in `2013-10-02_problematic_header_removal` to generate the reheadered bam files first.
+
+Run `SNP_strelka.sh` in current directory to get the vcf files, which will be available under directory 'work'.
+
 
 Results
 -----------
 
-I got the essentially same bug as when I ran Virmid.
-
-So the error returned was:  
-
-	ERROR: BAM headers and reference fasta disagree on chromosome: '2_1_10'
-	'BAM headers and reference fasta disagree on chromosome: \'2_1...'
-
-I used samtools to view the headers of the sorted bam file and got:
-
-	@HD     VN:1.4  SO:coordinate
-	@SQ     SN:1_1_400      LN:400
-	@SQ     SN:2_1_10       LN:10
-	@PG     ID:bwa  PN:bwa  VN:0.5.9-r16
-
-Why there is a chromosome 2_1_10 in the bam file header?
 
 
 Archived Samples
@@ -51,7 +39,7 @@ Archived Computer Data
 ------------------------------
 
 
-Prepared by: _____Yuting He____________     Date: _______09/30/13______________
+Prepared by: _____Yuting He____________     Date: _______10/02/13______________
 
 
 Witnessed by: ________________________

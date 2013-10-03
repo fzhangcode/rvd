@@ -30,6 +30,7 @@ def main():
               'VarScan2_somatic':'../2013-09-23_SNP_calling_using_varscan2_somatic/vcf',
               'samtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
               'GATK':'../2013-09-13_SNP_calling_using_GATK/vcf',
+              'strelka':'../2013-10-01_SNP_calling_using_strelka/work',
               'VarScan2':'../2013-09-20_SNP_calling_using_varscan2/vcf'}
     
     DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
