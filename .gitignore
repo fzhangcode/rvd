@@ -33,3 +33,5 @@ doc/bioinformatics2013/manuscript-formatted.log
 *.aux
 *.log
 *.gz
+doc/RECOMB2014/recomb2014.blg
+doc/RECOMB2014/recomb2014.bbl
