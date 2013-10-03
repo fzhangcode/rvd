@@ -1,6 +1,4 @@
 #!/bin/sh
-BAMDIR=../../data/Synthetic_BAM_files
-BAMFILE=$BAMDIR/*.bam
 
 FASTAFILE=../../data/Synthetic_BAM_files/plasmid.fa
 VIRMID=../2013-09-30_SNP_calling_using_virmid/virmid-1.0.2/Virmid.jar
@@ -13,25 +11,25 @@ do
 	DRATE=${DRATELIST[$j]}
 	DFRAC=$(echo $DRATE| awk '{printf "%2.0f\n",1/$1}')
 
-	echo -------------------------------------------------------
+	DOWNDIR=../2013-10-02_problematic_header_removal/bam/$DFRAC
 
-	DOWNDIR=../2013-08-06_Downsample_Read_Depth/bam/$DFRAC
-	
 	VCFDIR=vcf/$DFRAC
 	mkdir -p $VCFDIR
 
+	controlbam=$DOWNDIR/20100916_c1_p1.02_ACT.reheadered.sorted.bam
+	case100_0bam=$DOWNDIR/20100916_c3_p1.07_CGT.reheadered.sorted.bam
 
-	controlbam=$DOWNDIR/20100916_c1_p1.04*.sorted.bam
-	case100_0bam=$DOWNDIR/20100916_c3_p1.12*.sorted.bam
-
-	echo -------------------------------------------------------
-	echo Index the sorted bam files
-	samtools index $controlbam
-	samtools index $case100_0bam
-	samtools faidx plasmid.fa
 	echo -------------------------------------------------------
 	echo call Virmid	
-	java -jar $VIRMID -R plasmid.fa -D $case100_0bam -N $controlbam -w $VCFDIR/ -f
+	java -jar $VIRMID \
+		-R $FASTAFILE \
+		-D $case100_0bam \
+		-N $controlbam \
+		-r 400 \
+		-q 0 \
+		-w $VCFDIR/ \
+		-v 3 \
+		-af
 
 done
 
