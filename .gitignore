@@ -30,3 +30,6 @@ doc/bioinformatics2013/RVD2.log
 doc/bioinformatics2013/RVD2.synctex.gz
 doc/bioinformatics2013/manuscript-formatted.aux
 doc/bioinformatics2013/manuscript-formatted.log
+*.aux
+*.log
+*.gz
