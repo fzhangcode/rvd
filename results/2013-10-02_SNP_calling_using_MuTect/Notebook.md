@@ -26,7 +26,7 @@ Materials and Equipment
 
 Experimental Protocol
 ---------------------------
-A sample experiment is implemented in `SNP_muTect.sh`
+Run `SNP_muTect.sh` to get final vcf files.
 
 Results
 -----------
