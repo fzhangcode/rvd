@@ -19,13 +19,12 @@ do
 
 	DOWNDIR=../2013-10-02_problematic_header_removal/bam/$DFRAC
 	
-	BAMCONTROL=$DOWNDIR/20100916_c1_p1.02_ACT.reheadered.sorted.bam
-	echo $BAMCONTROL
-	BAM0_1=$DOWNDIR/20100916_c1_p1.07_CGT.reheadered.sorted.bam
-	BAM0_3=$DOWNDIR/20100916_c2_p1.02_ACT.reheadered.sorted.bam
-	BAM1_0=$DOWNDIR/20100916_c2_p1.07_CGT.reheadered.sorted.bam
-	BAM10_0=$DOWNDIR/20100916_c3_p1.02_ACT.reheadered.sorted.bam
-	BAM100_0=$DOWNDIR/20100916_c3_p1.07_CGT.reheadered.sorted.bam
+	BAMCONTROL=$DOWNDIR/20100916_c1_p2.04_ATT.reheadered.sorted.bam
+	BAM0_1=$DOWNDIR/20100916_c1_p2.07_CGT.reheadered.sorted.bam
+	BAM0_3=$DOWNDIR/20100916_c2_p2.02_ACT.reheadered.sorted.bam
+	BAM1_0=$DOWNDIR/20100916_c2_p1.12_GTT.reheadered.sorted.bam
+	BAM10_0=$DOWNDIR/20100916_c3_p1.04_ATT.reheadered.sorted.bam
+	BAM100_0=$DOWNDIR/20100916_c3_p1.12_GTT.reheadered.sorted.bam
 	
 	BAM=($BAM0_1 $BAM0_3 $BAM1_0 $BAM10_0 $BAM100_0)
 	DILUTIONLIST=(0_1 0_3 1_0 10_0 100_0)
