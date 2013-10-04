@@ -7,6 +7,7 @@ To compare varscan2(somatic mode) with rvd2 across coverage depths and dilutions
 
 Conclusions
 -----------------
+Run `SNP_varscan2_somatic.sh`to get the final vcf files.
 
 Background
 ----------------
@@ -323,14 +324,6 @@ undownsampled dataset:
 
 **Failed** **Approach 7** 
 ****************************
-
-**TODO:**
-
-each dilution rate
-
-each downsampling rate
-
-whether merge 6 files or only take 1.
 
 Archived Samples
 -------------------------

@@ -16,12 +16,12 @@ do
 
 	DOWNDIR=../2013-08-06_Downsample_Read_Depth/bam/$DFRAC
 	
-	SORTCONTROL=$DOWNDIR/20100916_c1_p1.02*.sorted.bam
-	SORTBAM0_1=$DOWNDIR/20100916_c1_p1.07*.sorted.bam
-	SORTBAM0_3=$DOWNDIR/20100916_c2_p1.02*.sorted.bam
-	SORTBAM1_0=$DOWNDIR/20100916_c2_p1.07*.sorted.bam
-	SORTBAM10_0=$DOWNDIR/20100916_c3_p1.02*.sorted.bam
-	SORTBAM100_0=$DOWNDIR/20100916_c3_p1.07*.sorted.bam
+	SORTCONTROL=$DOWNDIR/20100916_c1_p2.04_ATT.sorted.bam
+	SORTBAM0_1=$DOWNDIR/20100916_c1_p2.07_CGT.sorted.bam
+	SORTBAM0_3=$DOWNDIR/20100916_c2_p2.02_ACT.sorted.bam
+	SORTBAM1_0=$DOWNDIR/20100916_c2_p1.12_GTT.sorted.bam
+	SORTBAM10_0=$DOWNDIR/20100916_c3_p1.04_ATT.sorted.bam
+	SORTBAM100_0=$DOWNDIR/20100916_c3_p1.12_GTT.sorted.bam
 
 	SNPDIR=snp/$DFRAC
 	mkdir -p $SNPDIR
@@ -70,3 +70,7 @@ do
 		fi 
 	done
 done
+
+echo -------------------------------------------------------
+echo Convert snp files to vcf files
+python snp2vcf.py

@@ -16,21 +16,21 @@ import rvd27
 
 def main():
     book=xlwt.Workbook(encoding="utf-8")
-    sheet1=book.add_sheet("Sheet1")
-    sheet1.write(0, 0, "Dilution")
-    sheet1.write(0, 1, "Depth")
+    sheet1=book.add_sheet("TPR_TNR")
+    sheet1.write(0, 0, "MAF")
+    sheet1.write(0, 1, "Coverage Median")
 
-    sheet2=book.add_sheet("Sheet2")
-    sheet2.write(0, 0, "Dilution")
-    sheet2.write(0, 1, "Depth")
+    sheet2=book.add_sheet("Multi-measures")
+    sheet2.write(0, 0, "MAF")
+    sheet2.write(0, 1, "Coverage Median")
     
-    method = {'rvd2_optimalT':'../2013-08-15_Compute_ROC_Synthetic_avg_all/vcf',
-              'rvd2_half_dilution':'../2013-09-21_SNP_calling_RVD2_half_dilution/vcf',
-              'rvd2_zero':'../2013-09-27_SNP_calling_RVD2_zero/vcf',
+    method = {'RVD2_optimalT':'../2013-08-15_Compute_ROC_Synthetic_avg_all/vcf',
+              'RVD2_zero':'../2013-09-27_SNP_calling_RVD2_zero/vcf',
               'VarScan2_somatic':'../2013-09-23_SNP_calling_using_varscan2_somatic/vcf',
-              'samtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
+              'SAMtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
               'GATK':'../2013-09-13_SNP_calling_using_GATK/vcf',
-              'strelka':'../2013-10-01_SNP_calling_using_strelka/work',
+              'Strelka':'../2013-10-01_SNP_calling_using_strelka/work',
+              'MuTect':'../2013-10-02_SNP_calling_using_MuTect/work',
               'VarScan2':'../2013-09-20_SNP_calling_using_varscan2/vcf'}
     
     DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
