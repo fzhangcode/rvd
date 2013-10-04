@@ -1,0 +1,56 @@
+This is BibTeX, Version 0.99d (TeX Live 2013)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: RVD2.aux
+The style file: apalike.bst
+Database file #1: bioinfo.bib
+Warning--I didn't find a database entry for "Laird"
+Warning--I didn't find a database entry for "Consortium:2013co"
+Warning--I didn't find a database entry for "Ghedin:2010ie"
+Warning--I didn't find a database entry for "McKenna:2010bv"
+Warning--I didn't find a database entry for "Koboldt:2012cg"
+Warning--I didn't find a database entry for "Saunders"
+Warning--I didn't find a database entry for "Cibulskis"
+Warning--I didn't find a database entry for "HauserNEJM2007"
+Warning--I didn't find a database entry for "HahnCho2011"
+You've used 14 entries,
+            1935 wiz_defined-function locations,
+            588 strings with 7212 characters,
+and the built_in function-call counts, 7370 in all, are:
+= -- 680
+> -- 485
+< -- 4
++ -- 178
+- -- 178
+* -- 738
+:= -- 1313
+add.period$ -- 42
+call.type$ -- 14
+change.case$ -- 159
+chr.to.int$ -- 14
+cite$ -- 14
+duplicate$ -- 194
+empty$ -- 409
+format.name$ -- 196
+if$ -- 1362
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 14
+newline$ -- 73
+num.names$ -- 42
+pop$ -- 131
+preamble$ -- 1
+purify$ -- 159
+quote$ -- 0
+skip$ -- 145
+stack$ -- 0
+substring$ -- 492
+swap$ -- 14
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 84
+warning$ -- 0
+while$ -- 52
+width$ -- 0
+write$ -- 182
+(There were 9 warnings)

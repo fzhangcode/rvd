@@ -1,5 +1,5 @@
 \documentclass[11pt,reqno]{amsart}
-\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\usepackage[top=1in, left=1in, right=1in, bottom=1in]{geometry}                % See geometry.pdf to learn the layout options. There are lots.
 \geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
 \usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
 %\usepackage{algorithm, algorithmic}
@@ -16,7 +16,10 @@
 \usepackage{enumitem}
 
 \usepackage{setspace}
-\doublespacing
+%\doublespacing
+
+\usepackage{natbib}
+
 %\usepackage{epstopdf}
 %\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
 
@@ -32,26 +35,29 @@
   \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
 }
 
-\title[RVD2]{RVD2: An ultra-sensitive variant detection model for heterogeneous population sequencing}
+\title[RVD2]{RVD2: An ultra-sensitive variant detection model for low-depth targeted next-generation sequencing data}
 \author{}
 %\date{}                                           % Activate to display a given date or no date
 
 \begin{document}
+
+\begin{abstract}
+Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Unlike most research samples, these clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples. We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and a Bayesian posterior hypothesis test to call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over a wide range of median read depths and a minor allele frequencies. We use our algorithm to call variants in a pooled sample of 100 patients with multiple sclerosis and identify novel variants in IL7RA and IL2R.
+\end{abstract}
+
 \maketitle
 
 \section{Introduction}
 
-% DIscuss low-purity samples and somatic mutations
+Next-generation sequencing (NGS) technology has enabled the systematic interrogation of the genome for a fraction of the cost of traditional assays~\citep{Koboldt:2013kw}. Protocol and platform engineering improvements have enabled the generation of $1\times10^9$ bases of sequence data in 27 hours for approximately \$1000~\citep{Quail:2012hf}. As a result, NGS is increasingly being used as a general platform for research assays for methylation state~\citep{Laird}, DNA mutations~\citep{Consortium:2013co}, copy number variation~\citep{Alkan:2009cr}, promoter occupancy~\citep{Ouyang:2009hc} and others~\citep{Rivera:2013ee}. NGS diagnostics are being translated to clinical applications including noninvasive fetal diagnostics~\citep{Kitzman:2012hea}, infectious disease diagnostics~\citep{Capobianchi:2012em}, cancer diagnostics~\citep{Navin:2010gu}, and human microbial analysis~\citep{Consortium:2013iz}. 
 
-Next-generation sequencing (NGS) technology has enabled the genomic interrogation for a fraction of the cost of traditional assays~\cite{Koboldt2013Cell}. Protocol and platform engineering improvements have reduced the cost of the assay to the point where it is now possible to generate $1\times10^9$ bases of sequence data in under 40 hours for less than \$1000 \cite{}. As a result NGS is increasingly being used as a general platform for research assays for methylation state \cite{}, DNA mutations \cite{}, copy number variation \cite{}, promoter occupancy \cite{} and others \cite{}. Recently, NGS has been used as a clinical diagnostic tool for testing for mutations in non-invasive fetal DNA \cite{}, infectious disease samples \cite{}, cancerous tumors \cite{}, and human microbial communities \cite{}. 
+Clinical samples are often genetically heterogeneous. For example, non-invasive fetal DNA testing uses maternal blood sample to sequence the minority fraction of cell-free fetal DNA~\citep{Fan:2008di}. Infectious diseases such as HIV and influenza may contain many genetically heterogeneous sub-populations~\citep{Flaherty:2011ja, Ghedin:2010ie}. DNA sequencing of individual regions of a solid tumor has revealed genetic heterogeneous within an individual sample~\citep{Navin:2010gu}.  
 
-Clinical samples are often genetically heterogeneous. Non-invasive fetal DNA testing uses a sample of the maternal blood and filters for the minor fraction that is cell-free DNA from the fetus \cite{}. Infectious diseases such as HIV and influenza mutate rapidly and a given sample from an individual host may contain many sub-populations \cite{}. DNA sequencing of individual regions of a solid tumor has revealed genetic heterogeneous within an individual sample.  
+However, the primary statistical tools for calling variants from NGS data are optimized for homogeneous samples. Most analysis pipelines make use of preprocessing or postprocessing or both to eliminate error prone reads and false positives. Samtools/bcftools and GATK a naive Bayes decision rule to call a variant~\citep{}. GATK involves more sophisticate pre and post-processing steps. The genotype prior is fixed and constant across all loci and the likelihood of an allele at a locus is a function of the phred score~\citep{McKenna:2010bv}.
 
-However, the primary statistical tools for calling variants from NGS data are optimized for homogeneous samples. Most analysis pipelines make use of preprocessing or postprocessing or both to eliminate error prone reads and false positives. Samtools/bcftools use a relatively straightforward XXX to call genotypes \cite{}. GATK uses a naive Bayesian decision rule to call a variant as one of two possible alleles \cite{McKenna2010}. VarScan2-mpileup uses information from multiple replicates to call homogeneous and heterogeneous genotypes.
+Recently, researchers have developed algorithms to call low-frequency or rare variants in heterogeneous samples.  VarScan2 combines algorithmic heuristics to call genotypes in the tumor and normal sample pileup data and then applies a Fisher's exact test on the read count data to detect a significant difference in the genotype calls~\citep{Koboldt:2012cg}. Strelka uses a hierarchical Bayesian approach to model the joint distribution of the allele frequency in the tumor and normal samples at each locus~\citep{Saunders}. With the joint distribution available, one is able to identify locations with dissimilar allele frequencies. muTect uses a Bayesian posterior probability in its decision rule to evaluate the likelihood of a mutation~\citep{Cibulskis}.
 
-Recently, researchers have developed algorithms to call low-frequency or rare variants in heterogeneous samples. MuTect is able to handle low-purity samples by computing a log-odds score. If the likelihood of the data assuming the locus is mutated exceeds the likelihood of the data assuming the site is not mutated by a threshold then a variant is called. There is an additional log-odds check on the normal sample to filter false positives~\cite{Cibulskis2013}. Strelka models the joint distribution for a tumor and normal sample as a mixture model using continuous values allele frequencies \cite{}. VarScan2 has a subcommand to call somatic mutations \cite{}. Recently VarScan2 was shown to outperform many other algorithms for calling low-frequency (5\%) variants \cite{}. 
-
-The remainder of this paper presents a novel algorithm for calling rare variants in heterogeneous samples using NGS data. We present the hierarchical Bayesian model for the method in Section X and the Bayesian hypothesis test to detect mutations in Section X. In Section X we present sensitivity and specificity results of our method on pure DNA samples mixed at defined fractions. We compare our algorithm to the most accurate methods available to date in Section X. Finally, in section X we present results on detecting mutations associated with multiple sclerosis from data obtained from pooling 100 affected patients. This strategy effectively reduces the cost of the assay by $n$-fold where $n$ is the pool size.
+The remainder of this paper presents a novel algorithm for calling rare variants in heterogeneous samples using NGS data that is an improvement upon currently available technology. We present the hierarchical Bayesian model in Section X and a Bayesian hypothesis test to detect mutations in Section X. In Section X we present sensitivity and specificity results of our method on known, pure DNA samples mixed at defined fractions. We compare our algorithm to the most accurate methods available to date in Section X. Finally, in section X we present results on detecting mutations associated with multiple sclerosis from data obtained from pooling 100 affected patients~\citep{Ferretti:2013hp}.
 
 \section{Materials and Methods}
 
@@ -59,7 +65,7 @@ RVD uses a two-stage approach for detecting for rare variants. First, it estimat
 
 \subsection{Model Structure}
 
-For a given sample, the observed data consists of two matrices $r \in \RR^{J \times N}$ and $n \in \RR^{J \times N}$, where $r_{ji}$ is the number of reads with a non-reference base at location $j$ in experimental replicate $i$ and $n_{ji}$ is the total number of reads at location $j$ in replicate $i$. We model the data generation process as a hierarchical Bayesian model; independent models are fit to the case and control data. The generative process is as follows:
+For a given sample, the observed data consists of two matrices $r \in \RR^{J \times N}$ and $n \in \RR^{J \times N}$, where $r_{ji}$ is the number of reads with a non-reference base at location $j$ in experimental replicate $i$ and $n_{ji}$ is the total number of reads at location $j$ in replicate $i$. The generative process is as follows:
 
 \begin{enumerate}[noitemsep]
 	\item For each location $j$: 
@@ -194,9 +200,6 @@ A variant is called if $\tilde{\mu}_j^{\text{case}} > \tilde{\mu}_j^{\text{contr
 \end{equation}
 where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. We draw a sample from the posterior distribution $\tilde{\mu}_j^{\Delta} \triangleq \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}}$ by randomly sampling with replacement from the samples of $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$.
 
-\section{Comparison with other variant calling algorithms}
-
-GATK uses considerable preprocessing and a simple naive Bayes decision rule to call a variant. The genotype prior is fixed and constant across all loci and the likelihood of an allele at a locus is a function of the phred score \cite{McKenna2010}. Samtools
 
 %%%%%%%%%%%%%%%%%%
 
@@ -229,7 +232,7 @@ GATK uses considerable preprocessing and a simple naive Bayes decision rule to c
 
 \section{Results}
 
-\subsection{Performance with read depth}\
+\subsection{Performance with read depth}
 
 We synthesized a 400bp control DNA sequence and another 400bp sequence that is identical to the control except at 14 loci with variant bases. We denote the indices of these true positive variant positions $j^*$. Pure case and control samples were mixed at defined fractions to yield minor allele frequencies (MAFs) of 0.1\%, 0.3\%, 1\%, 10\%, and 100\%. The sequencing protocol and data set are available from the original publication~\cite{}.
 
@@ -239,7 +242,7 @@ We ran the RVD2 algorithm on each downsampled data set sand varied the threshold
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=80mm]{pdf_figs/ROC_without_chi2.pdf}
+\includegraphics[width=120mm]{pdf_figs/ROC_without_chi2.pdf}
 \caption{ROC curve varying read depth showing detection performance of model with Bayesian Hypothesis Test.}
 \label{fig:ROC}
 \end{center}
@@ -249,23 +252,42 @@ Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=80mm]{pdf_figs/MuBarPlot.pdf}
+\includegraphics[width=120mm]{pdf_figs/MuBarPlot.pdf}
 \caption{Estimated minor allele fraction for called variants in 0.1\% dilution.}
 \label{fig:MAF}
 \end{center}
 \end{figure}
 
 
-\subsection{Comparison Results on Synthetic DNA}\
+\subsection{Empirical performance compared with other algorithms}
 
-Figure 3 ROC comparison with other methods: varscan2/samtools/rvd/strelka/virmid/muTect
+We compare the empirical performance of RVD2 to other variant calling algorithms. We use the synthetic DNA data sets described in the previous section to explore performance across a dynamic range of read depths as well as minor-allele frequencies. We report the sensitivity and specificity of each algorithm to detect the 14 true positive variant positions out of 400 tested positions.
 
+GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths. Varscan2-somatic, streak and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the median overall median depth of the replicates.
 
-\subsection{Pooled Multiple-Sclerosis Samples}\
+Table~\ref{t/l:comparison} shows the sensitivity and specificity for other variant calling algorithms. We computed the Matthews Correlation Coefficient (MCC) as a combined performance measure and present those results in Appendix B~\cite{}. Each cell contains the sensitivity and specificity of the method separated by a slash. The standard genotype variant calling algorithms: samtools, GATK, and VarScan2-mpileup are shown in the first columns. Samtools performs very well on 100\% MAF sample and has nearly perfect sensitivity and specificity for median coverage depths of 27 and 298. 
 
-We tested our algorithm on data from pooled samples from patients with multiple-sclerosis (MS). The MS patients are ``high-burden"; meaning that they are known to carry one or more of several genetic risk alleles. Our aim with studying these patients is to identify rare risk alleles that may not yet be known to be associated with MS. 
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=140mm]{pdf_figs/comparison_table.pdf}
+\caption{Comparison of RVD2 with other variant calling algorithms (sensitivity / specificity).}
+\label{fig:comparison}
+\end{center}
+\end{figure}
 
-DNA was extracted from whole blood samples from 100 patients with multiple sclerosis and 100 unaffected, unrelated individuals. Each sample was subjected to targeted PCR amplification of IL2RA and interleukin 7 receptor (IL7R); genes with known risk alleles~\cite{HauserNEJM2007}. We targeted X eons covering XXbp in IL2RA and X exon covering XXbp in IL7R. The experiment was repeated on two independent cohorts to filter for spurious associations due to population sampling.
+VarScan2-somatic has perfect performance on a 100\% MAF samples at a low depth. As the depth increases, it calls more false positives and the specificity decreases monotonically from 1.0 to 0.31. For MAFs between 0.1\% and 10\% specificity generally decreases with read depth similarly. There appears to be an optimal read depth for sensitivity. The 100\% MAF sample shows optimal sensitivity at a depth of 27, the 10\% optimal depth is 260 and the 1\% optimal depth is 5584. One would expect that increasing the read depth would lead to better sensitivity, but contrary to expectation further increasing the depth decreases performance. This effect is not exclusive to VarScan2-somatic and is also observed in samtools and GATK. 
+
+Strelka has better sensitivity and specificity than the samtools, GATK or Varscan2-somatic algorithms for almost all read depths and the 100\% and 10\% MAF. However, it has zero sensitivity to detect variants at or below 1\% MAF. 
+
+MuTect has the best overall performance of the other algorithms we tested over a wide range of MAF and depths. Unlike several of the other algorithms muTect generally improves with a higher read depth or the specificity degradation due to false positives is modest. Specifically, muTect calls some of the true variant positions with a 0.3\% MAF and a median read depth of only 53 and 410.
+
+We tested our model RVD2 using two variations of the hypothesis test. We set $\tau$, the hypothesis test threshold to the naive value of zero and we optimized $\tau$ for the read depth and MAF ($\tau^*$). These optimal values were computed from this data set, but in general may be computed once and used as a lookup table for future experiments. With $\tau=0$, RVD2 is not able to call variants with a MAF of 0.1\% if the read depth is less than 4,129. This generally agrees with previous observations and intuition that more than 1,000 reads are required to call a 1:1000 MAF. The specificity degrades slightly at higher read depths with this fixed $\tau$ in line with muTect. At high read depths and MAFs classification is perfect. With $\tau$ set to the optimal value $\tau^*$, we find a significant improvement in both sensitivity and specificity. The algorithm is able to call a 0.1\% MAF with a median read depth of only 39. This performance is due to two properties: (1) the empirical Bayes structure of the model allows parameters $\mu_j$ to borrow strength from one another through $\mu_0$ and (2) the actual coverage at a particular location may be higher than the median coverage across all locations.
+
+\subsection{Pooled Multiple-Sclerosis Samples}
+
+We tested our algorithm on data from pooled samples from patients with multiple-sclerosis (MS). The MS patients are ``high-burden"; meaning that they are known to carry one or more of several genetic risk alleles. Our aim in studying this  patient population is to identify rare risk alleles that may not yet be known to be associated with MS. 
+
+DNA was extracted from whole blood samples from 100 patients with multiple sclerosis and 100 unaffected, unrelated individuals. Each sample was subjected to targeted PCR amplification of IL2RA and interleukin 7 receptor (IL7R); genes with known risk alleles~\cite{HauserNEJM2007}. We targeted X exons covering XXbp in IL2RA and X exon covering XXbp in IL7R. The experiment was repeated on two independent cohorts to filter for spurious associations due to population sampling.
 
 We took 4000 samples from the Markov chain, removed the first 10\% for burn-in and thinned the chain by a factor of 2. We used 10 Metropolis samples for each Gibbs step. We called variants with $\tau = 0.005$ and $\alpha = 0.05$ because we expect that the minimum detectable genotype is a heterozygous mutation in 1 out of 100 samples. 
 
@@ -304,6 +326,16 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 	\tilde{\mu}_0 =& \frac{1}{J} \sum_{j=1}^J \mu_j \\
 	\tilde{M}_0 =& \frac{ \tilde{\mu}_0 (1 - \tilde{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \mu_j^2 } -1.
 \end{eqnarray}
+
+\section{Comparison to other algorithms}\label{sec:comparison}
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=140mm]{pdf_figs/comparison_table_mcc.pdf}
+\caption{Comparison of RVD2 with other variant calling algorithms (MCC).}
+\label{fig:comparison_mcc}
+\end{center}
+\end{figure}
+
 
 \bibliographystyle{apalike}
 \bibliography{bioinfo}
