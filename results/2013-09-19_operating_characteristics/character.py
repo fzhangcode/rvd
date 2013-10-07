@@ -24,7 +24,10 @@ def main():
     sheet2.write(0, 0, "MAF")
     sheet2.write(0, 1, "Coverage Median")
     
-    method = {'RVD2_optimalT':'../2013-08-15_Compute_ROC_Synthetic_avg_all/vcf',
+    method = {'RVD2_optimalT_ED':'../2013-10-04_optimal_threshold/vcf/ED',
+              'RVD2_optimalT_L1':'../2013-10-04_optimal_threshold/vcf/L1',
+              'RVD2_optimalT_MCC':'../2013-10-04_optimal_threshold/vcf/MCC',
+              'RVD2_optimalT_Fitting':'../2013-10-07_optimal_threshold/vcf/fit',
               'RVD2_zero':'../2013-09-27_SNP_calling_RVD2_zero/vcf',
               'VarScan2_somatic':'../2013-09-23_SNP_calling_using_varscan2_somatic/vcf',
               'SAMtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
