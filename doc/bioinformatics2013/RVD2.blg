@@ -3,54 +3,47 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: RVD2.aux
 The style file: apalike.bst
 Database file #1: bioinfo.bib
-Warning--I didn't find a database entry for "Laird"
-Warning--I didn't find a database entry for "Consortium:2013co"
-Warning--I didn't find a database entry for "Ghedin:2010ie"
-Warning--I didn't find a database entry for "McKenna:2010bv"
-Warning--I didn't find a database entry for "Koboldt:2012cg"
-Warning--I didn't find a database entry for "Saunders"
-Warning--I didn't find a database entry for "Cibulskis"
+Warning--I didn't find a database entry for ""
 Warning--I didn't find a database entry for "HauserNEJM2007"
-Warning--I didn't find a database entry for "HahnCho2011"
-You've used 14 entries,
+You've used 21 entries,
             1935 wiz_defined-function locations,
-            588 strings with 7212 characters,
-and the built_in function-call counts, 7370 in all, are:
-= -- 680
-> -- 485
+            620 strings with 13643 characters,
+and the built_in function-call counts, 15555 in all, are:
+= -- 1311
+> -- 1456
 < -- 4
-+ -- 178
-- -- 178
-* -- 738
-:= -- 1313
-add.period$ -- 42
-call.type$ -- 14
-change.case$ -- 159
-chr.to.int$ -- 14
-cite$ -- 14
-duplicate$ -- 194
-empty$ -- 409
-format.name$ -- 196
-if$ -- 1362
++ -- 558
+- -- 558
+* -- 1691
+:= -- 2839
+add.period$ -- 63
+call.type$ -- 21
+change.case$ -- 384
+chr.to.int$ -- 21
+cite$ -- 21
+duplicate$ -- 291
+empty$ -- 613
+format.name$ -- 583
+if$ -- 2769
 int.to.chr$ -- 1
 int.to.str$ -- 0
-missing$ -- 14
-newline$ -- 73
-num.names$ -- 42
-pop$ -- 131
+missing$ -- 21
+newline$ -- 108
+num.names$ -- 63
+pop$ -- 344
 preamble$ -- 1
-purify$ -- 159
+purify$ -- 384
 quote$ -- 0
-skip$ -- 145
+skip$ -- 215
 stack$ -- 0
-substring$ -- 492
-swap$ -- 14
+substring$ -- 738
+swap$ -- 21
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 84
+type$ -- 126
 warning$ -- 0
-while$ -- 52
+while$ -- 78
 width$ -- 0
-write$ -- 182
-(There were 9 warnings)
+write$ -- 272
+(There were 2 warnings)
