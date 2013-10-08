@@ -7,6 +7,8 @@ import logging
 import pdb
 import scipy.stats as ss
 
+os.chdir('S:/yhe2/Research/rvd2/results/2013-10-08_optimal_threshold_surface_fitting')
+
 # Insert the src/python/rvd27 directory at front of the path
 rvddir = os.path.join('../../src/python/rvd27')
 sys.path.insert(0, rvddir)
@@ -17,12 +19,12 @@ logging.basicConfig(level=logging.DEBUG,
 
 def main():
     try:
-        with h5py.File('optimalT_logfit.hdf5', 'r') as f:
+        with h5py.File('./optimalT311.hdf5', 'r') as f:
             T_fit = f['T_fit'][...]        
             f.close()
             logging.debug('optimalT.hdf5 exits.')
     except IOError as e:
-        logging.debug('Generate optimalT_logfit.hdf5 first')
+        logging.debug('Generate optimalT311.hdf5 first')
         sys.exit(1)
     dilutionList = (0.1,0.3,1.0,10.0,100.0)
     folderList = ('2013-08-14_Compute_ROC_Synthetic_avg10',\
@@ -33,7 +35,7 @@ def main():
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
     	for f in folderList:
-            path='vcf/fit/%s' % str(10**(folderList.index(f)+1))
+            path='vcf/fit/311/%s' % str(10**(folderList.index(f)+1))
             if not os.path.exists(path):
                 os.makedirs(path)
             controlFile = "../%s/Control.hdf5" %f
@@ -41,7 +43,7 @@ def main():
             caseFile = "../%(folder)s/%(file)s" %{'folder':f,'file':caseFile}
             
             outputFile='%(path)s/vcf%(dilution)s' %{'path':path,'dilution':str(d).replace('.','_')}
-            if d is not 100.0:
+            if d is not 100.0 and d is not 10.0:
                 T = T_fit[dilutionList.index(d),folderList.index(f)]
             else:
                 T=0               

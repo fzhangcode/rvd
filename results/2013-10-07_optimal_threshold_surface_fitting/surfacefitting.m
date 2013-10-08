@@ -25,5 +25,7 @@ optimalT2=@(x,y) fitresult2.p00+fitresult2.p10*x+fitresult2.p01*y+...
 
 optimalT=optimalT2(xdilution_log,xcov_log);
 
-h5create('optimalT_logfit.hdf5','/T_fit',size(optimalT));
-h5write('optimalT_logfit.hdf5','/T_fit',optimalT);
+if ~exist('optimalT_logfit.hdf5','file')
+    h5create('optimalT_logfit.hdf5','/T_fit',size(optimalT));
+    h5write('optimalT_logfit.hdf5','/T_fit',optimalT);
+end
