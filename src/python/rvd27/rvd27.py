@@ -107,7 +107,7 @@ def gibbs(args):
 def test_main(args):
     test(args.controlHDF5Name, args.caseHDF5Name, args.T, args.N, args.outputFile)
 
-def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile=None):
+def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
     """ Top-level function to test for variants.
     """
     
@@ -154,7 +154,7 @@ def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile=None):
 	    else:
 	       chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
 
-    # Call variants that have postP > 0.95 and chi2pvalue < 0.05 after Bonferroni correction
+    # Call variants that have postP > 0.95 
     call = []
     altb = []
     for i in xrange(J):
@@ -166,8 +166,8 @@ def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile=None):
 
         altb_r = [acgt_r[x] for x in np.argmax(r, axis=1)]
         
-        if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
-##        if postP[i] >0.95: 
+        #if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
+        if postP[i] >0.95: 
             altb.append(altb_r[0]) # TODO: find a better way to report all alternate bases
             call.append(True)
         else:
@@ -183,11 +183,11 @@ def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile=None):
             f.create_dataset('chi2pvalue',data=chi2P)
             f.close()
     
-        write_vcf(outputFile+'.vcf', caseLoc, call, refb, altb, np.mean(caseMu, axis=1))
+        write_vcf(outputFile+'.vcf', caseLoc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(controlMu, axis=1) )
         
     return caseLoc, caseMu, controlMu, postP, chi2P, call
 
-def write_vcf(outputFile, loc, call, refb, altb, caseMu):
+def write_vcf(outputFile, loc, call, refb, altb, caseMu, controlMu):
     """ Write high confidence variant calls to VCF 4.2 file.
     """
     
@@ -203,12 +203,13 @@ def write_vcf(outputFile, loc, call, refb, altb, caseMu):
     print("##fileformat=VCFv4.1", file=vcfF)
     print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
     
-    print("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele Frequency\">", file=vcfF)
+    print("##INFO=<ID=COAF,Number=1,Type=Float,Description=\"Control Allele Frequency\">", file=vcfF)
+    print("##INFO=<ID=CAAF,Number=1,Type=Float,Description=\"Case Allele Frequency\">", file=vcfF)
     
     print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO", file=vcfF)
     for i in xrange(J):
         if call[i]:
-            print("%s\t%d\t.\t%c\t%s\t.\tPASS\tAF=%0.3f" % (chrom[i], pos[i], refb[i], altb[i], caseMu[i]*100.0), file=vcfF)
+            print("%s\t%d\t.\t%c\t%s\t.\tPASS\tCOAF=%0.3f;CAAF=%0.3f" % (chrom[i], pos[i], refb[i], altb[i], controlMu[i]*100.0, caseMu[i]*100.0), file=vcfF)
     
     vcfF.close()
     
