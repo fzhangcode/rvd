@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG,
 def main():
     dilutionList = (0.1,0.3,1.0,10.0,100.0)
     
-    folder = '2013-08-19_Compute_ROC_Synthetic_avg10000'
+    folder = '2013-08-19_Compute_ROC_Synthetic_avg10'
     N=1000 # Z sampling size  
     (n_gibbs, nmh) = (4000, 50)
 

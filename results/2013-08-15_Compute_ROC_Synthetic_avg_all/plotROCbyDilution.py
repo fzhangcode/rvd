@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(message)s')
 
 def main():
-    dilutionList = (0.1,0.3,1.0,10.0,100.0)
+    dilutionList = (0.1,0.3,1.0,10.0)
 
     folderList = ('2013-08-14_Compute_ROC_Synthetic_avg10',\
                   '2013-08-14_Compute_ROC_Synthetic_avg100',\
@@ -26,11 +26,11 @@ def main():
     N=1000 # Z sampling size  
     fig=plt.figure(figsize=(10, 9))
     chi2=False
-##    lstyle=('-','--','-.',':')
+    lstyle=('-','--','-.',':')
     lcolor=('c','r','g','b')
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
-        ax = fig.add_subplot(3,2,dilutionList.index(d)+1)
+        ax = fig.add_subplot(2,2,dilutionList.index(d)+1)
         label=[]
         for f in folderList:
             path='vcf/%s' % str(10**(folderList.index(f)+1))
@@ -41,9 +41,9 @@ def main():
             caseFile = "../%(folder)s/%(file)s" %{'folder':f,'file':caseFile}
              # ROC
             [fpr,tpr,cov, T] = ROCpoints(controlFile,caseFile, path, d, P=0.95,chi2=chi2)
-            ax.plot(fpr,tpr, color=lcolor[folderList.index(f)], label='%d' % cov)
-##            ax.plot(fpr,tpr,linestyle=lstyle[folderList.index(f)], color=lcolor[folderList.index(f)], label='%d' % cov)
-##            ax.plot(fpr[0],tpr[0],marker='o',markerfacecolor=lcolor[folderList.index(f)])
+##            ax.plot(fpr,tpr, color=lcolor[folderList.index(f)], label='%d' % cov)
+            ax.plot(fpr,tpr,linestyle=lstyle[folderList.index(f)], color=lcolor[folderList.index(f)], label='%d' % cov)
+            ax.plot(fpr[0],tpr[0],marker='o',markerfacecolor=lcolor[folderList.index(f)])
         l = ax.legend(loc=4,prop={'size':9},title='Read depth')
         l.get_title().set_fontsize(9)
         ax.plot([0,1],[0,1],color='k',linestyle='dashed')
@@ -51,14 +51,14 @@ def main():
         ax.set_xlim((-0.03,1.03))
         ax.set_ylim((-0.03,1.03))
                  
-        ax.set_xlabel('False Positive Rate')
-        ax.set_ylabel('True Positive Rate')
+        ax.set_xlabel('1-Specificity (FPR)',fontsize=10)
+        ax.set_ylabel('Sensitivity (TPR)',fontsize=10)
         
     if chi2:
         title='ROC_with_chi2'
     else:
         title='ROC_without_chi2'
-    figformat='.eps'
+    figformat='.pdf'
     plt.savefig(title+figformat)
 
 def ROCpoints(controlFile,caseFile, path, d,N=1000, P=0.95, chi2=False):
@@ -123,6 +123,7 @@ def ROCpoints(controlFile,caseFile, path, d,N=1000, P=0.95, chi2=False):
     # return information for mu bar plot at called positions under optimal threshold.
     distance=np.sum(np.power([fpr,tpr-1],2),0)
     Tidx=distance.argmin()
+    print Tidx
 
     outputFile=os.path.join(path,'vcf%s.vcf' %str(d).replace('.','_'))
     

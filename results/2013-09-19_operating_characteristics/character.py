@@ -16,22 +16,28 @@ import rvd27
 
 def main():
     book=xlwt.Workbook(encoding="utf-8")
-    sheet1=book.add_sheet("Sheet1")
-    sheet1.write(0, 0, "Dilution")
-    sheet1.write(0, 1, "Depth")
+    sheet1=book.add_sheet("TPR_TNR")
+    sheet1.write(0, 0, "MAF")
+    sheet1.write(0, 1, "Coverage Median")
 
-    sheet2=book.add_sheet("Sheet2")
-    sheet2.write(0, 0, "Dilution")
-    sheet2.write(0, 1, "Depth")
+    sheet2=book.add_sheet("Multi-measures")
+    sheet2.write(0, 0, "MAF")
+    sheet2.write(0, 1, "Coverage Median")
     
-    method = {'rvd2_optimalT':'../2013-08-15_Compute_ROC_Synthetic_avg_all/vcf',
-              'rvd2_half_dilution':'../2013-09-21_SNP_calling_RVD2_half_dilution/vcf',
-              'samtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
+    method = {'RVD2_optimalT_ED':'../2013-10-04_optimal_threshold/vcf/ED',
+              'RVD2_optimalT_L1':'../2013-10-04_optimal_threshold/vcf/L1',
+              'RVD2_optimalT_MCC':'../2013-10-04_optimal_threshold/vcf/MCC',
+              'RVD2_optimalT_Fitting':'../2013-10-07_optimal_threshold/vcf/fit',
+              'RVD2_zero':'../2013-09-27_SNP_calling_RVD2_zero/vcf',
+              'VarScan2_somatic':'../2013-09-23_SNP_calling_using_varscan2_somatic/vcf',
+              'SAMtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
               'GATK':'../2013-09-13_SNP_calling_using_GATK/vcf',
+              'Strelka':'../2013-10-01_SNP_calling_using_strelka/work',
+              'MuTect':'../2013-10-02_SNP_calling_using_MuTect/work',
               'VarScan2':'../2013-09-20_SNP_calling_using_varscan2/vcf'}
     
     DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
-    DepthList = (10, 100, 1000, 10000)
+    DepthList = (10000, 1000, 100, 10)
     i=0
     
     
@@ -59,6 +65,7 @@ def main():
                 if i==1:
                     sheet1.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1, 1, "%s" % str(cov))
                     sheet2.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+2, 1, "%s" % str(cov))
+                    #pdb.set_trace()
                     print DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1
 
                 # read in called positions from vcf files
@@ -98,7 +105,7 @@ def characteristics(RefClass = None, PredictClass = None):
         RefClass[pos-1] = np.ones_like(pos)
     if PredictClass is None:
         PredictClass = np.copy(RefClass)
-        pos = np.arange(85,246,20)
+        pos = np.arange(85,346,20)
         PredictClass[pos-1] = np.zeros_like(pos)
 
     #True Positive

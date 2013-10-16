@@ -36,6 +36,8 @@ Figure 3. Dilution 1.0% Read depth median 554249
 ![](ConfusionMatrix_Dilution10_0_Depth270064.png)
 Figure 4. Dilution 10.0% Read depth median 270064
 
+If the figures can not display in this notebook, change the figure format in ConfMatrix.py from .pdf to .png and rerun ConfMatrix.py to generate new figures.
+
 Archived Samples
 -------------------------
 
