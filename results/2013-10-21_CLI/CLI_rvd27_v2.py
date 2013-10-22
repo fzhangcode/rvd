@@ -62,7 +62,7 @@ class RVD_CLI(LoggingMixin, CommandLineMixin, Application):
 		#self.log.basicConfig(level=log_level, format='%(levelname)s:%(module)s:%(message)s')
 		
 		# Tell where is the pileup temp directory 
-		self.log.warning('Info: The pipleup files are: ./pileup/')
+		self.log.info('Info: The pileup files are: ./pileup/')
 		
 		# Create pileup directory if it doesn't exist
 		if not os.path.isdir(rvd27.Temp_Directroy):
