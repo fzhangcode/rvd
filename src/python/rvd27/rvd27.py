@@ -163,8 +163,8 @@ def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile=None):
         # Make a list of the alternate bases for each replicate
         acgt_r = ['A','C','G','T']
         del acgt_r[ acgt[refb[i]] ]
-
-        altb_r = [acgt_r[x] for x in np.argmax(r, axis=1)]
+        
+        altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
         
         if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
 ##        if postP[i] >0.95: 
