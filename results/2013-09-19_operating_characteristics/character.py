@@ -1,13 +1,14 @@
 import sys
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-import h5py
+
 import logging
 import pdb
-import scipy.stats as ss
+
 import vcf
 import xlwt
+
+##os.chdir('S:/yhe2/Research/rvd2/results/2013-09-19_operating_characteristics')
 
 # Insert the src/python/rvd27 directory at front of the path
 rvddir = os.path.join('../../src/python/rvd27')
@@ -18,33 +19,45 @@ def main():
     book=xlwt.Workbook(encoding="utf-8")
     sheet1=book.add_sheet("TPR_TNR")
     sheet1.write(0, 0, "MAF")
-    sheet1.write(0, 1, "Coverage Median")
+    sheet1.write(0, 1, "Median Depth")
 
     sheet2=book.add_sheet("Multi-measures")
-    sheet2.write(0, 0, "MAF")
-    sheet2.write(0, 1, "Coverage Median")
+    sheet2.write(1, 0, "MAF")
+    sheet2.write(1, 1, "Median Depth")
+
+    sheet3=book.add_sheet("FDR")
+    sheet3.write(0, 0, "MAF")
+    sheet3.write(0, 1, "Median Depth")
+
+    sheet4=book.add_sheet("MCC")
+    sheet4.write(0, 0, "MAF")
+    sheet4.write(0, 1, "Median Depth")
     
-    method = {'RVD2_optimalT_ED':'../2013-10-04_optimal_threshold/vcf/ED',
-              'RVD2_optimalT_L1':'../2013-10-04_optimal_threshold/vcf/L1',
-              'RVD2_optimalT_MCC':'../2013-10-04_optimal_threshold/vcf/MCC',
-              'RVD2_optimalT_Fitting':'../2013-10-07_optimal_threshold/vcf/fit',
-              'RVD2_zero':'../2013-09-27_SNP_calling_RVD2_zero/vcf',
-              'VarScan2_somatic':'../2013-09-23_SNP_calling_using_varscan2_somatic/vcf',
-              'SAMtools':'../2013-09-10_SNP_calling_using_samtools/vcf',
-              'GATK':'../2013-09-13_SNP_calling_using_GATK/vcf',
-              'Strelka':'../2013-10-01_SNP_calling_using_strelka/work',
-              'MuTect':'../2013-10-02_SNP_calling_using_MuTect/work',
-              'VarScan2':'../2013-09-20_SNP_calling_using_varscan2/vcf'}
+    method = {'RVD2(T*)':'./../2013-10-04_optimal_threshold/vcf/L1',
+              'RVD2(T* regr311)':'./../2013-10-08_optimal_threshold_surface_fitting/vcf/fit/311',
+              'RVD2(T=0,R=6)':'./../2013-09-27_SNP_calling_RVD2_zero/vcf',
+              'RVD2(T=0,R=1)':'./../2013-10-18_one_replicate_T_zero/vcf',
+              'VarScan2 somatic':'./../2013-09-23_SNP_calling_using_varscan2_somatic/vcf',
+              'SAMtools':'./../2013-09-10_SNP_calling_using_samtools/vcf',
+              'GATK':'./../2013-09-13_SNP_calling_using_GATK/vcf',
+              'MuTect':'./../2013-10-02_SNP_calling_using_MuTect/work',
+              'Strelka':'./../2013-10-01_SNP_calling_using_strelka/vcf',
+              'VarScan2 mpileup':'./../2013-09-20_SNP_calling_using_varscan2/vcf'}
     
+##    'RVD2_T*_ED':'./../2013-10-04_optimal_threshold/vcf/ED',
+##    'Strelka':'./../2013-10-01_SNP_calling_using_strelka/work',
+##    'RVD2_T*_MCC':'./../2013-10-04_optimal_threshold/vcf/MCC',
     DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
     DepthList = (10000, 1000, 100, 10)
     i=0
     
-    
     for k, v in method.iteritems():
         i=i+1
+        print 'Method %(number)d: %(method)s' %{'number':i, 'method': k}
         sheet1.write(0, i+1, k)
         sheet2.write(0, 9*(i-1)+6, k)
+        sheet3.write(0, i+1, k)
+        sheet4.write(0, i+1, k)
         character=('Sensitiviy', 'Specificity', 'FPR', 'FNR', 'PPV', 'NPV', 'FDR', 'ACC', 'MCC')
         for j in xrange(9):
             sheet2.write(1,9*(i-1)+j+2,character[j])
@@ -52,6 +65,9 @@ def main():
             if i==1:
                 sheet1.write(DilutionList.index(d)*len(DepthList)+1,0,"%0.1f%%" %d)
                 sheet2.write(DilutionList.index(d)*len(DepthList)+2,0,"%0.1f%%" %d)
+                sheet3.write(DilutionList.index(d)*len(DepthList)+1,0,"%0.1f%%" %d)
+                sheet4.write(DilutionList.index(d)*len(DepthList)+1,0,"%0.1f%%" %d)
+                
             for r in DepthList:
                 # read in the median coverage
                 hdf5Dir='../2013-08-14_Compute_ROC_Synthetic_avg%s' %str(r)
@@ -60,13 +76,12 @@ def main():
                 (_, _, _, _, _, caseN) = rvd27.load_model(caseFile)
                 cov = int(np.median(caseN))
 
-
                 # print the median coverage
                 if i==1:
                     sheet1.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1, 1, "%s" % str(cov))
                     sheet2.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+2, 1, "%s" % str(cov))
-                    #pdb.set_trace()
-                    print DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1
+                    sheet3.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1, 1, "%s" % str(cov))
+                    sheet4.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1, 1, "%s" % str(cov))
 
                 # read in called positions from vcf files
                 vcfFile=os.path.join(v,"%s" %r,
@@ -87,14 +102,15 @@ def main():
                 # characteristics computation
                 [TPR, TNR, FPR, FNR, PPV, NPV, FDR, ACC, MCC]=characteristics(RefClass, PredictClass)
                 ncharacter=(TPR, TNR, FPR, FNR, PPV, NPV, FDR, ACC, MCC)
-                sheet1.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1,i+1,"%(TPR)0.2f/%(TNR)0.2f" %{'TPR':TPR,'TNR':TNR})
 
                 # print characteristics
+                sheet1.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1,i+1,"%(TPR)0.2f/%(TNR)0.2f" %{'TPR':TPR,'TNR':TNR})               
                 for j in xrange(9):
-                    if np.isnan(ncharacter[j]):
-                        sheet2.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+2,9*(i-1)+j+2,'NaN')
-                    else:
-                        sheet2.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+2,9*(i-1)+j+2,ncharacter[j])
+                    sheet2.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+2,9*(i-1)+j+2,'%0.2f' %ncharacter[j])
+                if not np.isnan(FDR):
+                    sheet3.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1,i+1,"%0.2f" %FDR)
+                if not np.isnan(FDR):
+                    sheet4.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1,i+1,"%0.2f" %MCC)
     book.save('character.xls')  
 
 def characteristics(RefClass = None, PredictClass = None):

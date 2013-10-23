@@ -60,6 +60,8 @@ do
 		fi
 		echo $PWD
 
-		cp $PWD/work/$DFRAC/${DILUTIONLIST[$i]}/myAnalysis/results/all.somatic.snvs.vcf $PWD/work/$DFRAC/vcf${DILUTIONLIST[$i]}.vcf
+		cp $PWD/work/$DFRAC/${DILUTIONLIST[$i]}/myAnalysis/results/all.somatic.snvs.vcf $PWD/work/$DFRAC/vcf${DILUTIONLIST[$i]}.txt
 	done
 done
+
+python txt2vcf.py
