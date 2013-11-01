@@ -13,6 +13,8 @@ Background
 ----------------
 Please go to [VarScan2 mpileup2snp manual page](http://varscan.sourceforge.net/using-varscan.html#v2.3_mpileup2snp) for more information.
 
+The algorithm paper is available in [VarScan 2: Somatic mutation and copy number alteration discovery in cancer by exome sequencing](http://genome.cshlp.org/content/22/3/568.short)
+
 Materials and Equipment
 ------------------------------
 rvd2/bin/varscan.v2.3.4.jar
