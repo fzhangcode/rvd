@@ -360,8 +360,11 @@ def estimate_mom(r, n):
     theta = r/(n + np.finfo(np.float).eps) # make sure this is non-truncating division
     if np.ndim(r) == 1: mu = theta
     elif np.ndim(r) > 1: mu = np.mean(theta, 0)
-    
-    M = (mu*(1-mu))/(np.var(theta, 0) + np.finfo(np.float).eps )    
+
+    if np.shape(theta)[0] is 1:
+        M=np.ones_like(mu)
+    else:
+        M = (mu*(1-mu))/(np.var(theta, 0) + np.finfo(np.float).eps )    
     
     mu0 = np.mean(mu)
     M0 = (mu0*(1-mu0))/(np.var(mu) + np.finfo(np.float).eps)
@@ -465,7 +468,7 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
         if i % 100 == 0 and i > 0: logging.debug("Gibbs Iteration %d" % i)
             
         # Draw samples from p(theta | r, mu, M) by Gibbs
-        alpha = r + mu*phi['M'] +  + np.finfo(np.float).eps
+        alpha = r + mu*phi['M'] + np.finfo(np.float).eps
         beta = (n - r) + (1-mu)*phi['M'] + np.finfo(np.float).eps
         theta = ss.beta.rvs(alpha, beta)
         
@@ -581,8 +584,8 @@ def load_depth(dcFileNameList):
             header = dcFile.readline().strip()
             dc = dcFile.readlines()
             dc = [x.strip().split("\t") for x in dc]
-            
             loc1 = [x[1]+':'+str(x[2]).strip('\000') for x in dc if x[4] in acgt.keys()]
+            
 	    loc.append( loc1 )
             
             refb1 = dict(zip(loc1, [x[4] for x in dc if x[4] in acgt.keys()]))
@@ -590,7 +593,7 @@ def load_depth(dcFileNameList):
             cd.append( dict(zip(loc1, [map(int, x[5:9]) for x in dc if x[4] in acgt.keys()])) )
             
     loc = list(reduce(set.intersection, map(set, loc)))
-
+    
     def stringSplitByNumbers(x):
         r = re.compile('(\d+)')
         l = r.split(x)
@@ -619,7 +622,7 @@ def load_depth(dcFileNameList):
         r.append(c)
     r = np.array(r)
     n = np.array(n)
-
+    
     return (r, n, loc, refb)
 
 def chi2test(X, lamda=2.0/3, pvector=np.array([1.0/3]*3)):
