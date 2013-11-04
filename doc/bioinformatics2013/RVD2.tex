@@ -274,7 +274,7 @@ Table~\ref{t/l:comparison} shows the sensitivity and specificity for other varia
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=140mm]{pdf_figs/comparison_table.pdf}
+%\includegraphics[width=140mm]{pdf_figs/comparison_table.pdf}
 \caption{Comparison of RVD2 with other variant calling algorithms (sensitivity / specificity).}
 \label{fig:comparison}
 \end{center}
@@ -307,7 +307,11 @@ We identified by consensus of the two independent cohorts two variants in IL7R a
 \end{figure}
 
 The validity of these loci are subject to confirmation on a larger independent sample. However, we note that most GWAS studies focus on common SNPs due to the cost-effective microarray technology used for those studies. We have instead used sequencing technology which yields and unbiased coverage of the targeted regions and has the potential to uncover rare variants that are not targeted by microarray technology. Indeed, the common SNP that was found is associated with an autoimmune disorder and the other two variants are not at dbSNP loci.
+\subsection{HCC1187 primary ductual carcinoma sample}
+We test our algorithm on normal-tumor paired data from sample HCC1187, a 41 years old white female with primary ductal carcinoma in TNM stage IIA, grade 3. The tumor DNA was extracted from HCC1187 breast ductal carcinoma cell line while the normal DNA from a matching lymphoblastoid cell line. 
 
+
+500 ng of DNA were prepped using an early access version of Illumina’s TruSeq DNA PCR-Free kit. The libraries were sequenced on four and eight lanes of a HiSeq 2000 flow cell for the normal and tumor, respectively, using 100 bp paired-end reads. Data, analyzed using the pre-release version of the Illumina Cancer Sequencing Workflow showed an average coverage of 40x for the normal and 90x for the tumor DNA with about 96\% of loci covered with 10 or more reads.
 \appendix
 \section{Parameter Initialization}\label{sec:appendix_mom}
 Since $r_{ji} \thicksim \text{Binomial}(n_{ji}, \theta_{ji})$, the first population moment is  $E[r_{ji}] = \theta_{ji} n_{ji}$ and the first sample moment is simply $m_1 = r_{ji}$. Therefore the MoM estimator is 
@@ -335,7 +339,7 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 \section{Comparison to other algorithms}\label{sec:app_comparison}
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=140mm]{pdf_figs/comparison_table_mcc.pdf}
+%\includegraphics[width=140mm]{pdf_figs/comparison_table_mcc.pdf}
 \caption{Comparison of RVD2 with other variant calling algorithms (MCC).}
 \label{fig:comparison_mcc}
 \end{center}
