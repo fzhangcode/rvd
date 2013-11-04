@@ -63,7 +63,7 @@ def main():
     f.create_dataset('chi2pvalue',data=chi2P)
     f.close()
 
-    idx = [i for i, j in enumerate(postP) if j>=0.99]
+    idx = [i for i, j in enumerate(postP) if j>=0.95]
 
     # Read in called position depth chart
     contdc=pd.read_table('depth_chart/HCC1187BL_S1.dc')
@@ -93,13 +93,13 @@ def main():
             print >> f, i+1,'\t', caseR[0,i,0],'\t',caseR[0,i,1],'\t',caseR[0,i,2]
         f.close()   
     with open('result.txt','w') as f:
-        print >> f, 'loc\tpostP\trefb\tA0\tC0\tG0\tT0\tA1\tC1\tG1\tT1'
-        for f1, f2,f3,f4,f5,f6,f7,f8,f9,f10,f11 in zip(loc[idx], postP[idx],refb[idx],
+        print >> f, 'count\tloc\tpostP\trefb\tA0\tC0\tG0\tT0\tA1\tC1\tG1\tT1'
+        for f0, f1, f2,f3,f4,f5,f6,f7,f8,f9,f10,f11 in zip(idx,loc[idx], postP[idx],refb[idx],
                                                        A0[idx],C0[idx],
                                                        G0[idx],T0[idx],
                                                        A1[idx],C1[idx],
                                                        G1[idx],T1[idx],):
-            print >> f, f1,'\t',f2,'\t',f3,'\t',f4,'\t',f5,'\t',f6,'\t',f7,'\t',f8,'\t',f9,'\t',f10,'\t',f11
+            print >> f, f0,'\t', f1,'\t',f2,'\t',f3,'\t',f4,'\t',f5,'\t',f6,'\t',f7,'\t',f8,'\t',f9,'\t',f10,'\t',f11
         f.close()
         
 if __name__ == "__main__":
