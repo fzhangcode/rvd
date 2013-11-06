@@ -4,46 +4,45 @@ The top-level auxiliary file: RVD2.aux
 The style file: apalike.bst
 Database file #1: bioinfo.bib
 Warning--I didn't find a database entry for ""
-Warning--I didn't find a database entry for "HauserNEJM2007"
-You've used 21 entries,
+You've used 20 entries,
             1935 wiz_defined-function locations,
-            620 strings with 13643 characters,
-and the built_in function-call counts, 15555 in all, are:
-= -- 1311
-> -- 1456
-< -- 4
-+ -- 558
-- -- 558
-* -- 1691
-:= -- 2839
-add.period$ -- 63
-call.type$ -- 21
-change.case$ -- 384
-chr.to.int$ -- 21
-cite$ -- 21
-duplicate$ -- 291
-empty$ -- 613
-format.name$ -- 583
-if$ -- 2769
+            610 strings with 13630 characters,
+and the built_in function-call counts, 15288 in all, are:
+= -- 1277
+> -- 1468
+< -- 3
++ -- 564
+- -- 564
+* -- 1672
+:= -- 2799
+add.period$ -- 60
+call.type$ -- 20
+change.case$ -- 382
+chr.to.int$ -- 20
+cite$ -- 20
+duplicate$ -- 277
+empty$ -- 581
+format.name$ -- 586
+if$ -- 2711
 int.to.chr$ -- 1
 int.to.str$ -- 0
-missing$ -- 21
-newline$ -- 108
-num.names$ -- 63
-pop$ -- 344
+missing$ -- 20
+newline$ -- 103
+num.names$ -- 60
+pop$ -- 345
 preamble$ -- 1
-purify$ -- 384
+purify$ -- 382
 quote$ -- 0
-skip$ -- 215
+skip$ -- 204
 stack$ -- 0
-substring$ -- 738
-swap$ -- 21
+substring$ -- 695
+swap$ -- 20
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 126
+type$ -- 120
 warning$ -- 0
-while$ -- 78
+while$ -- 74
 width$ -- 0
-write$ -- 272
-(There were 2 warnings)
+write$ -- 259
+(There was 1 warning)
