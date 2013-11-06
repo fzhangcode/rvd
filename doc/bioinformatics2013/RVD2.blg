@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2013)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: RVD2.aux
+The style file: apalike.bst
+Database file #1: bioinfo.bib
+Warning--I didn't find a database entry for ""
+You've used 20 entries,
+            1935 wiz_defined-function locations,
+            610 strings with 13630 characters,
+and the built_in function-call counts, 15288 in all, are:
+= -- 1277
+> -- 1468
+< -- 3
++ -- 564
+- -- 564
+* -- 1672
+:= -- 2799
+add.period$ -- 60
+call.type$ -- 20
+change.case$ -- 382
+chr.to.int$ -- 20
+cite$ -- 20
+duplicate$ -- 277
+empty$ -- 581
+format.name$ -- 586
+if$ -- 2711
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 20
+newline$ -- 103
+num.names$ -- 60
+pop$ -- 345
+preamble$ -- 1
+purify$ -- 382
+quote$ -- 0
+skip$ -- 204
+stack$ -- 0
+substring$ -- 695
+swap$ -- 20
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 120
+warning$ -- 0
+while$ -- 74
+width$ -- 0
+write$ -- 259
+(There was 1 warning)

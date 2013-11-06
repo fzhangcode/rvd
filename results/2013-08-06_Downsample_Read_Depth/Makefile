@@ -6,8 +6,8 @@ PILEUP2DC=../../bin/pileup2dc
 BAMDIR := ../../data/Synthetic_BAM_files
 BAMFILE := $(wildcard $(addprefix $(BAMDIR)/, 20100916_c?_p?.*.bam)) # all pair1 & pair2
 
-DRATE = 1
-DFRAC = 1
+DRATE = 0.0001
+DFRAC = 10000
 DOWNSAMPLEDIR = ./bam/$(DFRAC)
 DOWNSAMPLEBAM := $(addprefix $(DOWNSAMPLEDIR)/, $(notdir $(BAMFILE) ) )
 # := enforces wildcard expansion
@@ -48,6 +48,7 @@ $(DOWNSAMPLESORTEDBAM): $(DOWNSAMPLEBAM)
 $(PILEUPFILE): $(DOWNSAMPLESORTEDBAM)
 	mkdir -p $(PILEUPDIR)
 	samtools mpileup \
+                -C 50 \
 		-d 1000000 \
 		-f $(FASTAFILE) \
 		$(addprefix $(DOWNSAMPLEDIR)/, $(patsubst %.pileup, %.sorted.bam, $(@F)) ) \
