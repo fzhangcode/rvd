@@ -163,11 +163,14 @@ def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
         # Make a list of the alternate bases for each replicate
         acgt_r = ['A','C','G','T']
         del acgt_r[ acgt[refb[i]] ]
+
+        if not np.iterable(np.argmax(r, axis=-1)):
+            altb_r = acgt_r[np.argmax(r, axis=-1)]
+        else:
+            altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
         
-        altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
-        
-        #if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
-        if postP[i] >0.95: 
+        if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
+##        if postP[i] >0.95: 
             altb.append(altb_r[0]) # TODO: find a better way to report all alternate bases
             call.append(True)
         else:
@@ -360,15 +363,16 @@ def estimate_mom(r, n):
     theta = r/(n + np.finfo(np.float).eps) # make sure this is non-truncating division
     if np.ndim(r) == 1: mu = theta
     elif np.ndim(r) > 1: mu = np.mean(theta, 0)
-
-    if np.shape(theta)[0] is 1:
-        M=np.ones_like(mu)
-    else:
-        M = (mu*(1-mu))/(np.var(theta, 0) + np.finfo(np.float).eps )    
     
     mu0 = np.mean(mu)
     M0 = (mu0*(1-mu0))/(np.var(mu) + np.finfo(np.float).eps)
-    
+
+    # estimate M. If there is only one replicate, set M as 10 times of M0.
+    # If there is multiple replicates, set M according to the moments of beta distribution
+    if np.shape(theta)[0] is 1:
+        M = 10*M0*np.ones_like(mu)
+    else:
+        M = (mu*(1-mu))/(np.var(theta, 0) + np.finfo(np.float).eps )    
 
     phi = {'mu0':mu0, 'M0':M0, 'M':M}
     return phi, mu, theta
@@ -408,8 +412,11 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, 
         
     alpha0 = mu0*M0 + np.finfo(np.float).eps
     beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
-    
-    Qsd = mu/10
+
+    # set Qsd as the higher value between mu[j]/10 and 1.0E-4 for each position
+    bound = 1.0E-4*np.ones_like(mu)
+    Qsd = [max(bound[i],0.1*mu[i]) for i in range(np.shape(mu)[0])]
+
     mu_s = np.zeros( (mh_nsample, J) ) 
     for ns in xrange(0, mh_nsample):
         if pool is not None:
@@ -490,7 +497,6 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
         h5file['theta_s'][:,:,i] = theta
         h5file['mu_s'][:,i] = mu
         h5file.flush()
-    
     # Apply the burn-in and thinning
     if burnin > 0.0:
         mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*gibbs_nsample):], 1)
