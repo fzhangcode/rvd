@@ -89,11 +89,6 @@ Fan, H.~C., Blumenfeld, Y.~J., Chitkara, U., Hudgins, L., and Quake, S.~R.
   from maternal blood.}
 \newblock {\em PNAS}, 105(42):16266--16271.
 
-\bibitem[Ferretti and Onsins, 2013]{Ferretti:2013hp}
-Ferretti, L. and Onsins, S.~R. (2013).
-\newblock {Population genomics from pool sequencing}.
-\newblock {\em Molecular {\ldots}}.
-
 \bibitem[Flaherty et~al., 2011]{Flaherty:2011ja}
 Flaherty, P., Natsoulis, G., Muralidharan, O., Winters, M., Buenrostro, J.,
   Bell, J., Brown, S., Holodniy, M., Zhang, N., and Ji, H.~P. (2011).
@@ -109,12 +104,6 @@ Ghedin, E., Laplante, J., DePasse, J., Wentworth, D.~E., Santos, R.~P., Lepow,
 \newblock {Deep Sequencing Reveals Mixed Infection with 2009 Pandemic Influenza
   A (H1N1) Virus Strains and the Emergence of Oseltamivir Resistance}.
 \newblock {\em Journal of Infectious Diseases}, 203(2):168--174.
-
-\bibitem[Hahn et~al., 2009]{Hahn:2009bi}
-Hahn, W.~H., Cho, B.~S., Do~Kim, S., Kim, S.~K., and Kang, S. (2009).
-\newblock {Interleukin-1 cluster gene polymorphisms in childhood IgA
-  nephropathy}.
-\newblock {\em Pediatric Nephrology}, 24(7):1329--1336.
 
 \bibitem[Kitzman et~al., 2012]{Kitzman:2012hea}
 Kitzman, J.~O., Snyder, M.~W., Ventura, M., Lewis, A.~P., Qiu, R., Simmons,
@@ -162,6 +151,13 @@ Ouyang, Z., Zhou, Q., and Wong, W.~H. (2009).
 \newblock {ChIP-Seq of transcription factors predicts absolute and differential
   gene expression in embryonic stem cells.}
 \newblock {\em PNAS}, 106(51):21521--21526.
+
+\bibitem[Pabinger et~al., 2013]{Pabinger:2013dl}
+Pabinger, S., Dander, A., Fischer, M., Snajder, R., Sperk, M., Efremova, M.,
+  Krabichler, B., Speicher, M.~R., Zschocke, J., and Trajanoski, Z. (2013).
+\newblock {A survey of tools for variant analysis of next-generation genome
+  sequencing data.}
+\newblock {\em Briefings in bioinformatics}.
 
 \bibitem[Quail et~al., 2012]{Quail:2012hf}
 Quail, M.~A., Smith, M., Coupland, P., Otto, T.~D., Harris, S.~R., Connor,

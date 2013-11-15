@@ -42,7 +42,8 @@
 \begin{document}
 
 \begin{abstract}
-Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Unlike most research samples, these clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples. We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and a Bayesian posterior hypothesis test to call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over a wide range of median read depths and a minor allele frequencies. We use our algorithm to call variants in a pooled sample of 100 patients with multiple sclerosis and identify novel variants in IL7RA and IL2R.
+Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Unlike most research samples, these clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples. We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and a Bayesian posterior hypothesis test to call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over a wide range of median read depths and a minor allele frequencies. 
+%We use our algorithm to call variants in a pooled sample of 100 patients with multiple sclerosis and identify novel variants in IL7RA and IL2R.
 \end{abstract}
 
 \maketitle
@@ -57,7 +58,10 @@ However, the primary statistical tools for calling variants from NGS data are op
 
 Recently, researchers have developed algorithms to call low-frequency or rare variants in heterogeneous samples.  VarScan2 combines algorithmic heuristics to call genotypes in the tumor and normal sample pileup data and then applies a Fisher's exact test on the read count data to detect a significant difference in the genotype calls~\citep{Koboldt:2012cg}. Strelka uses a hierarchical Bayesian approach to model the joint distribution of the allele frequency in the tumor and normal samples at each locus~\citep{Saunders:2012fh}. With the joint distribution available, one is able to identify locations with dissimilar allele frequencies. muTect uses a Bayesian posterior probability in its decision rule to evaluate the likelihood of a mutation~\citep{Cibulskis:2013ta}.
 
-The remainder of this paper presents a novel algorithm for calling rare variants in heterogeneous samples using NGS data that is an improvement upon currently available technology. We present the hierarchical Bayesian model in Section~\ref{sec:model_structure} and a Bayesian hypothesis test to detect mutations in Section~\ref{sec:hypothesis_test}. In Section~\ref{sec:read_depth} we present sensitivity and specificity results of our method on known, pure DNA samples mixed at defined fractions. We compare our algorithm to the most accurate methods available to date in Section~\ref{sec:comparison}. Finally, in Section~\ref{sec:ms} we present results on detecting mutations associated with multiple sclerosis from data obtained from pooling 100 affected patients~\citep{Ferretti:2013hp}.
+The remainder of this paper presents a novel algorithm for calling rare variants in heterogeneous samples using NGS data that is an improvement upon currently available technology. Typically such a variant calling algorithms are comprised of multiple pre- and post filtration steps around model estimation and hypothesis testing steps~\citep{Pabinger:2013dl}. These steps may improve algorithm performance, but it is difficult to isolate what step is most responsible for the good performance. Instead, we focus exclusively on the model structure and statistical inference. Additional filtration steps may improve performance considerably, but those aspects are subjects of intense research and separate study. We have isolated the statistical inference and hypothesis testing steps so that they may be used independently or as part of a larger variant calling pipeline.
+
+We present the hierarchical Bayesian model in Section~\ref{sec:model_structure} and a Bayesian hypothesis test to detect mutations in Section~\ref{sec:hypothesis_test}. In Section~\ref{sec:read_depth} we present sensitivity and specificity results of our method on known, pure DNA samples mixed at defined fractions. We compare our algorithm to the most accurate methods available to date in Section~\ref{sec:comparison}. 
+%Finally, in Section~\ref{sec:ms} we present results on detecting mutations associated with multiple sclerosis from data obtained from pooling 100 affected patients~\citep{Ferretti:2013hp}.
 
 \section{Materials and Methods}
 
@@ -81,7 +85,7 @@ For a given sample, the observed data consists of two matrices $r \in \RR^{J \ti
 
 This process involves several hyperparameters: $\mu_0$, a global error rate; $M_0$, a global precision; $M_j$, a local precision. The global error rate, $\mu_0$, estimates the expected error rate across all locations. The global precision, $M_0$, estimates the variation in the error rate  across locations. The local precision, $M_j$, estimates the variation in the error rate across replicates at location $j$.
 
-RVD2 has three levels of sampling. First, a global error rate and global precision are chosen once for the entire data set. Then, at each location, a local precision is chosen and a local error rate is sampled from a beta distribution. Finally, the error rate for replicate $i$ at location $j$ is drawn from a beta distribution and the number of non-reference reads is drawn from a binomial.
+RVD2 has three levels of sampling. First, a global error rate and global precision are chosen once for the entire data set. Then, at each location, a local precision is chosen and a local error rate is sampled from a Beta distribution. Finally, the error rate for replicate $i$ at location $j$ is drawn from a Beta distribution and the number of non-reference reads is drawn from a binomial.
 
 RVD2 hierarchically partitions sources of variation in the data. $r_{ji} | n_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$ models the variation due to sampling the pool of DNA molecules on the sequencer. $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$ models the variation due to experimental reproducibility. The variation in error rate due to sequence context is modeled by $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$. Importantly, increasing the read depth $n_{ji}$ only reduces the sampling error, but does nothing to reduce experimental variation or variation due to sequence context.
 
@@ -101,21 +105,22 @@ The joint distribution over the latent and observed variables for data at locati
 p \left( r_{ji}, \theta_{ji}, \mu_j | n_{ji}; \mu_0, M_0, M_j \right) = p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right)
 \end{equation}
 
-\begin{gather}
-= \frac{ \Gamma(M_0) } { \Gamma(\mu_0 M_0) \Gamma(M_0 (1-\mu_0)) } \mu_j^{M_0\mu_0 -1} (1 - \mu_j)^{M_0 ( 1 - \mu_0) - 1} \\
-\cdot \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) } \theta_{ji}^{M_j\mu_j -1} (1 - \theta_{ji})^{M_j ( 1 - \mu_j) - 1} \\
-\cdot \frac{ \Gamma(n_{ji}+1) } { \Gamma(r_{ji}+1) \Gamma( n_{ji} - r_{ji} + 1 ) } \theta_{ji}^{r_{ji}} (1 - \theta_{ji})^{n_{ji} - r_{ji}}
-\end{gather}
+The individual conditional distributions are:
+\begin{align}
+p\left( \mu_j; \mu_0, M_0 \right)  &= \frac{ \Gamma(M_0) } { \Gamma(\mu_0 M_0) \Gamma(M_0 (1-\mu_0)) } \mu_j^{M_0\mu_0 -1} (1 - \mu_j)^{M_0 ( 1 - \mu_0) - 1}, \nonumber \\
+p\left( \theta_{ji} | \mu_j; M_j \right) &= \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) } \theta_{ji}^{M_j\mu_j -1} (1 - \theta_{ji})^{M_j ( 1 - \mu_j) - 1}, \nonumber \\
+p \left( r_{ji} | \theta_{ji}, n_{ji} \right) &= \frac{ \Gamma(n_{ji}+1) } { \Gamma(r_{ji}+1) \Gamma( n_{ji} - r_{ji} + 1 ) } \theta_{ji}^{r_{ji}} (1 - \theta_{ji})^{n_{ji} - r_{ji}}. \nonumber
+\end{align}
 
 Integrating over the latent variables $\theta_{ji}$ and $\mu_j$ yields the marginal distribution of the data at location $j$ in replicate $i$, 
 \begin{equation}
-p \left( r_{ji} | n_{ji} ; \mu_0, M_0, M_j \right) = \int_{\mu_j} \int_{\theta_{ji}}  p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right) d\theta_{ji} d\mu_j
+p \left( r_{ji} | n_{ji} ; \mu_0, M_0, M_j \right) = \int_{\mu_j} \int_{\theta_{ji}}  p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right) d\theta_{ji} d\mu_j.
 \end{equation}
 
-Finally, the complete likelihood is
+Finally, the complete log-likelihood for the data set is
 
 \begin{equation}
-p \left( r ; \mu_0, M_0, M \right) = \prod_{j=1}^J p\left( \mu_j; \mu_0, M_0 \right) \prod_{i=1}^N p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) 
+\log p \left( r | n ; \mu_0, M_0, M \right) = \sum_{j=1}^J \sum_{i=1}^N \log \int_{\mu_j} \int_{\theta_{ji}}  p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right) d\theta_{ji} d\mu_j.
 \end{equation}
 
 \section{Inference and Hypothesis Testing}
@@ -126,9 +131,9 @@ The primary object of inference in this model is the joint posterior distributio
 \end{equation}
 where the parameters are $\phi \triangleq \{\mu_0, M_0, M\}$.
 
-Exact inference in this model is intractable due to the coupling between the local and global beta distributions. [XXX complete this proof] 
+The Beta distribution over $\mu_j$ is conjugate to the Binomial distribution over $\theta_{ji}$, so we can write the posterior distribution as a Beta distribution. However, there is not a closed form for the product of a Beta distribution with another Beta distribution and exact inference is intractable.  exact inference is intractable.
 
-Instead, we have developed a Metropolis-within-Gibbs  approximate inference algorithm shown in Algorithm~\ref{alg:metro_gibbs}. First, the hyperparameters are initialized using method-of-moments. Given those hyperparameter estimates, we sample from the marginal posterior distribution for $\mu_j$ given its Markov blanket using a Metropolis-Hasting rejection sampling rule. Finally, we sample from the marginal posterior distribution for $\theta_{ji}$ given its Markov blanket. Samples from $\theta_{ji}$ can be drawn from the posterior distribution directly  because the prior and likelihood form a conjugate pair. This sampling procedure is repeated until the chain converges to a stationary distribution then we draw samples from the posterior distribution over latent variables.
+Instead, we have developed a Metropolis-within-Gibbs  approximate inference algorithm shown in Algorithm~\ref{alg:metro_gibbs}. First, the hyperparameters are initialized using method-of-moments (MoM). Given those hyperparameter estimates, we sample from the marginal posterior distribution for $\mu_j$ given its Markov blanket using a Metropolis-Hasting rejection sampling rule. Finally, we sample from the marginal posterior distribution for $\theta_{ji}$ given its Markov blanket. Samples from $\theta_{ji}$ can be drawn from the posterior distribution directly  because the prior and likelihood form a conjugate pair. This sampling procedure is repeated until the chain converges to a stationary distribution then we draw samples from the posterior distribution over latent variables.
 
 \begin{algorithm}[ht]
 \caption{Metropolis-within-Gibbs Algorithm}
@@ -181,7 +186,7 @@ The posterior distribution over $\mu_j$ given its Markov blanket is
 
 Since the prior, $p(\mu_j | \mu_0, M_0)$, is not conjugate to the likelihood, $p(\theta_{ji} | \mu_j, M_j)$, we cannot write an analytical form for the posterior distribution. Instead, we sample from the posterior distribution using the Metropolis-Hastings algorithm.
 
-A candidate sample is generated from the symmetric proposal distribution $Q(\mu_j^* | \mu_j^{(p)}) \thicksim $. The acceptance probability is then
+A candidate sample is generated from the symmetric proposal distribution $Q(\mu_j^* | \mu_j^{(p)}) \thicksim \mathcal{N}(\mu_j^{(p)}, 0.1 \cdot \mu_j^{(p)})$. The acceptance probability is then
 \begin{equation}
 	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
 \end{equation}
@@ -200,10 +205,12 @@ A variant is called if $\tilde{\mu}_j^{\text{case}} > \tilde{\mu}_j^{\text{contr
 \end{equation}
 where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. We draw a sample from the posterior distribution $\tilde{\mu}_j^{\Delta} \triangleq \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}}$ by randomly sampling with replacement from the samples of $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$.
 
-The threshold, $\tau$, may be set to zero or optimized for a given median depth and desired MAF detection limit. The optimal $\tau$ maximizes the Matthews correlation coefficient.
+The threshold, $\tau$, may be set to zero or optimized for a given median depth and desired MAF detection limit. The optimal $\tau$ maximizes the sum of the false negative rate and false positive rate or, equivalently,  the $L_1$ distance to perfect classification in the ROC curve plot.
 \begin{equation}
-	\tau^* = \arg\max_\tau \text{MCC}(\tilde{n}, \text{MAF})
+	\tau^* = \arg\max_\tau \left\{ (1-\text{TPR}(\tau)) + \text{FPR}(\tau) \right\}
 \end{equation}
+
+While we are able to compute the optimal $\tau$ threshold for this test data set, in general we would not have access to $\tau^*$. With sufficient training data, one would be able to develop a lookup table or calibration curve to set $\tau$ based on read depth and MAF level of interest.
 
 
 %%%%%%%%%%%%%%%%%%
@@ -266,53 +273,70 @@ Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\
 
 \subsection{Empirical performance compared with other algorithms}\label{sec:comparison}
 
-We compare the empirical performance of RVD2 to other variant calling algorithms. We use the synthetic DNA data sets described in the previous section to explore performance across a dynamic range of read depths as well as minor-allele frequencies. We report the sensitivity and specificity of each algorithm to detect the 14 true positive variant positions out of 400 tested positions.
+We compare the empirical performance of RVD2 to other variant calling algorithms. We use the synthetic DNA data sets described in the previous section to explore performance across a dynamic range of read depths as well as minor-allele frequencies. We report false discovery rate, sensitivity and specificity for each algorithm to detect the 14 true positive variant positions out of 400 tested positions. In a research application, the false discovery rate is more relevant because the aim is generally to identify interesting variants and not spend resources following up false positives. The sensitivity/specificity metric is more relevant in clinical applications where one is more interested in calling all of the true variants and none of the true negatives.
 
 GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths. Varscan2-somatic, streak and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the median overall median depth of the replicates.
 
-Table~\ref{t/l:comparison} shows the sensitivity and specificity for other variant calling algorithms. We computed the Matthews Correlation Coefficient (MCC) as a combined performance measure and present those results in Appendix B~\cite{}. Each cell contains the sensitivity and specificity of the method separated by a slash. The standard genotype variant calling algorithms: samtools, GATK, and VarScan2-mpileup are shown in the first columns. Samtools performs very well on 100\% MAF sample and has nearly perfect sensitivity and specificity for median coverage depths of 27 and 298. 
+\subsubsection*{False Discovery Rate Comparison}
+Figure~\ref{tbl:comparison_fdr} shows the false discovery rate for RVD2 and other variant calling algorithms. We computed the Matthews Correlation Coefficient (MCC) and sensitivity and specificity as a combined performance measure and present those results in Appendix B~\cite{}. Blank cells indicate no positive calls were made. The standard genotype variant calling algorithms: samtools, GATK, and VarScan2-mpileup are shown in the first columns. Samtools performs very well on 100\% MAF sample and performance improves for read depths 3089 and 30590. GATK performs well to detect both 10\% and 100\% variants, but makes a false positive call at the 100\% MAF level for all read depth levels. VarScan2-pileup performs perfectly for all but the lowest depth for the 100\% MAF.
 
 \begin{figure}[h]
 \begin{center}
-%\includegraphics[width=140mm]{pdf_figs/comparison_table.pdf}
-\caption{Comparison of RVD2 with other variant calling algorithms (sensitivity / specificity).}
-\label{fig:comparison}
+\includegraphics[width=140mm]{pdf_figs/comparison_table_fdr.pdf}
+\caption{False discovery rate comparison of RVD2 with other variant calling algorithms. Blank cells indicate no locations were called variant.}
+\label{tbl:comparison_fdr}
 \end{center}
 \end{figure}
 
-VarScan2-somatic has perfect performance on a 100\% MAF samples at a low depth. As the depth increases, it calls more false positives and the specificity decreases monotonically from 1.0 to 0.31. For MAFs between 0.1\% and 10\% specificity generally decreases with read depth similarly. There appears to be an optimal read depth for sensitivity. The 100\% MAF sample shows optimal sensitivity at a depth of 27, the 10\% optimal depth is 260 and the 1\% optimal depth is 5584. One would expect that increasing the read depth would lead to better sensitivity, but contrary to expectation further increasing the depth decreases performance. This effect is not exclusive to VarScan2-somatic and is also observed in samtools and GATK. 
+VarScan2-somatic generally has a poor performance across all MAF and read depths.  The FDR is close to 1 for the lower MAF experiments. The FDR drastically increases with read depth due many more false positive calls. This effect is not exclusive to VarScan2-somatic and is also observed in samtools and GATK.  Strelka has a better FDR than the samtools, GATK or Varscan2-somatic algorithms for almost all read depths and the 100\% and 10\% MAF. However, it does not call any variants at or below 1\% MAF.  MuTect has the best FDR performance of the other algorithms we tested over a wide range of MAF and depths. The FDR is stable across a wide range of read depths. But the stable FDR level is relatively high at around 0.7 for 0.1\% -- 1\% MAF and 0.3 for 10\%-100\% MAF. Indeed, muTect performs worse than samtools, GATK and varScan2 for high MAF experiments.
 
-Strelka has better sensitivity and specificity than the samtools, GATK or Varscan2-somatic algorithms for almost all read depths and the 100\% and 10\% MAF. However, it has zero sensitivity to detect variants at or below 1\% MAF. 
+We tested our model RVD2 using two variations of the hypothesis test. We set $\tau$, the hypothesis test threshold to the naive value of zero and we optimized $\tau$ for the read depth and MAF ($\tau^*$). These optimal values were computed from this data set, but in general may be computed once and used as a lookup table for future experiments. With $\tau=0$, RVD2 is not able to call variants with a MAF of 0.1\% if the read depth is less than 4,129. This generally agrees with previous observations and intuition that more than 1,000 reads are required to call a 1:1000 MAF. The FDR degrades at higher read depths with this fixed $\tau$ as more false positives are called. At high read depths and MAFs FDR is perfect. With $\tau$ set to the optimal value $\tau^*$, we find a significant improvement at all read depths and the FDR decreases with read depth. Comparing $\tau=0$ with $\tau^*$, we see that the $\tau=0$ parameter setting is more conservative and negatively affected by higher read depths.
 
-MuTect has the best overall performance of the other algorithms we tested over a wide range of MAF and depths. Unlike several of the other algorithms muTect generally improves with a higher read depth or the specificity degradation due to false positives is modest. Specifically, muTect calls some of the true variant positions with a 0.3\% MAF and a median read depth of only 53 and 410.
+\subsubsection*{Sensitivity/Specificity Comparison}
 
-We tested our model RVD2 using two variations of the hypothesis test. We set $\tau$, the hypothesis test threshold to the naive value of zero and we optimized $\tau$ for the read depth and MAF ($\tau^*$). These optimal values were computed from this data set, but in general may be computed once and used as a lookup table for future experiments. With $\tau=0$, RVD2 is not able to call variants with a MAF of 0.1\% if the read depth is less than 4,129. This generally agrees with previous observations and intuition that more than 1,000 reads are required to call a 1:1000 MAF. The specificity degrades slightly at higher read depths with this fixed $\tau$ in line with muTect. At high read depths and MAFs classification is perfect. With $\tau$ set to the optimal value $\tau^*$, we find a significant improvement in both sensitivity and specificity. The algorithm is able to call a 0.1\% MAF with a median read depth of only 39. This performance is due to two properties: (1) the empirical Bayes structure of the model allows parameters $\mu_j$ to borrow strength from one another through $\mu_0$ and (2) the actual coverage at a particular location may be higher than the median coverage across all locations.
-
-\subsection{Pooled Multiple-Sclerosis Samples}\label{sec:ms}
-
-We tested our algorithm on data from pooled samples from patients with multiple-sclerosis (MS). The MS patients are ``high-burden"; meaning that they are known to carry one or more of several genetic risk alleles. Our aim in studying this  patient population is to identify rare risk alleles that may not yet be known to be associated with MS. 
-
-DNA was extracted from whole blood samples from 100 patients with multiple sclerosis and 100 unaffected, unrelated individuals. Each sample was subjected to targeted PCR amplification of IL2RA and interleukin 7 receptor (IL7R); genes with known risk alleles~\cite{HauserNEJM2007}. We targeted X exons covering XXbp in IL2RA and X exon covering XXbp in IL7R. The experiment was repeated on two independent cohorts to filter for spurious associations due to population sampling.
-
-We took 4000 samples from the Markov chain, removed the first 10\% for burn-in and thinned the chain by a factor of 2. We used 10 Metropolis samples for each Gibbs step. We called variants with $\tau = 0.005$ and $\alpha = 0.05$ because we expect that the minimum detectable genotype is a heterozygous mutation in 1 out of 100 samples. 
-
-We identified by consensus of the two independent cohorts two variants in IL7R and one variant in IL2RA. All position information is referenced to human genome reference hg19. One variant in IL7R is rs1494558 at chr5:35861068 T$>$C and has a MAF of 76\% and 71\% in the two cohorts. This mutation causes a missense variant Ile66Thr and has been shown to be associated with abnormal T-cell response and IgA neuropathy~\citep{Hahn:2009bi}. The second IL7R variant is at chr5:35875593 A$>$T and has a MAF of 60\% and 55\% in the two cohorts. This variant has not yet been shown to be associated with any known disease. The IL2RA variant is at chr10:6061965 A$>$T and has a MAF  of 3\% and 5\% in the two cohorts. This variant has not yet been shown to be associated with any known disease.
+Figure~\ref{tbl:comparison_ss} shows the sensitivity and specificity for other variant calling algorithms. Each cell contains the sensitivity and specificity of the method separated by a slash.
 
 \begin{figure}[h]
 \begin{center}
-%\includegraphics[width=80mm]{pdf_figs/MuBarPlot.pdf}
-\caption{Estimated minor allele fractions for consensus variants in MS patient pools.}
-\label{fig:MS_MAF}
+\includegraphics[width=140mm]{pdf_figs/comparison_table_ss.pdf}
+\caption{Sensitivity/Specificity comparison of RVD2 with other variant calling algorithms.}
+\label{tbl:comparison_ss}
 \end{center}
 \end{figure}
 
-The validity of these loci are subject to confirmation on a larger independent sample. However, we note that most GWAS studies focus on common SNPs due to the cost-effective microarray technology used for those studies. We have instead used sequencing technology which yields and unbiased coverage of the targeted regions and has the potential to uncover rare variants that are not targeted by microarray technology. Indeed, the common SNP that was found is associated with an autoimmune disorder and the other two variants are not at dbSNP loci.
+
+Samtools, GATK and VarScan2-pileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call mixed samples as expected. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
+
+The sensitivity for RVD2 with $\tau=0$ is low for low read depths and MAF levels. The sensitivity increases considerably with read depth at a slight expense to specificity. With $\tau^*$ the performance is much better with high sensitivity and specificity across a wide range of read depths and MAF levels. However, the algorithm performance is still limited at low MAF levels and low read depth.
 \subsection{HCC1187 primary ductual carcinoma sample}
 We test our algorithm on normal-tumor paired data from sample HCC1187, a 41 years old white female with primary ductal carcinoma in TNM stage IIA, grade 3. The tumor DNA was extracted from HCC1187 breast ductal carcinoma cell line while the normal DNA from a matching lymphoblastoid cell line. 
 
+%\subsection{Pooled Multiple-Sclerosis Samples}\label{sec:ms}
+%
+%We tested our algorithm on data from pooled samples from patients with multiple-sclerosis (MS). The MS patients are ``high-burden"; meaning that they are known to carry one or more of several genetic risk alleles. Our aim in studying this  patient population is to identify rare risk alleles that may not yet be known to be associated with MS. 
+%
+%DNA was extracted from whole blood samples from 100 patients with multiple sclerosis and 100 unaffected, unrelated individuals. Each sample was subjected to targeted PCR amplification of IL2RA and interleukin 7 receptor (IL7R); genes with known risk alleles~\cite{HauserNEJM2007}. We targeted X exons covering XXbp in IL2RA and X exon covering XXbp in IL7R. The experiment was repeated on two independent cohorts to filter for spurious associations due to population sampling.
+%
+%We took 4000 samples from the Markov chain, removed the first 10\% for burn-in and thinned the chain by a factor of 2. We used 10 Metropolis samples for each Gibbs step. We called variants with $\tau = 0.005$ and $\alpha = 0.05$ because we expect that the minimum detectable genotype is a heterozygous mutation in 1 out of 100 samples. 
+%
+%We identified by consensus of the two independent cohorts two variants in IL7R and one variant in IL2RA. All position information is referenced to human genome reference hg19. One variant in IL7R is rs1494558 at chr5:35861068 T$>$C and has a MAF of 76\% and 71\% in the two cohorts. This mutation causes a missense variant Ile66Thr and has been shown to be associated with abnormal T-cell response and IgA neuropathy~\citep{Hahn:2009bi}. The second IL7R variant is at chr5:35875593 A$>$T and has a MAF of 60\% and 55\% in the two cohorts. This variant has not yet been shown to be associated with any known disease. The IL2RA variant is at chr10:6061965 A$>$T and has a MAF  of 3\% and 5\% in the two cohorts. This variant has not yet been shown to be associated with any known disease.
+%
+%\begin{figure}[h]
+%\begin{center}
+%%\includegraphics[width=80mm]{pdf_figs/MuBarPlot.pdf}
+%\caption{Estimated minor allele fractions for consensus variants in MS patient pools.}
+%\label{fig:MS_MAF}
+%\end{center}
+%\end{figure}
+%
+%The validity of these loci are subject to confirmation on a larger independent sample. However, we note that most GWAS studies focus on common SNPs due to the cost-effective microarray technology used for those studies. We have instead used sequencing technology which yields and unbiased coverage of the targeted regions and has the potential to uncover rare variants that are not targeted by microarray technology. Indeed, the common SNP that was found is associated with an autoimmune disorder and the other two variants are not at dbSNP loci.
 
 500 ng of DNA were prepped using an early access version of Illumina’s TruSeq DNA PCR-Free kit. The libraries were sequenced on four and eight lanes of a HiSeq 2000 flow cell for the normal and tumor, respectively, using 100 bp paired-end reads. Data, analyzed using the pre-release version of the Illumina Cancer Sequencing Workflow showed an average coverage of 40x for the normal and 90x for the tumor DNA with about 96\% of loci covered with 10 or more reads.
 \appendix
+
+%%%%%%%%%%%%%%%%%%%
+% Appendix A: Parameter Initialization
+%%%%%%%%%%%%%%%%%%%
 \section{Parameter Initialization}\label{sec:appendix_mom}
 Since $r_{ji} \thicksim \text{Binomial}(n_{ji}, \theta_{ji})$, the first population moment is  $E[r_{ji}] = \theta_{ji} n_{ji}$ and the first sample moment is simply $m_1 = r_{ji}$. Therefore the MoM estimator is 
 \begin{equation}
@@ -336,7 +360,14 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 	\tilde{M}_0 =& \frac{ \tilde{\mu}_0 (1 - \tilde{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \mu_j^2 } -1.
 \end{eqnarray}
 
+%%%%%%%%%%%%%%%%%%%
+% Appendix B: Comparison Statistics
+%%%%%%%%%%%%%%%%%%%
 \section{Comparison to other algorithms}\label{sec:app_comparison}
+
+
+
+
 \begin{figure}[h]
 \begin{center}
 %\includegraphics[width=140mm]{pdf_figs/comparison_table_mcc.pdf}
@@ -344,6 +375,30 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 \label{fig:comparison_mcc}
 \end{center}
 \end{figure}
+
+
+
+
+%%%%%%%%%%%%%%%%%
+% Appendix C: Data Set Statistics
+%%%%%%%%%%%%%%%%%
+\section{Estimated Parameters for Synthetic DNA Data}\label{sec:synthetic_estimate}
+The RVD2 algorithm provides estimates of the model parameters given the data. We show several of these key parameters in Figure~\ref{fig:depthM}. 
+
+The left column of Figure~\ref{fig:depthM} shows the read depth for each of the six bam files (three replicates each with two read pairs) for each data set. Because the DNA was not sheared and ligated prior to sequencing, the read depth drops to zero at the boundaries. For the 100\% mutant data set, the read depth drops at the mutant locations. This is due to the parameters imposed at the alignment stage. The reads are 36bp long and we required no more than 2 mismatches. Therefore, reads that overlapped two mutations (spaced 20bp apart by design) and included one additional mutation would not align.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=120mm]{pdf_figs/depthM.pdf}
+\caption{Key parameters for RVD2 model for synthetic DNA data sets.}
+\label{fig:depthM}
+\end{center}
+\end{figure}
+
+The right column of Figure~\ref{fig:depthM} shows the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, we see that $M_j$ does not change with read depth (except where the depth goes to zero) indicating that $M_j$ because $M_j$ is capturing a different process than the read depth. 
+
+The error rate across positions is captured by the $M_0$ parameter shown as a horizontal dotted line in the plots in the right column. We see that the variation between replicates is smaller than the variation between location. $M_j$ and $M_0$ are precision parameters, they are inversely proportional to the variance. Where $M_j$ is greater than $M_0$ the precision between replicates is higher than the precision across positions.
+
 
 
 \bibliographystyle{apalike}
