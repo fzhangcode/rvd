@@ -1,0 +1,138 @@
+\documentclass[11pt,reqno]{amsart}
+\usepackage[top=1in, left=1in, right=1in, bottom=1in]{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ...
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+%\usepackage{algorithm, algorithmic}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage{graphicx}
+
+\usepackage{verbatim}
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+\usepackage{enumitem}
+
+\usepackage{setspace}
+\doublespacing
+
+\usepackage{natbib}
+
+%\usepackage{epstopdf}
+%\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\newcommand{\RR}{I\!\!R} %real numbers
+\DeclareMathOperator{\diag}{diag}
+
+\algnewcommand{\Inputs}[1]{%
+  \State \textbf{Inputs:}
+  \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
+}
+\algnewcommand{\Initialize}[1]{%
+  \State \textbf{Initialize:}
+  \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
+}
+
+\title[Priors]{Priors for $M_{j}$}
+\author{}
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+
+\maketitle
+
+\section{Parametric Gamma Prior}
+\subsection{Initialization}
+The initial values for the model parameters and latent variables is obtained by a method-of-moments (MoM) procedure. MoM works by setting the population moment equal to the sample moment. We present the initial parameter estimates and provide the derivations here.
+
+Since the distribution is $ M_{j} \thicksim \text{Gamma}(a, b)$. The first and second population moments are
+
+\begin{eqnarray}
+	E[M_{j}] =& a b,\\
+	E[{M_{j}}^2] =& b^2 a (a+1).
+\end{eqnarray}
+
+The first and second sample moments are $m_1 = \frac{1}{J}\sum_{j=1}^J M_{j}$ and $m_2 = \frac{1}{J}\sum_{j=1}^J M_{j}^2$. Setting the population moments equal to the sample moments and we get
+
+\begin{equation}
+    a = \frac {{m_1}^2}{{m_2}-{m_1}^2}
+\end{equation}
+
+\begin{equation}
+    b = \frac {{m_2}-{m_1}^2}{m_1}
+\end{equation}
+
+\subsection{Sampling from $p \left( M_{j} |a, b, \theta_{ji},\mu_j\right)$}
+The posterior distribution over $M_{j}$ given its Markov blanket is
+
+\begin{equation}
+	p( M_{j} |a, b, \theta_{ji},\mu_j) \propto p(\theta_{ji} | \mu_j, M_j) p(M_{j} | a, b)
+\end{equation}
+
+We have $ \theta_{ji}\thicksim\text{Beta}(\mu_{j},M_{j})$, and $ M_{j} \thicksim \text{Gamma}(a, b)$. Assuming there is only one replicate,
+
+\begin{equation}
+	p( M_{j} |a, b, \theta_{ji},\mu_j) \propto \frac{\Gamma \left({\mu}_{j} {M}_{j} \right)}{\Gamma \left({\mu }_{j}\right)\Gamma \left({M}_{j}\right)} {{\theta}_{j}}^{{\mu}_{j}{M}_{j}-1}{\left(1-\theta\right)_{j}}^{\left(1-{\mu}_{j}\right){M}_{j}-1}\frac{{b}^{a}}{\Gamma \left({a}\right)}M_{j}^{a-1}{e}^{-bM_{j}}
+\end{equation}
+
+Since we cannot give an analytical form for this, so we sample from the posterior distribution using the Metropolis-Hastings algorithm.
+
+\section{Jefferys Priors}\label{sec:model_structure}
+Jeffreys prior is proposed for invariance by Harold Jeffreys (1946), and defined in terms of the Fisher information. For our ploblem,
+\begin{equation}\label{eqn:JefferyPrior}
+\pi\left({M}_{j}\right)= I\left({M}_{j}\right)^{\frac{1}{2}}
+\end{equation}
+
+Since ${\theta }_{ji}\sim Beta\left( {\mu }_{j},{M}_{j}\right)$, the Fisher information is given by
+
+\begin{equation}\label{equ:JefferyInference}
+I\left({M}_{j}\right)={E}_{{M}_{j}}\left[ -\frac{\delta ^{2}\log p\left(\theta _{j}|\mu_{j},M_{j}\right)}{\delta M^{2}_{j}}\right]
+\end{equation}
+
+Now to calculate the equations to acquire the Fisher information, we assume there is only one replicate,
+
+\begin{equation}\label{eqn:Betapdf}
+p\left({\theta }_{j} \right)= \frac{\Gamma \left({M}_{j} \right)}{\Gamma \left({\mu }_{j} {M}_{j}\right)\Gamma \left(( 1-{\mu }_{j}){M}_{j}\right)} {{\theta}_{j}}^{{\mu}_{j}{M}_{j}-1}{\left(1-\theta\right)_{j}}^{\left(1-{\mu}_{j}\right){M}_{j}-1}
+\end{equation}
+
+\begin{equation}\label{equ:JefferyInference1}
+\begin{split}
+\log p\left(\theta_{j}|\mu_{j},M_{j}\right)& =\log \Gamma \left(M_{j}\right)-\log \Gamma\left(\mu_{j},M_{j}\right)- \log \Gamma\left(1-\mu_{j},M_{j}\right)\\
+& + (\mu_{j}M_{j}-1)\log\theta_{j} + ((1-\,u_{j})M_{j}-1)\log(1-\theta_{j})\
+\end{split}
+\end{equation}
+
+\begin{equation}
+\frac{\delta\log p(\theta_{j})}{\delta M_{j}} = \Psi(M_{j}) - \Psi(\mu_{j} M_{j})\mu_{j} - \Psi((1-\mu_{j})M_{j})(1-\mu_{j}) +\mu_{j}\log\theta_{j} + (1-\mu_{j})\log(1-\theta_{j})
+\end{equation}
+
+\begin{equation}
+\frac{\delta^{2}\log p(\theta_{j})}{\delta M_{j}^{2}}  = \Psi_{1}(M_{j}) - \Psi_{1}(\mu_{j} M_{j})\mu_{j}^{2} - \Psi_{1}((1-\mu_{j})M_{j})(1-\mu_{j})^{2}
+\end{equation}
+
+Now we have the Jeffreys' prior for $M_{j}$:
+
+\begin{equation}
+\pi\left({M}_{j}\right) = [-\left(\Psi_{1}(M_{j}) - \Psi_{1}(\mu_{j} M_{j})\mu_{j}^{2} - \Psi_{1}((1-\mu_{j})M_{j}){(1-\mu_{j})^{2}}\right)]^{\frac{1}{2}}
+\end{equation}
+
+
+\section{Reference Prior}
+We want to make the prior as less informative as possible, so to maximize a certain distance measure of prior and posterior is considered using Kullback-Leibler divergence.
+
+\subsection{KL-Divergence}
+For distributions $p$ and $q$, their KL-divergence is defined as $KL\left(p||\right) = E_p[\log\left(p/q\right)] = int_p\left(x\right)\log \frac{p\left(x\right)}{q\left(x\right)}dx$
+
+\subsection{Definition for Reference Prior}
+Suppose posterior is $p\left(\theta | x \right)$, depending on pror $p\left(\theta \right)$, marginal is $p\left(x \right)$, then $p\left(\theta \right)$ is called the reference pror if it maximizes $max_{p\left(\theta\right)}E_{p\left(x\right)}KL\left(p\left(\theta|x\right)||p\left(\theta\right)\right)$
+The Jeffreys prior is proved to be reference prior in one dimension (by Michael I. Jordan).
+
+
+\section{Log-Normal Prior}
+
+
+
+
+\end{document}
