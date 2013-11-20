@@ -5,8 +5,9 @@ import h5py
 import logging
 import pdb
 import pandas as pd
+import random
 
-##os.chdir('S:/yhe2/Research/rvd2/results/2013-11-03_HCC1187_TP53_somatic')
+os.chdir('S:/yhe2/Research/rvd2/results/2013-11-07_HCC1187_PAXIP1_genome_fa')
 # Insert the src/python/rvd27 directory at front of the path
 rvddir = os.path.join('../../../rvd2/src/python/rvd27')
 sys.path.insert(0, rvddir)
@@ -37,9 +38,10 @@ def main():
     loc = caseLoc[caseLocIdx]
     J = len(loc)
 
-    # caculation the probability that mu is in range (0, 1.0/3),(1.0/3,2.0/3),(2.0/3,1) respecitively.
-    muControlP = Mu_distr(controlMu-controlPhi['mu0'], [(0, 1.0/3),(1.0/3,2.0/3),(2.0/3,1)])
-    muCaseP = Mu_distr(caseMu-casePhi['mu0'], [(0, 1.0/3),(1.0/3,2.0/3),(2.0/3,1)])
+    # caculation the probability that mu is in range (0, 0.1),(0.05,0.9),(0.9,1) respecitively.
+    somatic_interval=[(0, 0.1),(0.05,0.9),(0.9,1)]
+    muControlP = Mu_distr(controlMu-controlPhi['mu0'], somatic_interval)
+    muCaseP = Mu_distr(caseMu-casePhi['mu0'], somatic_interval)
 
     # For each position find the range with highest probability
     ControlMaxpIdx = np.argmax(muControlP, axis=1)
@@ -49,8 +51,8 @@ def main():
     # Germline mutation classify; only looking into controlmu
     Germline_type={
         0:'Reference',
-        1:'Heterozygous Germline',
-        2:'Homozygous Germline',
+        1:'Heterozygous',
+        2:'Homozygous',
         }
     Germline_status=[]
     for i in xrange(J):
@@ -61,13 +63,13 @@ def main():
     # Somatic mutation classify
     Somatic_type={
         (0,0):'Reference',
-        (0,1):'Heterozygous Somatic',
-        (0,2):'Homozygous Somatic',
-        (1,0):'Loss of heterozygosity',
+        (0,1):'Heterozygous',
+        (0,2):'Homozygous',
+        (1,0):'LOH',
         (1,1):'Unknown',
-        (1,2):'Loss of heterozygosity',
-        (2,0):'Homozygous Somatic',
-        (2,1):'Heterozygous Somatic',
+        (1,2):'LOH',
+        (2,0):'Homozygous',
+        (2,1):'Heterozygous',
         (2,2):'Unknown',
         }
     Somatic_status=[]
@@ -92,7 +94,7 @@ def main():
             T=f['T'][()]
             chi2P=f['chi2pvalue'][...]
             f.close()
-    except OSError:     
+    except IOError:     
         T = 0.00001 # detection threshold
         print("Detection Threshold = %f" % T)
         
