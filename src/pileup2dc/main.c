@@ -205,6 +205,7 @@ static void export_depthchart(const pile_t *pile, const int numLines, const char
 static void init_depth(pile_t *pile)
 {
     int i;
+
     for(i=0; i<5; i++) { 
         pile->depthF[i] = 0;
         pile->depthR[i] = 0;
@@ -241,16 +242,41 @@ int main (int argc, char *argv[])
     
     // read the pileup file and store in the structure
     for (i=0; i<numLines; i++) {
-        fgets(lineBuf, MAXLINE, plfid);
-        sscanf(lineBuf, "%s\t%d\t%c\t%d\t%s\t%s", chrName, &pos, &refb,
-               &totDepth, alignString, qualityString);
-        
-        init_depth(&pile[i]);
-        
-        pile[i].pos = pos;
 
-        
-        parse_align_string ( toupper(refb), alignString, &pile[i] );
+		fgets(lineBuf, MAXLINE, plfid);
+        sscanf(lineBuf, "%s\t%d\t%c\t%d", chrName, &pos, &refb, &totDepth);
+
+		init_depth(&pile[i]);
+		pile[i].pos = pos;
+    
+
+		
+		if ( totDepth > 0) {
+			sscanf(lineBuf, "%s\t%d\t%c\t%d\t%s\t%s", chrName, &pos, &refb,
+               &totDepth, alignString, qualityString);
+			parse_align_string ( toupper(refb), alignString, &pile[i] );
+		}
+		else {
+			switch (refb) {
+        			case 'A':
+            			pile[i].refb=A;
+            			break;
+        			case 'C':
+            			pile[i].refb=C;
+            			break;
+        			case 'G':
+            			pile[i].refb=G;
+            			break;
+        			case 'T':
+            			pile[i].refb=T;
+            			break;   
+        			case 'N':
+            			pile[i].refb=N;
+           			break; 
+        			default:
+            			break;
+    			}
+		}
     }
     fclose(plfid);
     

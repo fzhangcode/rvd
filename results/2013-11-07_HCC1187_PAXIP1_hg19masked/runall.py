@@ -11,6 +11,7 @@ import pandas as pd
 import h5py
 import multiprocessing as mp
 import logging
+import random
 
 # <codecell>
 
@@ -23,7 +24,7 @@ sys.path.insert(0, rvddir)
 import rvd27
 
 
-pool = mp.Pool(processes=48)
+pool = mp.Pool(processes=30)
 #pool = None
 
 gibbs_nsample = 4000
@@ -40,17 +41,18 @@ def fit_model(fileNameList, h5FileName):
     rvd27.save_model(h5FileName, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
        refb=refb)
 
-def main():    
+def main():
+    random.seed(199096)
     # Estimate the model for the cases
     logging.debug("Processing control data.")
     controlList = ['HCC1187BL_S1.dc',]
-    fit_model(controlList, 'Control_trial.hdf5')
+    fit_model(controlList, 'Control.hdf5')
 
 
     # Estimate the model for the cases
     logging.debug("Processing case data.")
     caseList = ['HCC1187C_S1.dc',]
-    fit_model(caseList, 'Case_trial.hdf5')
+    fit_model(caseList, 'Case.hdf5')
 
 if __name__ == "__main__":
 	main()

@@ -10,7 +10,7 @@ BAMFILE := $(wildcard $(addprefix $(BAMDIR)/, *.bam)) # all pair1 & pair2
 PILEUPDIR = ./pileup
 PILEUPFILE := $(addprefix $(PILEUPDIR)/, $(addsuffix .pileup, $(basename $(notdir $(BAMFILE) ) ) ) )
 REGION = chr7:154738059-154782774
-FASTAFILE = ../../data/freeze/hg19/hg19.fa.masked
+FASTAFILE = ../../data/freeze/hg19/Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta/genome.fa
 
 DEPTHDIR = ./depth_chart
 DEPTHFILE := $(addprefix $(DEPTHDIR)/, $(addsuffix .dc, $(basename $(notdir $(PILEUPFILE) ) ) ) )

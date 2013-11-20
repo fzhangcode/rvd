@@ -1,6 +1,4 @@
 
-#PICARD=/usr/local/pjf/picard-tools-1.96/DownsampleSam.jar
-#PICARD=java -Xmx2g -jar ../2013-08-06_Downsample_Read_Depth/picard-tools-1.96/DownsampleSam.jar
 
 PILEUP2DC=../../bin/pileup2dc
 
@@ -9,7 +7,7 @@ BAMFILE := $(wildcard $(addprefix $(BAMDIR)/, *.bam)) # all pair1 & pair2
 
 PILEUPDIR = ./pileup
 PILEUPFILE := $(addprefix $(PILEUPDIR)/, $(addsuffix .pileup, $(basename $(notdir $(BAMFILE) ) ) ) )
-REGION = chr17:7565097-7590868
+REGION = chr7:154738059-154782774
 FASTAFILE = ../../data/freeze/hg19/hg19.fa.masked
 
 DEPTHDIR = ./depth_chart

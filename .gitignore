@@ -31,8 +31,14 @@ Thumbs.db
 *.gz
 *.blg
 *.fig
-results/2013-10-01_SNP_calling_using_strelka/workdoc/RECOMB2014/recomb2014.blg
+results/2013-10-01_SNP_calling_using_strelka/work
+results/2013-10-11_new_dataset_searching/datasets
+results/2013-10-11_new_dataset_searching/HCC1187
+bin/strelka_workflow/opt
+bin/bedtools-2.17.0
 doc/RECOMB2014/recomb2014.log
 doc/RECOMB2014/recomb2014.synctex.gz
 doc/RECOMB2014/recomb2014.aux
 doc/RECOMB2014/recomb2014.bbl
+results/2013-10-11_new_dataset_searching/datasets
+results/2013-10-23_HIV-1_dataset
