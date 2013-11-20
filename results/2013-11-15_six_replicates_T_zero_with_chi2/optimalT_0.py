@@ -18,10 +18,10 @@ logging.basicConfig(level=logging.DEBUG,
 def main():
     dilutionList = (0.1,0.3,1.0,10.0,100.0)
 
-    folderList = ('2013-11-12_one_replicate_synthetic_avg10',\
-                  '2013-11-12_one_replicate_synthetic_avg100',\
-                  '2013-11-12_one_replicate_synthetic_avg1000',\
-                  '2013-11-12_one_replicate_synthetic_avg10000')
+    folderList = ('2013-11-15_six_replicates_synthetic_avg10',\
+                  '2013-11-15_six_replicates_synthetic_avg100',\
+                  '2013-11-15_six_replicates_synthetic_avg1000',\
+                  '2013-11-15_six_replicates_synthetic_avg10000')
 
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
