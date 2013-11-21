@@ -40,6 +40,7 @@
 %\date{}                                           % Activate to display a given date or no date
 
 \begin{document}
+%TODO: Label all results/figures with comment indicating what experiment folder those results depend on and come from.
 
 \begin{abstract}
 Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples. We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over wide ranges of median read depth and a minor allele frequency. We identify XX mutations in the PAXXX gene in a matched clinical XXX tumor sample with 80\% tumor purity and XX median read depth.
@@ -52,22 +53,23 @@ Next-generation sequencing technology is increasingly being used for clinical di
 
 Next-generation sequencing (NGS) technology has enabled the systematic interrogation of the genome for a fraction of the cost of traditional assays~\citep{Koboldt:2013kw}. Protocol and platform engineering improvements have enabled the generation of $1\times10^9$ bases of sequence data in 27 hours for approximately \$1000~\citep{Quail:2012hf}. As a result, NGS is increasingly being used as a general platform for research assays for methylation state~\citep{Laird:2010ab}, DNA mutations~\citep{Consortium:2013co}, copy number variation~\citep{Alkan:2009cr}, promoter occupancy~\citep{Ouyang:2009hc} and others~\citep{Rivera:2013ee}. NGS diagnostics are being translated to clinical applications including noninvasive fetal diagnostics~\citep{Kitzman:2012hea}, infectious disease diagnostics~\citep{Capobianchi:2012em}, cancer diagnostics~\citep{Navin:2010gu}, and human microbial analysis~\citep{Consortium:2013iz}. 
 
-Clinical samples are often genetically heterogeneous. For example, non-invasive fetal DNA testing uses maternal blood sample to sequence the minority fraction of cell-free fetal DNA~\citep{Fan:2008di}. Infectious diseases such as HIV and influenza may contain many genetically heterogeneous sub-populations~\citep{Flaherty:2011ja, Ghedin:2010ie}. DNA sequencing of individual regions of a solid tumor has revealed genetic heterogeneous within an individual sample~\citep{Navin:2010gu}.  
+Increasingly, NGS is being used to interrogate mutations in heterogeneous clinical samples. For example, NGS-based non-invasive fetal DNA testing uses maternal blood sample to sequence the minority fraction of cell-free fetal DNA~\citep{Fan:2008di}. Infectious diseases such as HIV and influenza may contain many genetically heterogeneous sub-populations~\citep{Flaherty:2011ja, Ghedin:2010ie}. DNA sequencing of individual regions of a solid tumor has revealed genetic heterogeneous within an individual sample~\citep{Navin:2010gu}.  
 
 However, the primary statistical tools for calling variants from NGS data are optimized for homogeneous samples. Most analysis pipelines make use of preprocessing or postprocessing or both to eliminate error prone reads and false positives. Samtools/bcftools and GATK a naive Bayes decision rule to call a variant~\citep{}. GATK involves more sophisticate pre and post-processing steps. The genotype prior is fixed and constant across all loci and the likelihood of an allele at a locus is a function of the phred score~\citep{McKenna:2010bv}.
 
 Recently, researchers have developed algorithms to call low-frequency or rare variants in heterogeneous samples.  VarScan2 combines algorithmic heuristics to call genotypes in the tumor and normal sample pileup data and then applies a Fisher's exact test on the read count data to detect a significant difference in the genotype calls~\citep{Koboldt:2012cg}. Strelka uses a hierarchical Bayesian approach to model the joint distribution of the allele frequency in the tumor and normal samples at each locus~\citep{Saunders:2012fh}. With the joint distribution available, one is able to identify locations with dissimilar allele frequencies. muTect uses a Bayesian posterior probability in its decision rule to evaluate the likelihood of a mutation~\citep{Cibulskis:2013ta}.
 
-The remainder of this paper presents a novel algorithm for calling rare variants in heterogeneous samples using NGS data that is an improvement upon currently available technology. Typically such a variant calling algorithms are comprised of multiple pre- and post filtration steps around model estimation and hypothesis testing steps~\citep{Pabinger:2013dl}. These steps may improve algorithm performance, but it is difficult to isolate what step is most responsible for the good performance. Instead, we focus exclusively on the model structure and statistical inference. Additional filtration steps may improve performance considerably, but those aspects are subjects of intense research and separate study. We have isolated the statistical inference and hypothesis testing steps so that they may be used independently or as part of a larger variant calling pipeline.
+Typically such a variant calling algorithms are comprised of multiple pre- and post-filtration steps around model estimation and hypothesis testing steps~\citep{Pabinger:2013dl}. These steps may improve algorithm performance, but their presence makes it difficult to isolate what step is most responsible for the performance. Instead, we focus exclusively on the model structure and statistical inference steps. Additional filtration steps may improve performance considerably, but those aspects are subjects of intense research and separate study. We have isolated the statistical inference and hypothesis testing steps so that they may be used independently or as part of a larger variant calling pipeline.
 
-We present the hierarchical Bayesian model in Section~\ref{sec:model_structure} and a Bayesian hypothesis test to detect mutations in Section~\ref{sec:hypothesis_test}. In Section~\ref{sec:read_depth} we present sensitivity and specificity results of our method on known, pure DNA samples mixed at defined fractions. We compare our algorithm to the most accurate methods available to date in Section~\ref{sec:comparison}. 
-%Finally, in Section~\ref{sec:ms} we present results on detecting mutations associated with multiple sclerosis from data obtained from pooling 100 affected patients~\citep{Ferretti:2013hp}.
+We present the hierarchical Bayesian model in Section~\ref{sec:model_structure} and a Bayesian hypothesis test to detect mutations in Section~\ref{sec:hypothesis_test}. In Section~\ref{sec:read_depth} we present sensitivity and specificity results of our method on known, pure DNA samples mixed at defined fractions. We compare our algorithm to the most accurate methods available to date in Section~\ref{sec:comparison}. Finally, in Section~\ref{sec:brca} we present results on detecting mutations in the PAXIP1 gene from matched tumor-normal data from the HCC1187 cell line.
 
-\section{Materials and Methods}
+%%%%%%%%%%%%%%%%%%
+% Model Structure
+%%%%%%%%%%%%%%%%%%
+\section{Model Structure}\label{sec:model_structure}
+
 
 RVD uses a two-stage approach for detecting for rare variants. First, it estimates the parameters of two hierarchical Bayesian models; one using data from the sample of interest (case) and one using data from a known reference sample (control). Then, it tests for a significant difference between model parameters in the case and control samples and returns called variant positions.
-
-\subsection{Model Structure}\label{sec:model_structure}
 
 For a given sample, the observed data consists of two matrices $r \in \RR^{J \times N}$ and $n \in \RR^{J \times N}$, where $r_{ji}$ is the number of reads with a non-reference base at location $j$ in experimental replicate $i$ and $n_{ji}$ is the total number of reads at location $j$ in replicate $i$. The generative process is as follows:
 
@@ -123,6 +125,10 @@ Finally, the complete log-likelihood for the data set is
 \log p \left( r | n ; \mu_0, M_0, M \right) = \sum_{j=1}^J \sum_{i=1}^N \log \int_{\mu_j} \int_{\theta_{ji}}  p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right) d\theta_{ji} d\mu_j.
 \end{equation}
 
+
+%%%%%%%%%%%%%%%%%%
+% Inference & Hypothesis Testing
+%%%%%%%%%%%%%%%%%%
 \section{Inference and Hypothesis Testing}
 
 The primary object of inference in this model is the joint posterior distribution function over the latent variables,
@@ -207,6 +213,7 @@ A candidate sample is generated from the symmetric proposal distribution $Q(\mu_
 \end{equation}
 
 We have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position. We set the proposal distribution variance $\sigma_j^2 = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} >0$ and $0.1$ otherwise. We resample from the proposal if the sample is outside of the support of the posterior distribution. In the experiments, we discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this algorithm can be distributed across $J$ processors. 
+
 %%%%%%%%%%%%%%%%%%
 % Posterior Density Test
 %%%%%%%%%%%%%%%%%%
@@ -228,9 +235,7 @@ While we are able to compute the optimal $\tau$ threshold for this test data set
 
 
 %%%%%%%%%%%%%%%%%%
-
 % Chi^2 Test
-
 %%%%%%%%%%%%%%%%%%
 \subsection{$\chi^2$ test for non-uniform base distribution}
 
@@ -255,21 +260,37 @@ Equation~\eqref{eqn:fisher_combined} gives a test statistic that follows a $\chi
 Finally, we use the Bejamini-Hochberg method to control the family-wise error rate (FWER) across positions that have been called by the Bayesian hypothesis test~\eqref{eqn:bayes_test}.
 
 
+%%%%%%%%%%%%%%%%%%
+% Data Sets
+%%%%%%%%%%%%%%%%%%
+\section{Data Sets}
+
+We used two independent data sets to evaluate the performance of RVD2 and compare it with other variant calling algorithms. The synthetic DNA sequence data provides true positive and true negative positions as well as define minor allele fractions. The HCC1187 data is used to test the performance on a sequenced cancer genome with less than 100\% tumor purity.
+
+\subsection{Synthetic DNA Sequence Data}
+
+Two 400bp DNA sequences that are identical except at 14 loci with variant bases were synthesized and clonally isolated and labeled case and control. Sample of the case and control DNA were mixed at defined fractions to yield minor allele frequencies (MAFs) of 0.1\%, 0.3\%, 1\%, 10\%, and 100\%. More details of the experimental protocol are available from the original publication~\cite{}. We aligned the reads to the reference sequence using BWA v0.7.4 with the -C50 option to filter for high mapping quality reads.
+
+To simulate lower coverage data while retaining the error structure of real NGS data, BAM files for the synthetic DNA data were downsampled $10\times$, $100\times$, $1,000\times$, and $10,000\times$ using Picard v1.96. The final data set contains read pairs for three replicates of each case and pairs of reads three replicates for the control sample giving $N=6$ replicates for the control and each MAF level.
+
+\subsection{HCC1187 Sequence Data}
+
+The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. A matched normal cells were derived from lymphoblastoid cells from whole blood. 
+% TODO: check matched cells line origin
+% TODO: mention tumor purity here
+
+Sequencing libraries were prepared from 500 ng of DNA using an early access version of Illuminas TruSeq DNA PCR-Free kit. The libraries were sequenced on four and eight lanes of a HiSeq 2000 flow cell for the normal and tumor, respectively, using 100 bp paired-end reads. Data, analyzed using the pre-release version of the Illumina Cancer Sequencing Workflow showed an average coverage of 40x for the normal and 90x for the tumor DNA with about 96\% coverage with 10 or more reads~\cite{}.
+% TODO: write this in own words.
+% TODO: add citation here.
+
+
 \section{Results}
+
+We test RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $\mu^{\Delta}$ to estimate the posterior probability of a variant.
 
 \subsection{Performance with read depth}\label{sec:read_depth}
 
-We generated receiver-operating characteristic curves (ROCs) for a range of median read depth and a range of minor allele frequencies (MAFs). We used DNA sequenced data from two chemically synthesized DNA segments with known differential bases and positions as our test data set.
-
-Two 400bp DNA sequences that are identical except at 14 loci with variant bases were synthesized and clonally isolated and labeled case and control. Sample of the case and control DNA were mixed at defined fractions to yield minor allele frequencies (MAFs) of 0.1\%, 0.3\%, 1\%, 10\%, and 100\%. More details of the experimental protocol are available from the original publication~\cite{}.
-
-<<<<<<< HEAD
-BAM files for the synthetic DNA data were down sampled by $10\times$, $100\times$, $1,000\times$, $10,000\times$ using Picard Version 1.96 to simulate lower coverage data while retaining the error structure of real NGS data. The final data set contains pairs of reads for three replicates of each case and a pair of reads for the control sample giving a total of 36 BAM files for each downsampled data set.
-=======
-To simulate lower coverage data while retaining the error structure of real NGS data, BAM files for the synthetic DNA data were downsampled $10\times$, $100\times$, $1,000\times$, and $10,000\times$. The final data set contains read pairs for three replicates of each case and pairs of reads three replicates for the control sample giving $N=6$ replicates for the control and each MAF level.
->>>>>>> edits to manuscript.
-
-Figure~\ref{fig:ROC} shows ROC curves generated by varying the threshold $\tau$ with a fixed $\alpha=0.05$. Figure~\ref{fig:ROC}A shows ROC curves for a true 0.1\% MAF for a range of median coverage depths. At the lowest depth the sensitivity and specificity is no better than random. However, we would not expect to be able to call a 1 in 1000 variant base with a coverage of only 43. The performance improves monotonically with read depth. Figures~\ref{fig:ROC}B-C for larger MAFs show a similar relatonship between coverage depth and accuracy.
+We generated receiver-operating characteristic curves (ROCs) for a range of median read depth and a range of minor allele frequencies (MAFs). For these ROC curves, we only used the Bayesian test without the $\chi^2$ test. Adding the $\chi^2$ improves specificity at the expense of sensitivity. Figure~\ref{fig:ROC} shows ROC curves generated by varying the threshold $\tau$ with a fixed $\alpha=0.05$. Figure~\ref{fig:ROC}A shows ROC curves for a true 0.1\% MAF for a range of median coverage depths. At the lowest depth the sensitivity and specificity is no better than random. However, we would not expect to be able to call a 1 in 1000 variant base with a coverage of only 43. The performance improves monotonically with read depth. Figures~\ref{fig:ROC}B-C for larger MAFs show a similar relationship between coverage depth and accuracy.
 
 \begin{figure}[htbp]
 \begin{center}
@@ -292,62 +313,11 @@ Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\
 
 \subsection{Empirical performance compared with other algorithms}\label{sec:comparison}
 
-We compare the empirical performance of RVD2 to other variant calling algorithms using the synthetic DNA data sets described in the previous section. In a research application, the false discovery rate is more relevant performance metrics because the aim is generally to identify interesting variants. The sensitivity/specificity metric is more relevant in clinical applications where one is more interested in calling all of the true variants and none of the true negatives.
-
-<<<<<<< HEAD
-\subsubsection*{Parameters setting for variant calling}\
-
-The variant calling algorithms we compare RVD2 to include samtools/bcftools, GATK VarScan2-mpileup, Varscan2-somatic, Strelka, and muTect. 
-
-\paragraph{\textbf{Samtools}}We used samtools/bcftools (v0.1.19) for variant calling. mpileup was the function to call variants and bcftools was used to save the result in standard Variant Call Format (VCF) files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid coverage cap. Our synthetic data was mapped using BWA Version 0.7.4, -C50 option was applied to minimize the effect from reads with overestimated mapping quality. mpileup was able to accept multiple replicates at one time so six bam files from each replicate group were fed into mpileup for variant calling. Read depth for each sample was kept with -D enabled, and -u was turned on to make sure the output bcf files uncompressed. 
-
-\paragraph{\textbf{GATK}}
-UnifiedGenotyper is the function we used in GATK (v2.1-8) to detect mutations.We followed the general GATK recomended workflow to detect variants. Due to some format  incompatibility, we applied Picard to format read group and GATK for realignment as preprocessing. When calling variants using UnifiedGenotyper, -ploid (Number of samples in each pool $\times$ Sample Ploidy) was set at 1 because our synthetic data is haploid; we change the default setting for -dcov (default max coverage cutoff of $250\times$ ) to $10^6$ to avoid downsamplig so that the coverage was comparable to other approaches. All other parameters were set at default. Six replicates was passed to GATK for variant calling.
-
-\paragraph{\textbf{VarScan2-mpileup}}
-VarScan2 (v2.3.4) mpileup2snp is a SNP calling program which takes multi-samples from samtools mpileup pipeline. We set -d at $10^6$ and enabled -50 for same concern previously stated. In afterwards mpileup2snp function, --min-var-freq, the only non-default parameter, was set low enough at $10^{-5}$ because the variant frequency can be as low as $10^{-3}$. Six replicates were all introduced for variant calling.
-
-\paragraph{\textbf{VarScan2-somatic}}
-We tested VarScan2-somatic on our six replicates synthetic data set as well. Considering that RVD2 doesn't call somatic status, we combined all the positions VarScan2-somatic called regardless the somatic status (Germline/LOH/Somatic/Unknown). --normal-purity was set at 1.00, while --tumor-purity was set as the dilution rate. --min-var-freq was set at $10^{-5}$.
-
-\paragraph{\textbf{Strelka}}
-Configuration and Analysis for Strelka is standard so we just installed the program and ran it on our data set. One thing to note is that since Strelka can not accept relicate data, we used a single replicate with a read depth that most closely matched the overall median depth of the replicates.
-
-\paragraph{\textbf{muTect}}
-Similar to Strelka, we ran muTect with standard settings and only passed one replicate of synthetic data.
-
-GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
-=======
+We compare the empirical performance of RVD2 to other variant calling algorithms using the synthetic DNA data sets using the false discovery rate as well as sensitivity/specificity. In a research applications, the false discovery rate is a more relevant performance metrics because the aim is generally to identify interesting variants. The sensitivity/specificity metric is more relevant in clinical applications where one is more interested in calling all of the true variants and none of the true negatives.
 
 [DISCUSS \citet{Stead:2013fu}] 
->>>>>>> edits to manuscript.
-
-\subsubsection*{False Discovery Rate Comparison}
-Figure~\ref{tbl:comparison_fdr} shows the false discovery rate for RVD2 compared to samtools, GATK, varscan, strelka and muTect. Blank cells indicate no positive calls were made.
-
-Samtools performs very well on 100\% MAF sample and performance improves for read depths 3089 and 30590. GATK performs well on both the 10\% and 100\% variants, but makes a false positive call at the 100\% MAF level for all read depth levels. VarScan2-pileup performs perfectly for all but the lowest depth for the 100\% MAF.
-
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=160mm]{pdf_figs/comparison_table_fdr.pdf}
-\caption{False discovery rate comparison of RVD2 with other variant calling algorithms. Blank cells indicate no locations were called variant.}
-\label{tbl:comparison_fdr}
-\end{center}
-\end{figure}
-
-VarScan2-somatic is able to make calls for all but the lowest MAF and coverage level. However, the FDR is high due to many false positives. Interestingly, at a MAF of 100\%the FDR is zero for lowest read depth and 1.00 for the highest read depth. Strelka has a better FDR than the samtools, GATK or Varscan2-somatic algorithms for almost all read depths at the 10\% and 100\% MAF. However, it does not call any variants at or below 1\% MAF.  MuTect has the best FDR performance of the other algorithms we tested over a wide range of MAF and depths. But the FDR level is relatively high at around 0.7 for 0.1\% -- 1\% MAF and 0.3 for 10\%-100\% MAF.
- 
-For RVD2, we set $\tau$, the hypothesis test threshold, to the naive value of zero and we optimized $\tau$. RVD2 is able to make use of multiple replicates but the other algorithms do not. So we ran RVD2 with all $N=6$ replicates as well as with $N=1$.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Empirically, RVD2 is able to call variants if the median read depth is $10\times$ the MAF.
-
- The sensitivity improves 
-With $\tau=0$, RVD2 is not able to call variants with a MAF of 0.1\% if the read depth is less than 4,129. This generally agrees with previous observations and intuition that more than 1,000 reads are required to call a 1:1000 MAF. The FDR degrades at higher read depths with this fixed $\tau$ as more false positives are called. At high read depths and MAFs FDR is perfect. With $\tau$ set to the optimal value $\tau^*$, we find a significant improvement at all read depths and the FDR decreases with read depth. Comparing $\tau=0$ with $\tau^*$, we see that the $\tau=0$ parameter setting is more conservative and negatively affected by higher read depths.
 
 \subsubsection*{Sensitivity/Specificity Comparison}
-
-Figure~\ref{tbl:comparison_ss} shows the sensitivity and specificity for other variant calling algorithms. Each cell contains the sensitivity and specificity of the method separated by a slash.
 
 \begin{figure}[h]
 \begin{center}
@@ -358,23 +328,33 @@ Figure~\ref{tbl:comparison_ss} shows the sensitivity and specificity for other v
 \end{figure}
 
 
-Samtools, GATK and VarScan2-pileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call mixed samples as expected. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
+Figure~\ref{tbl:comparison_ss} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
 
-The sensitivity for RVD2 with $\tau=0$ is low for low read depths and MAF levels. The sensitivity increases considerably with read depth at a slight expense to specificity. With $\tau^*$ the performance is much better with high sensitivity and specificity across a wide range of read depths and MAF levels. However, the algorithm performance is still limited at low MAF levels and low read depth.
+The sensitivity for RVD2 with $\tau=0$ is low for low read depths and MAF levels and $N=1$ case and control sample. The sensitivity increases considerably with read depth at a slight expense to specificity. With $\tau^*$ the performance is much better with high sensitivity and specificity across a wide range of read depths and MAFs. However, in practice one may not know the optimal $\tau^*$ a-priori. With $N=6$ replicates, the sensitivity increases considerably for low MAF variants with a slight degradation in specificity due to false positives. When the median read depth is at least $10\times$ the MAF, RVD2 has higher specificity than all of the other algorithms tested and has a lower sensitivity in only three cases. The Matthews correlation coefficient (MCC) indicates that RVD2($\tau=0, N=1$) is more accurate than the other algorithms when the median read depth is at least $10\times$ the MAF (see supplementary table SX).
+
+\subsubsection*{False Discovery Rate Comparison}
+Figure~\ref{tbl:comparison_fdr} shows the false discovery rate for RVD2 compared to samtools, GATK, varscan, strelka and muTect. Blank cells indicate no positive calls were made.
+
+Samtools performs well on 100\% MAF sample and performance improves for read depths 3089 and 30590. GATK performs well on both the 10\% and 100\% variants, but makes a false positive call at the 100\% MAF level for all read depth levels. VarScan2-pileup performs perfectly for all but the lowest depth for the 100\% MAF.
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=160mm]{pdf_figs/comparison_table_fdr.pdf}
+\caption{False discovery rate comparison of RVD2 with other variant calling algorithms. Blank cells indicate no locations were called variant.}
+\label{tbl:comparison_fdr}
+\end{center}
+\end{figure}
+
+VarScan2-somatic is able to make calls for all but the lowest MAF and coverage level. However, the FDR is high due to many false positives. Interestingly, at a MAF of 100\% the FDR is zero for lowest read depth and 1.00 for the highest read depth. Strelka has a better FDR than the samtools, GATK or Varscan2-somatic algorithms for almost all read depths at the 10\% and 100\% MAF. However, it does not call any variants at or below 1\% MAF.  MuTect has the best FDR performance of the other algorithms we tested over a wide range of MAF and depths. But the FDR level is relatively high at around 0.7 for 0.1\% -- 1\% MAF and 0.3 for 10\%-100\% MAF.
+ 
+RVD2 has a lower FDR than other algorithms when the read depth is greater than $10\times$ the MAF with $N=1$ and $\tau$ set to the default value of zero or to the optimal value. The FDR is higher when $N=6$ because the variance of the control error rate distribution $P(\mu_j^{\text{control}} | r^{\text{control}})$ is smaller. The smaller variance yields improvements in sensitivity at the expense of more false positives. Since the FDR only considers positive calls, the performance degrades.
 
 
-\subsection{HCC1187 primary ductual carcinoma sample}\label{sec:brca}
+\subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca
 
-We test RVD2 on matched breast tumor-normal sequencing data. The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. A matched normal cells were derived from lymphoblastoid cells from whole blood.
-% TODO: check matched cells line origin
-% TODO: mention tumor purity here
+RVD2 identified 5 variants in the XXkb PAXIP1 gene. We identified the same variants when the fastq data was aligned to HG19 masked for repetitive regions and when we used the unmasked iGenome reference sequence. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample.
 
-Sequencing libraries were prepared from 500 ng of DNA using an early access version of Illuminas TruSeq DNA PCR-Free kit. The libraries were sequenced on four and eight lanes of a HiSeq 2000 flow cell for the normal and tumor, respectively, using 100 bp paired-end reads. Data, analyzed using the pre-release version of the Illumina Cancer Sequencing Workflow showed an average coverage of 40x for the normal and 90x for the tumor DNA with about 96\% coverage with 10 or more reads~\cite{}.
-% TODO: was this copied from somewhere or is this original?
-
-We ran RVD2 on the PAXIP1, a XXkb gene ecoding a protein that is important for maintaining genome stability~\cite{}. We set the paramters of the algorithm to give 4000 gibbs samples with a burn-in of XX\% and a thinning rate of 2. The threshold for the hypothesis tests were $\tau=XX$ and $\alpha=0.05$. 
-
-The algorithm identified XX homozygous germline variants and XX heterozygous germline variants. 
+%TODO: Add plan for discussion of these results
 
 
 \appendix
@@ -408,15 +388,13 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 %%%%%%%%%%%%%%%%%%%
 % Appendix B: Comparison Statistics
 %%%%%%%%%%%%%%%%%%%
-\section{Comparison to other algorithms}\label{sec:app_comparison}
-
-
+\section{Algorithm Comparison Statistics}\label{sec:app_comparison}
 
 
 \begin{figure}[h]
 \begin{center}
-%\includegraphics[width=140mm]{pdf_figs/comparison_table_mcc.pdf}
-\caption{Comparison of RVD2 with other variant calling algorithms (MCC).}
+\includegraphics[width=140mm]{pdf_figs/comparison_table_mcc.pdf}
+\caption{Matthews correlation coefficient (MCC) comparison with other variant calling algorithms.}
 \label{fig:comparison_mcc}
 \end{center}
 \end{figure}
@@ -427,8 +405,8 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 %%%%%%%%%%%%%%%%%
 % Appendix C: Data Set Statistics
 %%%%%%%%%%%%%%%%%
-\section{Estimated Parameters for Synthetic DNA Data}\label{sec:synthetic_estimate}
-The RVD2 algorithm provides estimates of the model parameters given the data. We show several of these key parameters in Figure~\ref{fig:depthM}. 
+\section{RVD2 Estimated Parameters}\label{sec:synthetic_estimate}
+The RVD2 algorithm provides estimates of model parameters and latent variables given the data. We show several of these parameters in Figure~\ref{fig:depthM}. 
 
 The left column of Figure~\ref{fig:depthM} shows the read depth for each of the six bam files (three replicates each with two read pairs) for each data set. Because the DNA was not sheared and ligated prior to sequencing, the read depth drops to zero at the boundaries. For the 100\% mutant data set, the read depth drops at the mutant locations. This is due to the parameters imposed at the alignment stage. The reads are 36bp long and we required no more than 2 mismatches. Therefore, reads that overlapped two mutations (spaced 20bp apart by design) and included one additional mutation would not align.
 
@@ -445,6 +423,29 @@ The right column of Figure~\ref{fig:depthM} shows the parameter estimates $\hat{
 The error rate across positions is captured by the $M_0$ parameter shown as a horizontal dotted line in the plots in the right column. We see that the variation between replicates is smaller than the variation between location. $M_j$ and $M_0$ are precision parameters, they are inversely proportional to the variance. Where $M_j$ is greater than $M_0$ the precision between replicates is higher than the precision across positions.
 
 
+%%%%%%%%%%%%%%%%%
+% Appendix D: Parameter Settings for Variant Calling Algorithms
+%%%%%%%%%%%%%%%%%
+\section*{Parameter setting for other variant calling algorithms}
+
+\paragraph{\textbf{Samtools}}We used samtools/bcftools (v0.1.19) for variant calling. mpileup was the function to call variants and bcftools was used to save the result in standard Variant Call Format (VCF) files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid coverage cap.  mpileup was able to accept multiple replicates at one time so six bam files from each replicate group were fed into mpileup for variant calling. Read depth for each sample was kept with -D enabled, and -u was turned on to make sure the output bcf files uncompressed. 
+
+\paragraph{\textbf{GATK}}
+UnifiedGenotyper is the function we used in GATK (v2.1-8) to detect mutations.We followed the general GATK recomended workflow to detect variants. Due to some format  incompatibility, we applied Picard to format read group and GATK for realignment as preprocessing. When calling variants using UnifiedGenotyper, -ploid (Number of samples in each pool $\times$ Sample Ploidy) was set at 1 because our synthetic data is haploid; we change the default setting for -dcov (default max coverage cutoff of $250\times$ ) to $10^6$ to avoid downsamplig so that the coverage was comparable to other approaches. All other parameters were set at default. Six replicates was passed to GATK for variant calling.
+
+\paragraph{\textbf{VarScan2-mpileup}}
+VarScan2 (v2.3.4) mpileup2snp is a SNP calling program which takes multi-samples from samtools mpileup pipeline. We set -d at $10^6$ and enabled -50 for same concern previously stated. In afterwards mpileup2snp function, --min-var-freq, the only non-default parameter, was set low enough at $10^{-5}$ because the variant frequency can be as low as $10^{-3}$. Six replicates were all introduced for variant calling.
+
+\paragraph{\textbf{VarScan2-somatic}}
+We tested VarScan2-somatic on our six replicates synthetic data set as well. Considering that RVD2 doesn't call somatic status, we combined all the positions VarScan2-somatic called regardless the somatic status (Germline/LOH/Somatic/Unknown). --normal-purity was set at 1.00, while --tumor-purity was set as the dilution rate. --min-var-freq was set at $10^{-5}$.
+
+\paragraph{\textbf{Strelka}}
+Configuration and Analysis for Strelka is standard so we just installed the program and ran it on our data set. One thing to note is that since Strelka can not accept relicate data, we used a single replicate with a read depth that most closely matched the overall median depth of the replicates.
+
+\paragraph{\textbf{muTect}}
+Similar to Strelka, we ran muTect with standard settings and only passed one replicate of synthetic data.
+
+GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
 
 \bibliographystyle{apalike}
 \bibliography{bioinfo}
