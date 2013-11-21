@@ -40,11 +40,11 @@ do
 					I=$f \
 					O=$FormatOutput \
 					SORT_ORDER=coordinate \
-					RGID=H1N1 \
-					RGLB=H1N1 \
+					RGID=SYNTHETIC \
+					RGLB=SYNTHETIC \
 					RGPL=illumina \
-					RGPU=H1N1 \
-					RGSM=H1N1 \
+					RGPU=SYNTHETIC \
+					RGSM=SYNTHETIC \
 					CREATE_INDEX=True \
 					VALIDATION_STRINGENCY=LENIENT
 		fi
@@ -108,6 +108,8 @@ do
 				-I ${REALIGN[@]:$h+4:1} \
 				-I ${REALIGN[@]:$h+5:1} \
 				-o $VCFDIR/${VCF[$i]}.vcf \
+				-dcov 1000000 \
+				-ploidy 1 \
 				--output_mode EMIT_VARIANTS_ONLY
 		fi
 	done
