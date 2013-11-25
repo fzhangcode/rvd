@@ -43,7 +43,7 @@
 %TODO: Label all results/figures with comment indicating what experiment folder those results depend on and come from.
 
 \begin{abstract}
-Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples. We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over wide ranges of median read depth and a minor allele frequency. We identify XX mutations in the PAXXX gene in a matched clinical XXX tumor sample with 80\% tumor purity and XX median read depth.
+Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples. We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over wide ranges of median read depth and a minor allele frequency. We identify five mutations in the PAXP1 gene in a matched clinical breast ductal carcinoma tumor sample with 80\% tumor purity and 52 median read depth.%Unmasked positions has median read depth 51 for control sample, and 69 for case sample (from folder '2013-11-22_HCC1187_PAXIP1_genome_Qsd_0_1'; masked positions has median read depth 52 for control sample, and 70 for case sample( from foler '2013-11-22_HCC1187_PAXIP1_hg19masked_Qsd_0_1')
 %We use our algorithm to call variants in a pooled sample of 100 patients with multiple sclerosis and identify novel variants in IL7RA and IL2R.
 \end{abstract}
 
@@ -212,7 +212,11 @@ A candidate sample is generated from the symmetric proposal distribution $Q(\mu_
 	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
 \end{equation}
 
-We have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position. We set the proposal distribution variance $\sigma_j^2 = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} >0$ and $0.1$ otherwise. We resample from the proposal if the sample is outside of the support of the posterior distribution. In the experiments, we discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this algorithm can be distributed across $J$ processors. 
+We have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position. We set the proposal distribution standard deviation $\sigma_j = 0.1$, a constant to meet the Detailed Balance requirement.
+
+%We set the proposal distribution variance $\sigma_j^2 = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} >0$ and $0.1$ otherwise. 
+
+We resample from the proposal if the sample is outside of the support of the posterior distribution. In the experiments, we discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this algorithm can be distributed across $J$ processors. 
 
 %%%%%%%%%%%%%%%%%%
 % Posterior Density Test
@@ -299,16 +303,18 @@ We generated receiver-operating characteristic curves (ROCs) for a range of medi
 \label{fig:ROC}
 \end{center}
 \end{figure}
+% from folder '2013-11-24_six_replicates_Compute_ROC_Synthetic_Qsd_0_1'
 
 Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\mu_j$ for called variant positions with $\bar{n} = 41,573$ and MAF = XX\%. All of the called positions show a clear difference between the case and control error rates. The posterior mean estimates are all shrunken towards the global error rate parameter $\mu_0 = 0.0023$ due to the hierarchical structure of the model.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=120mm]{pdf_figs/MuBarPlot.pdf}
+\includegraphics[width=120mm]{pdf_figs/Synthetic_MuBarPlot.pdf}
 \caption{Estimated minor allele fraction for called variants in 0.1\% dilution.}
 \label{fig:MAF}
 \end{center}
 \end{figure}
+% from folder '2013-11-24_synthetic_mu_barplot_optimalT_Qsd_0_1'
 
 
 \subsection{Empirical performance compared with other algorithms}\label{sec:comparison}
@@ -326,7 +332,7 @@ We compare the empirical performance of RVD2 to other variant calling algorithms
 \label{tbl:comparison_ss}
 \end{center}
 \end{figure}
-
+% from folder 'rvd2\results\2013-09-19_operating_characteristics'
 
 Figure~\ref{tbl:comparison_ss} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
 
@@ -344,15 +350,26 @@ Samtools performs well on 100\% MAF sample and performance improves for read dep
 \label{tbl:comparison_fdr}
 \end{center}
 \end{figure}
+% from folder 'rvd2\results\2013-09-19_operating_characteristics'
 
 VarScan2-somatic is able to make calls for all but the lowest MAF and coverage level. However, the FDR is high due to many false positives. Interestingly, at a MAF of 100\% the FDR is zero for lowest read depth and 1.00 for the highest read depth. Strelka has a better FDR than the samtools, GATK or Varscan2-somatic algorithms for almost all read depths at the 10\% and 100\% MAF. However, it does not call any variants at or below 1\% MAF.  MuTect has the best FDR performance of the other algorithms we tested over a wide range of MAF and depths. But the FDR level is relatively high at around 0.7 for 0.1\% -- 1\% MAF and 0.3 for 10\%-100\% MAF.
  
 RVD2 has a lower FDR than other algorithms when the read depth is greater than $10\times$ the MAF with $N=1$ and $\tau$ set to the default value of zero or to the optimal value. The FDR is higher when $N=6$ because the variance of the control error rate distribution $P(\mu_j^{\text{control}} | r^{\text{control}})$ is smaller. The smaller variance yields improvements in sensitivity at the expense of more false positives. Since the FDR only considers positive calls, the performance degrades.
 
 
-\subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca
+\subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca}
 
-RVD2 identified 5 variants in the XXkb PAXIP1 gene. We identified the same variants when the fastq data was aligned to HG19 masked for repetitive regions and when we used the unmasked iGenome reference sequence. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample.
+RVD2 identified 5 variants in the 44716b PAXIP1 gene. We identified the same variants when the fastq data was aligned to HG19 masked for repetitive regions and when we used the unmasked iGenome reference sequence. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample.
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=120mm]{pdf_figs/HCC1187_MuBarPlot.pdf}
+\caption{Estimated minor allele fraction for called variants in PAXIP1 gene.}
+\label{fig:MAF}
+\end{center}
+\end{figure}
+
+% from folder 'rvd2\results\2013-11-22_HCC1187_PAXIP1_genome_Qsd_0_1'
 
 %TODO: Add plan for discussion of these results
 
@@ -398,7 +415,7 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 \label{fig:comparison_mcc}
 \end{center}
 \end{figure}
-
+% from folder 'rvd2\results\2013-09-19_operating_characteristics'
 
 
 
@@ -417,6 +434,8 @@ The left column of Figure~\ref{fig:depthM} shows the read depth for each of the 
 \label{fig:depthM}
 \end{center}
 \end{figure}
+
+% from folder '2013-11-24_depthM_plot_avg10_Qsd_0_1', dilution rate is 0.1.
 
 The right column of Figure~\ref{fig:depthM} shows the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, we see that $M_j$ does not change with read depth (except where the depth goes to zero) indicating that $M_j$ because $M_j$ is capturing a different process than the read depth. 
 
