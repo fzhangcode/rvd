@@ -193,7 +193,6 @@ def test(controlHDF5Name, caseHDF5Name, T=0.0005, N=1000, outputFile=None):
 
 def write_vcf(outputFile, loc, call, refb, altb, caseMu, controlMu):
     """ Write high confidence variant calls to VCF 4.2 file.
-	Modified: INFO=<ID=AF, Number = A  2013/10/20
     """
     
     #TODO: get dbSNP id for chrom:pos
@@ -291,8 +290,7 @@ def load_model(h5Filename):
     return tuple(out)
       
 def save_model(h5Filename, phi, mu=None, M=None, theta=None, r=None, n=None, loc=None, refb=None):
-    """ Save the RVD2.7 model samples and parameters """
-    """ modified in 2013/10/20, want to store all the temp files into the temp directory"""
+    """ Save the RVD29 model samples and parameters """
     
     # TODO add attributes to hdf5 file
     h5file = h5py.File(h5Filename, 'w')

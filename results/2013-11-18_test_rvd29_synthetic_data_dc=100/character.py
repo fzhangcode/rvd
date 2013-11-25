@@ -36,7 +36,7 @@ def main():
     DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
     
 ##  DepthList = (10000, 1000, 100, 10)
-    DepthList = (100, 10)
+    DepthList = (100,)
     i=0
     
     for k, v in method.iteritems():

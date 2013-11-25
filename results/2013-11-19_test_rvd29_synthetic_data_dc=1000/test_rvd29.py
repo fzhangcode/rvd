@@ -24,7 +24,8 @@ def main():
     for d in dilutionList:
         logging.debug("Processing dilution: %0.1f%%" % d)
         for f in folderList:
-            path='vcf/%s' % str(10**(folderList.index(f)+1))
+            #path='vcf/%s' % str(100**(folderList.index(f))+1)
+            path='vcf/%s' % str(1000*(folderList.index(f)))
             if not os.path.exists(path):
                 os.makedirs(path)
             controlFile = "./%s/Control.hdf5" %f

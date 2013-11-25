@@ -193,7 +193,6 @@ def test(controlHDF5Name, caseHDF5Name, T=0.0005, N=1000, outputFile=None):
 
 def write_vcf(outputFile, loc, call, refb, altb, caseMu, controlMu):
     """ Write high confidence variant calls to VCF 4.2 file.
-	Modified: INFO=<ID=AF, Number = A  2013/10/20
     """
     
     #TODO: get dbSNP id for chrom:pos
