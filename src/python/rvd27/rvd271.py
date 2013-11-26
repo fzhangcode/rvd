@@ -128,9 +128,9 @@ def test_main(args):
     test(args.alpha, args.controlHDF5Name, args.caseHDF5Name, args.controlroi,\
          args.caseroi, args.diffroi, args.N, args.outputFile, args.testtype)
 
-def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None,
-         \controlroi=(0.0,0.2),caseroi=(0.8,1),diffroi=(0,np.inf),
-         \N=1000, outputFile=None, testtype='diff')
+def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None, \
+         controlroi=(0.0,0.2),caseroi=(0.8,1),diffroi=(0,np.inf), \
+         N=1000, outputFile=None, testtype='diff')
 
     if testtype == 'diff':
         logging.debug('Running bayes test on posterior difference distribution on sample %s and %s)'\
@@ -142,7 +142,7 @@ def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None,
     if testtype == 'somatic':
         if outputFile == None:
             outputFile = 'normal_case_somatic.vcf'
-        somatic_test(alpha, controlHDF5Name, caseHDF5Name,controlroi, caseroi, outputFile):
+        somatic_test(alpha, controlHDF5Name, caseHDF5Name,controlroi, caseroi, outputFile)
       
 def somatic_test(alpha, controlHDF5Name, caseHDF5Name, controlroi, caseroi, outputFile):
 
@@ -154,19 +154,22 @@ def somatic_test(alpha, controlHDF5Name, caseHDF5Name, controlroi, caseroi, outp
 
         if len(np.shape(controlroi))==1:
             controlroi=[controlroi]
-        controlP = rvd27.bayes_test(controlMu,controlroi)        
+
+        controlP = bayes_test(controlMu,controlroi, 'close')        
         controlCall = controlP > alpha
         
         if len(np.shape(caseroi))==1:
             caseroi=[caseroi]
-        caseP = rvd27.bayes_test(caseMu,caseroi)
+        caseP = bayes_test(caseMu,caseroi)
         caseCall = caseP > alpha
-        
+
         call = np.logical_and(controlCall, caseCall)
 
         write_dualvcf(outputFile,loc, call, refb, np.mean(controlMu, axis=1), \
                       np.median(controlR,0), controlN, controlroi, \
                       np.mean(caseMu, axis=1), np.median(caseR,0), caseN, caseroi, alpha)
+
+        return loc, call, controlMu, caseMu, controlN, caseN, controlP, caseP
 
     else:
 
@@ -187,8 +190,8 @@ def somatic_test(alpha, controlHDF5Name, caseHDF5Name, controlroi, caseroi, outp
         if len(np.shape(roi))==1:
             roi=[roi]
             
-        (Phi, Theta, Mu, Loc, R, N) = rvd27.load_model(HDF5Name)
-        P = rvd27.bayes_test(Mu,roi)
+        (Phi, Theta, Mu, Loc, R, N) = load_model(HDF5Name)
+        P = bayes_test(Mu,roi,'close')
         call = P > alpha
 
         with h5py.File(HDF5Name, 'r') as f:
@@ -198,44 +201,62 @@ def somatic_test(alpha, controlHDF5Name, caseHDF5Name, controlroi, caseroi, outp
 
         write_univcf(outputFile,Loc, call, refb, np.mean(Mu, axis=1), \
                       np.median(R,0), N, roi, alpha, tag)
+
+        return loc, call, Mu, P, N
+
         
 def diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile):
     
     loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
              caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
-    (Z, caseMuS, controlMuS) = rvd27.sample_post_diff(caseMu-caseMu0, controlMu-controlMu0, N)
-    postP = rvd27.bayes_test(Z, [diffroi])
 
-    J = len(loc)
-    # chi2 test for goodness-of-fit to a uniform distribution for non-ref bases
-    nRep = caseR.shape[0]
-    chi2Prep = np.zeros((J,nRep))
-    chi2P = np.zeros((J,1))
-    for j in xrange(J):
-	    chi2Prep[j,:] = np.array([rvd27.chi2test( caseR[i,j,:] ) for i in xrange(nRep)] )
-	    if np.any(np.isnan(chi2Prep[j,:])):
-	        chi2P[j] = np.nan
-	    else:
-	       chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
+    hdf5name = "%s.hdf5" %os.path.splitext(outputFile)[0]
+##    pdb.set_trace()
 
+    try:
+        with h5py.File(hdf5name, 'r') as f:
+            loc = f['loc'][...]
+            postP = f['postP'][...]
+            interval = f['interval'][...]
+            chi2P = f['chi2P'][...]
+            f.close()
+           
+    except IOError as e:
+                  
+        (Z, caseMuS, controlMuS) = sample_post_diff(caseMu-caseMu0, controlMu-controlMu0, N)
+        if len(np.shape(diffroi))==1:
+            diffroi = [diffroi]
+        postP = bayes_test(Z, diffroi,'open')
+
+        J = len(loc)
+        # chi2 test for goodness-of-fit to a uniform distribution for non-ref bases
+        nRep = caseR.shape[0]
+        chi2Prep = np.zeros((J,nRep))
+        chi2P = np.zeros((J,1))
+        for j in xrange(J):
+                chi2Prep[j,:] = np.array([chi2test( caseR[i,j,:] ) for i in xrange(nRep)] )
+                if np.any(np.isnan(chi2Prep[j,:])):
+                    chi2P[j] = np.nan
+                else:
+                   chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
+
+        with h5py.File(hdf5name, 'w') as f:
+                f.create_dataset('loc', data=loc)
+                f.create_dataset('postP', data=postP)
+                f.create_dataset('interval', data=(diffroi))
+                f.create_dataset('chi2P',data=chi2P)
+                f.close()           
+##    pdb.set_trace()
     bayescall = postP > alpha
+    bayescall = bayescall.reshape(np.shape(chi2P))
     chi2call = chi2P < 0.05/len(loc)
     call = np.logical_and(bayescall, chi2call)
-    
-    hdf5name = "%s.hdf5" %os.path.splitext("outputFile")[0]
-    with h5py.File(hdf5name, 'w') as f:
-            f.create_dataset('loc', data=loc)
-            f.create_dataset('postP', data=postP)
-            f.create_dataset('interval', data=(diffroi))
-            f.create_dataset('chi2pvalue',data=chi2P)
-            f.close()
-            
-    if len(np.shape(diffroi))==1:
-        diffroi = [diffroi]
         
     write_diffvcf(outputFile, loc, call, refb, altb, np.mean(controlMu, axis=1),\
                   np.median(controlR,0), controlN, np.mean(caseMu, axis=1), \
                   np.median(caseR,0), caseN, diffroi, alpha )
+##    pdb.set_trace()
+    return loc, call, controlMu, caseMu, controlN, caseN, postP, chi2P
     
 def write_univcf(outputFile, loc, call, refb, Mu, R, N, roi, alpha, tag):
     J = len(loc)
@@ -336,7 +357,9 @@ def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
     print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles used in fitting the model\">", file=vcfF)
     
     print("#CHROM\tPOS\tID\tREF\tQUAL\tFILTER\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
+    
     for i in xrange(J):
+##        pdb.set_trace()
         if call[i]:
             # restore R
             actg = ['A','C','G','T']
@@ -397,10 +420,12 @@ def write_diffvcf(outputFile, loc, call, refb, altb, controlMu,\
     print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles used in fitting the model\">", file=vcfF)
     
     print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
+##    pdb.set_trace()
     for i in xrange(J):
         if call[i]:           
             # restore R
             actg = ['A','C','G','T']
+##            pdb.set_trace()
             idx = actg.index(refb[i])
             caseR4 = np.zeros(4)
             controlR4 = np.zeros(4)
@@ -422,8 +447,8 @@ def write_diffvcf(outputFile, loc, call, refb, altb, controlMu,\
 def load_dualmodel(controlHDF5Name, caseHDF5Name):
 
     # Load the Case and Control Model files
-    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = rvd27.load_model(controlHDF5Name)
-    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = rvd27.load_model(caseHDF5Name)
+    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(controlHDF5Name)
+    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(caseHDF5Name)
 
     # Extract the common locations in case and control
     caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
@@ -1027,8 +1052,8 @@ def sample_post_diff(muCaseG, muControlG, N):
     Z = muCaseS - muControlS
 
     return (Z, muCaseS, muControlS)
- 
-def bayes_test(Z, roi):
+
+def bayes_test(Z, roi, type = 'close'):
     """ Return posterior probabilities in regions defined in list of tuples (roi)
         from samples in columns of Z. """
     (J,N)=np.shape(Z)
@@ -1038,9 +1063,14 @@ def bayes_test(Z, roi):
     p = np.zeros((J,nTest))
     for i in xrange(nTest):
         for j in xrange(J):
-		p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] >= roi[i][0]), (Z[j,:] <= roi[i][1]) ) ) ) / N
-
-    return sum(p,1) # combine probabilities from all regions. 
+                if type == 'close':
+                    p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] >= roi[i][0]), (Z[j,:] <= roi[i][1]) ) ) ) / N
+                elif type == 'open':
+                    p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] > roi[i][0]), (Z[j,:] < roi[i][1]) ) ) ) / N
+    
+    p = np.sum(p,1) # add up all the regions in each position.
+    
+    return p # combine probabilities from all regions.
     
 if __name__ == '__main__':
     main()
