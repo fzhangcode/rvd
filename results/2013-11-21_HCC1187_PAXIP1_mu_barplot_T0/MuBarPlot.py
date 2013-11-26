@@ -89,7 +89,7 @@ def main():
                 f.create_dataset('controlMu',data=controlMu)
                 f.create_dataset('loc',data=loc)
                 f.close()
-    pdb.set_trace()            
+       
     call = [call00,call01, call1,call2,call3,call4,call5,call6,call7,call8]
     print('Median read depth for control sample HCC1187 is %d' % controlN_median)
     print('Median read depth for case sample HCC1187 is %d' % caseN_median)
@@ -123,12 +123,13 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
         ax.set_ylabel('Minor Allele Frequency')
         ax.set_xlabel('Called Locations')
         ax.set_xticks(ind+width)
-        ax.set_xticklabels( [str(x)[8:] for x in Loc])
+
+        ax.set_xticklabels( [x.split(':')[1] for x in Loc], rotation = 15)
 ##        ax.set_xticklabels( Loc, rotation = 60 )
         ax.set_ylim
         lgd = ax.legend( (rects1[0], rects2[0]), ('Control', 'Case'), bbox_to_anchor=(0., 1.02, 1., .102),
                    loc=3,ncol=2, mode="expand", borderaxespad=0. )
-        plt.rcParams.update({'font.size': 16, 'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 15, 'font.family': 'serif'})
         plt.savefig(title, bbox = 'tight', bbox_extra_artists=(lgd,))
     else:
         print 'No variant is called'
