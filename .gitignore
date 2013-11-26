@@ -3,13 +3,13 @@ tmp*
 *.hdf5
 *.mat
 *.pyc
-
+*.pdf
 *.txt
 *.pileup
 *.xlsx
 *.jpg
 *.png
-*.pdf
+
 *.bam
 *.pileup
 *.dc
@@ -31,7 +31,6 @@ Thumbs.db
 *.gz
 *.blg
 *.fig
-*.docx
 results/2013-10-01_SNP_calling_using_strelka/work
 results/2013-10-11_new_dataset_searching/datasets
 results/2013-10-11_new_dataset_searching/HCC1187
@@ -43,5 +42,4 @@ doc/RECOMB2014/recomb2014.aux
 doc/RECOMB2014/recomb2014.bbl
 results/2013-10-11_new_dataset_searching/datasets
 results/2013-10-23_HIV-1_dataset
-results/Notworkingexperiments
-results/2013-11-16_bayes_interval_probability
+RVD2.bbl

@@ -365,7 +365,7 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 
 RVD2 identified 5 variants in the 44,716bp PAXIP1 gene. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. None of the identified mutations are at known dnSNPX.X locations.
 
-Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:743899XC$\rightarrow$T, chr7:753635T$\rightarrow$C and chr7:780960C$\rightarrow$T are germline homozygous mutations. Positions chr7:754371 and chr7:758813 are called heterozygous in the normal sample. In the tumor cells we identified all five mutations chr7:743899C$\rightarrow$T, chr7:753635T$\rightarrow$C, chr7:754371T$\rightarrow$C, chr7:758813G$\rightarrow$A, and chr7:780960C$\rightarrow$T. Positions chr7:754371T$\rightarrow$C and chr7:758813G$\rightarrow$A are identified as loss-of-heterozygosity events.
+Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:743899XC$>$T, chr7:753635T$>$C and chr7:780960C$>$T are germline homozygous mutations. Positions chr7:754371 and chr7:758813 are called heterozygous in the normal sample. In the tumor cells we identified all five mutations chr7:743899C$>$T, chr7:753635T$>$C, chr7:754371T$>$C, chr7:758813G$>$A, and chr7:780960C$>$T. Positions chr7:754371T$>$C and chr7:758813G$>$A are identified as loss-of-heterozygosity events.
 
 % TODO: replace X>X with the reference and mutated base here
 % Done
@@ -462,7 +462,7 @@ The error rate across positions is captured by the $M_0$ parameter shown as a ho
 %%%%%%%%%%%%%%%%%
 % Appendix D: Parameter Settings for Variant Calling Algorithms
 %%%%%%%%%%%%%%%%%
-\section*{Parameter setting for other variant calling algorithms}
+\section{Parameter settings for other variant calling algorithms}
 
 \paragraph{\textbf{Samtools}}We used samtools/bcftools (v0.1.19) for variant calling. mpileup was the function to call variants and bcftools was used to save the result in standard Variant Call Format (VCF) files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid coverage cap.  mpileup was able to accept multiple replicates at one time so six bam files from each replicate group were fed into mpileup for variant calling. Read depth for each sample was kept with -D enabled, and -u was turned on to make sure the output bcf files uncompressed. 
 
