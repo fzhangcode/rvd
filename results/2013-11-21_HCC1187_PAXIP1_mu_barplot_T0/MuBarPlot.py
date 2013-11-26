@@ -17,12 +17,14 @@ logging.basicConfig(level=logging.DEBUG,
 
 def main():
     #model samples
-    controlFile = "../2013-11-07_HCC1187_PAXIP1_hg19masked/Control.hdf5"
-    caseFile = "../2013-11-07_HCC1187_PAXIP1_hg19masked/Case.hdf5"
-##
-##    controlFile = "../2013-11-15_six_replicates_synthetic_avg10/Control.hdf5"
-##    caseFile = "../2013-11-15_six_replicates_synthetic_avg10/Case100_0.hdf5"
-    hdf5name = 'HCC1187_call.hdf5'
+    
+    controlFile = "../2013-11-07_HCC1187_PAXIP1_genome_fa/Control.hdf5"
+    caseFile = "../2013-11-07_HCC1187_PAXIP1_genome_fa/Case.hdf5"
+    
+##    controlFile = "../2013-11-07_HCC1187_PAXIP1_hg19masked/Control.hdf5"
+##    caseFile = "../2013-11-07_HCC1187_PAXIP1_hg19masked/Case.hdf5"
+    
+    hdf5name = 'HCC1187_call_unmasked.hdf5'
     
     try:
         with h5py.File(hdf5name, 'r') as f:
@@ -127,7 +129,7 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
         lgd = ax.legend( (rects1[0], rects2[0]), ('Control', 'Case'), bbox_to_anchor=(0., 1.02, 1., .102),
                    loc=3,ncol=2, mode="expand", borderaxespad=0. )
         plt.rcParams.update({'font.size': 16, 'font.family': 'serif'})
-        plt.savefig(title.replace('.','_',1), bbox = 'tight', bbox_extra_artists=(lgd,))
+        plt.savefig(title, bbox = 'tight', bbox_extra_artists=(lgd,))
     else:
         print 'No variant is called'
 
