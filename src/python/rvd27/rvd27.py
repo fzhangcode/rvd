@@ -417,6 +417,10 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, 
     bound = 1.0E-4*np.ones_like(mu)
     Qsd = [max(bound[i],0.1*mu[i]) for i in range(np.shape(mu)[0])]
 
+    # rvd272
+    # Qsd = 0.1*np.ones_like(mu)
+    # rvd273
+    # Qsd = 0.01*np.ones_like(mu)
     mu_s = np.zeros( (mh_nsample, J) ) 
     for ns in xrange(0, mh_nsample):
         if pool is not None:
