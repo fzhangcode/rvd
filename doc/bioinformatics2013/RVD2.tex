@@ -363,12 +363,14 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 
 \subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca}
 
-RVD2 identified 5 variants in the 44,716bp PAXIP1 gene. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. None of the identified mutations are at known dnSNPX.X locations.
+RVD2 identified five variants in the 44kbp PAXIP1 gene from chr7:XXX to chr7:XXX. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. 
 
-Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:743899XC$>$T, chr7:753635T$>$C and chr7:780960C$>$T are germline homozygous mutations. Positions chr7:754371 and chr7:758813 are called heterozygous in the normal sample. In the tumor cells we identified all five mutations chr7:743899C$>$T, chr7:753635T$>$C, chr7:754371T$>$C, chr7:758813G$>$A, and chr7:780960C$>$T. Positions chr7:754371T$>$C and chr7:758813G$>$A are identified as loss-of-heterozygosity events.
+Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899C$>$T, chr7:154753635T$>$C and chr7:154780960C$>$T are germline homozygous mutations. Positions chr7:154754371 and chr7:154758813 are called heterozygous in the normal sample. In the tumor cells we identified all five mutations chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, and chr7:154780960C$>$T. Positions chr7:154754371T$>$C and chr7:154758813G$>$A then loss-of-heterozygosity events.
 
-% TODO: replace X>X with the reference and mutated base here
-% Done
+%According to dbSNPv138 chr7:154743899 is rs1239326, chr7:154753635 is rs1239324, chr7:154754371 is rs71534174, chr7:154758813 is rs35505514, and chr7:154780960 is rs4398858.
+%TODO: place these rs labels beneath the position labels on the x-axis of the figure. Remove the above sentence and add. 
+%Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding rs identities are shown in the figure.
+
 
 \begin{figure}[h]
 \begin{center}
@@ -379,7 +381,7 @@ Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the n
 \end{figure}
 %('rvd2\results\2013-11-21_HCC1187_PAXIP1_mu_barplot_T0')
 
-The original research describing this sample used Strelka to identify mutations in the same sample. They identified chr7:154760439 as variant, but missed the other four variants.
+The original research describing this sample used Strelka to identify mutations in the same sample. They identified chr7:154760439 as variant, but did not call the other four variants. In particular strelka missed the two LOH events.
 
 \section{Discussion}
 
