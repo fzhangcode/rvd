@@ -1,15 +1,19 @@
-2013-08-13 Compare ROC by Read Depth
+2013-11-15 Generate dataset on synthetic gene data with six replicates for each position
 ==============================
 
 Purpose
 ------------
-To measure sensitivity and specificity for full RVD2 pipeline for various read depths on synthetic gene data.
+Generate hdf5 dataset on synthetic gene data with six replicates for each position data.
+
+
+Proposal normal distribution is N(mu,std^2), where std = 0.1*mu when mu is higher than 10^-3 and 10^-4 otherwise.
 
 Conclusions
 -----------------
 
 Background
 -----------------
+
 
 
 Materials and Equipment

@@ -1,12 +1,13 @@
-2013-11-15 Generate dataset on synthetic gene data with six replicates for each position
+2013-11-15 Generate dataset on clinical data HCC1187 PAXIP1 gene with reference sequence unmasked
 ==============================
 
 Purpose
 ------------
-Generate hdf5 dataset on synthetic gene data with six replicates for each position data.
+Generate dataset on clinical data HCC1187 PAXIP1 gene with reference sequence unmasked
 
+Mj is set as 10*M0
 
-Proposal normal distribution is N(mu,std^2), where std = 0.1*mu when mu is higher than 10^-3 and 10^-4 otherwise.
+Proposal normal distribution is N(mu,std^2), where std = 0.1.
 
 Conclusions
 -----------------
