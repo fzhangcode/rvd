@@ -43,7 +43,9 @@
 %TODO: Label all results/figures with comment indicating what experiment folder those results depend on and come from.
 
 \begin{abstract}
-Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples. We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over wide ranges of median read depth and a minor allele frequency. We identify five mutations in the PAXP1 gene in a matched clinical breast ductal carcinoma tumor sample with 80\% tumor purity and 52 median read depth.%Unmasked positions has median read depth 51 for control sample, and 69 for case sample (from folder '2013-11-22_HCC1187_PAXIP1_genome_Qsd_0_1'; masked positions has median read depth 52 for control sample, and 70 for case sample( from foler '2013-11-22_HCC1187_PAXIP1_hg19masked_Qsd_0_1')
+Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples. We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over wide ranges of median read depth and a minor allele frequency. We identify five mutations in the PAXP1 gene in a matched clinical breast ductal carcinoma tumor sample; two of which are loss-of-heterozygosity events.
+
+%Unmasked positions has median read depth 51 for control sample, and 69 for case sample (from folder '2013-11-22_HCC1187_PAXIP1_genome_Qsd_0_1'; masked positions has median read depth 52 for control sample, and 70 for case sample( from foler '2013-11-22_HCC1187_PAXIP1_hg19masked_Qsd_0_1')
 %We use our algorithm to call variants in a pooled sample of 100 patients with multiple sclerosis and identify novel variants in IL7RA and IL2R.
 \end{abstract}
 
@@ -212,16 +214,14 @@ A candidate sample is generated from the symmetric proposal distribution $Q(\mu_
 	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
 \end{equation}
 
-We have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position. We set the proposal distribution standard deviation $\sigma_j = 0.1$, a constant to meet the Detailed Balance requirement.
+We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j^2 = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} >0$ and $0.1$ otherwise. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position. 
 
-%We set the proposal distribution variance $\sigma_j^2 = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} >0$ and $0.1$ otherwise. 
-
-We resample from the proposal if the sample is outside of the support of the posterior distribution. In the experiments, we discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this algorithm can be distributed across $J$ processors. 
+We resample from the proposal if the sample is outside of the support of the posterior distribution. We typically discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this algorithm can be distributed across $J$ processors. 
 
 %%%%%%%%%%%%%%%%%%
 % Posterior Density Test
 %%%%%%%%%%%%%%%%%%
-\subsection{Hypothesis Test}\label{sec:hypothesis_test}
+\subsection{Posterior Density Test}\label{sec:hypothesis_test}
 Metropolis-within-Gibbs provides samples from the posterior distribution of $\mu_j$ for both the control and case data. For notational simplicity, we define the random variables associated with these two distributions $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$.
 
 A variant is called if $\tilde{\mu}_j^{\text{case}} > \tilde{\mu}_j^{\text{control}}$ with high confidence,
@@ -287,10 +287,12 @@ Sequencing libraries were prepared from 500 ng of DNA using an early access vers
 % TODO: write this in own words.
 % TODO: add citation here.
 
+% TODO: discuss alignment protocol
+
 
 \section{Results}
 
-We test RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $\mu^{\Delta}$ to estimate the posterior probability of a variant.
+We tested RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $\mu^{\Delta}$ to estimate the posterior probability of a variant.
 
 \subsection{Performance with read depth}\label{sec:read_depth}
 
@@ -359,20 +361,31 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 
 \subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca}
 
-RVD2 identified 5 variants in the 44716b PAXIP1 gene. We identified the same variants when the fastq data was aligned to HG19 masked for repetitive regions and when we used the unmasked iGenome reference sequence. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample.
+RVD2 identified 5 variants in the 44,716bp PAXIP1 gene. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. None of the identified mutations are at known dnSNPX.X locations.
 
+Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:743899X>X, chr7:753635X>X and chr7:780960X>X are germline homozygous mutations. Positions chr7:754371 and chr7:758813 are called heterozygous in the normal sample. In the tumor cells we identified all five mutations chr7:743899X>X, chr7:753635X>X, chr7:754371X>X, chr7:758813X>X, and chr7:780960X>X. Positions chr7:754371X>X and chr7:758813X>X are identified as loss-of-heterozygosity events.
+
+% TODO: replace X>X with the reference and mutated base here
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=120mm]{pdf_figs/HCC1187_MuBarPlot.pdf}
 \caption{Estimated minor allele fraction for called variants in PAXIP1 gene.}
-\label{fig:MAF}
+\label{fig:brca_MAF}
 \end{center}
 \end{figure}
+%('rvd2\results\2013-11-22_HCC1187_PAXIP1_genome_Qsd_0_1')
 
-% from folder 'rvd2\results\2013-11-22_HCC1187_PAXIP1_genome_Qsd_0_1'
+The original research describing this sample used Strelka to identify mutations in the same sample. They identified XXX and XXX as variant, but missed the other three variants.
 
-%TODO: Add plan for discussion of these results
+\section{Discussion}
 
+We describe here a novel algorithm for model estimation and hypothesis testing for identifying single-nucleotide variants in heterogeneous samples using next-generation sequencing data. Our algorithm has a higher sensitivity and specificity than many other approaches for a range of read depths.
+
+Our inference algorithm uses Gibbs sampling and Metropolis-Hastings sampling to estimate the empirical Bayes statistical model. This sampling procedure provides a guarantee to identify the global optimal parameter settings in the long run. However, it may require many samples to achieve that guarantee causing the algorithm to be slower than other deterministic approaches. We opted for this balance of speed and accuracy because computational time is often not limiting and the loss of a false positive or false negative greatly outweighs the cost of more computation.
+
+We have focused on the statistical model and hypothesis test in this study and our results do not include any pre-filtration of erroneous reads or post-filtration of mutation calls beyond a simple quality score threshold. Incorporation of such data-cleaning steps will likely improve the accuracy of the algorithm.
+
+Our approach does not address identification of indels, structural variants or copy number variants. Those mutations typically require specific data analysis models and tests that are different than those for single-nucleotide variants. Furthermore, analysis of RNA-seq data or other data generated on the NGS platform may require different models that are more appropriately tuned to the particular noise feature of that data.
 
 \appendix
 
