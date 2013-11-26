@@ -34,7 +34,7 @@ def main():
     except IOError as e:
         logging.debug('Generate optimal dataset...')
         N=1000 # Z sampling size  
-        chi2=False
+        chi2=True
         times=8
         T_ED=np.zeros((times,len(dilutionList),len(folderList)))
         T_L1=np.zeros((times,len(dilutionList),len(folderList)))

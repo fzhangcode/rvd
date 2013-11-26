@@ -95,7 +95,7 @@ def main():
             chi2P=f['chi2pvalue'][...]
             f.close()
     except IOError:     
-        T = 0.00001 # detection threshold
+        T = 0.0 # detection threshold
         print("Detection Threshold = %f" % T)
         
         # Sample from the posterior Z = muCase - muControl
