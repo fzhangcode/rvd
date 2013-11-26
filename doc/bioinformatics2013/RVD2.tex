@@ -281,6 +281,7 @@ To simulate lower coverage data while retaining the error structure of real NGS 
 
 The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. A matched normal cells were derived from lymphoblastoid cells from whole blood. 
 % TODO: check matched cells line origin
+% double checked by Yuting, didn't find the matched cells line origin
 % TODO: mention tumor purity here
 
 Sequencing libraries were prepared from 500 ng of DNA using an early access version of Illuminas TruSeq DNA PCR-Free kit. The libraries were sequenced on four and eight lanes of a HiSeq 2000 flow cell for the normal and tumor, respectively, using 100 bp paired-end reads. Data, analyzed using the pre-release version of the Illumina Cancer Sequencing Workflow showed an average coverage of 40x for the normal and 90x for the tumor DNA with about 96\% coverage with 10 or more reads~\cite{}.
@@ -307,16 +308,16 @@ We generated receiver-operating characteristic curves (ROCs) for a range of medi
 \end{figure}
 % from folder '2013-11-24_six_replicates_Compute_ROC_Synthetic_Qsd_0_1'
 
-Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\mu_j$ for called variant positions with $\bar{n} = 41,573$ and MAF = XX\%. All of the called positions show a clear difference between the case and control error rates. The posterior mean estimates are all shrunken towards the global error rate parameter $\mu_0 = 0.0023$ due to the hierarchical structure of the model.
+Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\mu_j$ for called variant positions with $\bar{n} = 5584$ and MAF = 1.0\%. All of the called positions show a clear difference between the case and control error rates. The posterior mean estimates are all shrunken towards the global error rate parameter $\mu_0 = 0.0023$ due to the hierarchical structure of the model.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=120mm]{pdf_figs/Synthetic_MuBarPlot.pdf}
-\caption{Estimated minor allele fraction for called variants in 0.1\% dilution.}
+\includegraphics[width=120mm]{pdf_figs/Synthetic_Mubarplot_MAF1_0_Depth5584.pdf}
+\caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
 \label{fig:MAF}
 \end{center}
 \end{figure}
-% from folder '2013-11-24_synthetic_mu_barplot_optimalT_Qsd_0_1'
+% from folder '2013-11-15_synthetic_mu_barplot_optimalT', dilution rate is 0.1, downsampling rate is 0.01. 
 
 
 \subsection{Empirical performance compared with other algorithms}\label{sec:comparison}
@@ -335,6 +336,7 @@ We compare the empirical performance of RVD2 to other variant calling algorithms
 \end{center}
 \end{figure}
 % from folder 'rvd2\results\2013-09-19_operating_characteristics'
+% rvd2 data are from folder '2013-11-12_one_replicate_optT_with_chi','2013-11-12_one_replicate_T_zero_with_chi2','2013-11-15_six_replicates_optT_with_chi2','2013-11-15_six_replicates_T_zero_with_chi2'
 
 Figure~\ref{tbl:comparison_ss} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
 
@@ -363,9 +365,11 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 
 RVD2 identified 5 variants in the 44,716bp PAXIP1 gene. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. None of the identified mutations are at known dnSNPX.X locations.
 
-Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:743899X>X, chr7:753635X>X and chr7:780960X>X are germline homozygous mutations. Positions chr7:754371 and chr7:758813 are called heterozygous in the normal sample. In the tumor cells we identified all five mutations chr7:743899X>X, chr7:753635X>X, chr7:754371X>X, chr7:758813X>X, and chr7:780960X>X. Positions chr7:754371X>X and chr7:758813X>X are identified as loss-of-heterozygosity events.
+Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:743899XC$\rightarrow$T, chr7:753635T$\rightarrow$C and chr7:780960C$\rightarrow$T are germline homozygous mutations. Positions chr7:754371 and chr7:758813 are called heterozygous in the normal sample. In the tumor cells we identified all five mutations chr7:743899C$\rightarrow$T, chr7:753635T$\rightarrow$C, chr7:754371T$\rightarrow$C, chr7:758813G$\rightarrow$A, and chr7:780960C$\rightarrow$T. Positions chr7:754371T$\rightarrow$C and chr7:758813G$\rightarrow$A are identified as loss-of-heterozygosity events.
 
 % TODO: replace X>X with the reference and mutated base here
+% Done
+
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=120mm]{pdf_figs/HCC1187_MuBarPlot.pdf}
@@ -373,9 +377,9 @@ Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the n
 \label{fig:brca_MAF}
 \end{center}
 \end{figure}
-%('rvd2\results\2013-11-22_HCC1187_PAXIP1_genome_Qsd_0_1')
+%('rvd2\results\2013-11-21_HCC1187_PAXIP1_mu_barplot_T0')
 
-The original research describing this sample used Strelka to identify mutations in the same sample. They identified XXX and XXX as variant, but missed the other three variants.
+The original research describing this sample used Strelka to identify mutations in the same sample. They identified chr7:154760439 as variant, but missed the other four variants.
 
 \section{Discussion}
 
@@ -448,7 +452,7 @@ The left column of Figure~\ref{fig:depthM} shows the read depth for each of the 
 \end{center}
 \end{figure}
 
-% from folder '2013-11-24_depthM_plot_avg10_Qsd_0_1', dilution rate is 0.1.
+% from folder '22013-11-15_depthM_plot_avg10', dilution rate is 0.1.
 
 The right column of Figure~\ref{fig:depthM} shows the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, we see that $M_j$ does not change with read depth (except where the depth goes to zero) indicating that $M_j$ because $M_j$ is capturing a different process than the read depth. 
 
