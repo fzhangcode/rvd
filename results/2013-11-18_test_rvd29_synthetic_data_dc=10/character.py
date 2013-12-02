@@ -31,7 +31,7 @@ def main():
     sheet4.write(0, 0, "MAF")
     sheet4.write(0, 1, "Median Depth")
     
-    method = {'RVD2(T=0.00001)':'./vcf'}
+    method = {'RVD2(T=0)':'./vcf'}
     
     DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
     

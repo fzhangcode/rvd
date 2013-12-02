@@ -230,7 +230,7 @@ def sample_run():
 
 
 def load_model(h5Filename):
-    """ Returns the RVD2.7 model samples and parameters.
+    """ Returns the RVD30 model samples and parameters.
     Takes an hdf5 filename and returns phi and other parameters
     """
 
@@ -246,7 +246,7 @@ def load_model(h5Filename):
         
         # Load M if it exists
         if u"M" in h5file.keys():
-            theta = h5file['M'][...]
+            M = h5file['M'][...]
             out.append(M)
 
         # Load theta if it exists

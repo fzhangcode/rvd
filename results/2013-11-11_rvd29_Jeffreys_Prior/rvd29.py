@@ -329,7 +329,7 @@ def generate_sample(mu0=0.25, M0=10, n=100, N=3, J=100, seedint=None):
     beta0 = M0*(1-mu0)
     mu = ss.beta.rvs(alpha0, beta0, size=J)
     
-    #generate initial sample M
+    # generate initial sample M
     M = np.dot(1000,np.random.rand(J))
     #print (M)
     
