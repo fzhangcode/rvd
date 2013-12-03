@@ -47,7 +47,7 @@ def main():
     except IOError as e:
         
         diffalpha = 0.95
-        diffroi = (0,np.inf)
+        diffroi = (0.00001,np.inf)
         N = 1000
         outputFile = 'control_case_diff_plus.vcf'
         [loc, call00, controlMu, caseMu, controlN, caseN, postP, chi2P ]= rvd27.diff_test(0.95, controlFile, caseFile, \
@@ -56,21 +56,21 @@ def main():
         caseN_median = np.median(caseN)
         controlN_median = np.median(controlN)
         
-        diffroi = (-np.inf, 0)
+        diffroi = (-np.inf, -0.00001)
         [_,call01,_,_,_,_,_,_] = rvd27.diff_test(0.95, controlFile, caseFile, \
                                                 diffroi, N, outputFile = 'control_case_diff_minus.vcf')
         Interval=[[0.0,0.2],[0.2,0.8],[0.8,1.0]]
-        alpha = 0.8
+        alpha = 0.9
 
         [_,call1,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[0],caseroi=Interval[1],outputFile='normal_case_ref_heter.vcf')
     ##    pdb.set_trace()
         [_,call2,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[0],caseroi=Interval[2],outputFile='normal_case_ref_homo.vcf')
         [_,call3,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[1],caseroi=Interval[0],outputFile='normal_case_heter_LOH1.vcf')
-        [_,call4,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[1],caseroi=Interval[1],outputFile='normal_case_heter_unknown.vcf')
+        [_,call4,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[1],caseroi=Interval[1],outputFile='normal_case_heter_heter.vcf')
         [_,call5,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[1],caseroi=Interval[2],outputFile='normal_case_heter_LOH2.vcf')
-        [_,call6,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[2],caseroi=Interval[0],outputFile='normal_case_homo_homo.vcf')
+        [_,call6,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[2],caseroi=Interval[0],outputFile='normal_case_homo_ref.vcf')
         [_,call7,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[2],caseroi=Interval[1],outputFile='normal_case_homo_heter.vcf')
-        [_,call8,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[2],caseroi=Interval[2],outputFile='normal_case_homo_unknown.vcf')    
+        [_,call8,_,_,_,_,_,_] = rvd27.somatic_test(alpha, controlFile, caseFile, controlroi=Interval[2],caseroi=Interval[2],outputFile='normal_case_homo_homo.vcf')    
         
         with h5py.File(hdf5name, 'w') as f:
                 f.create_dataset('call01', data=call01)
@@ -121,16 +121,24 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
         rects2 = ax.bar(ind+width, np.mean(CallCaseMu,1), width, color='0.5', yerr=Case_yerr,ecolor='k')
         
         ax.set_ylabel('Minor Allele Frequency')
-        ax.set_xlabel('Called Locations')
+        ax.set_xlabel("HG19 Genomic Location [chr7:154,000,000+X]")
         ax.set_xticks(ind+width)
+        
+        Loclabel = [x.split(':')[1][3:] for x in Loc]
+        rslabel = ['rs1239326','rs1239324','rs71534174','rs35505514',' ','rs4398858']
 
-        ax.set_xticklabels( [x.split(':')[1] for x in Loc], rotation = 15)
+        label = ['%s\n%s' %(Loclabel[i], rslabel[i]) for i in xrange(len(Loclabel))]
+
+        ax.set_xticklabels(label)
 ##        ax.set_xticklabels( Loc, rotation = 60 )
         ax.set_ylim
-        lgd = ax.legend( (rects1[0], rects2[0]), ('Control', 'Case'), bbox_to_anchor=(0., 1.02, 1., .102),
-                   loc=3,ncol=2, mode="expand", borderaxespad=0. )
-        plt.rcParams.update({'font.size': 15, 'font.family': 'serif'})
+        lgd = ax.legend( (rects1[0], rects2[0]), ('Control', 'Case'), bbox_to_anchor=(0.8, 1.02, 0.2, .102),
+                   loc=4,ncol=1, mode="expand", borderaxespad=0., prop={'size':12})
+        plt.rcParams.update({'font.size': 12, 'font.family': 'serif'})
+        fig.tight_layout(rect=[0, 0, 0.95, 0.9])
+##        plt.show()
         plt.savefig(title, bbox = 'tight', bbox_extra_artists=(lgd,))
+        
     else:
         print 'No variant is called'
 
