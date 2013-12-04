@@ -66,11 +66,11 @@ def main():
         (0,1):'Heterozygous',
         (0,2):'Homozygous',
         (1,0):'LOH',
-        (1,1):'Unknown',
+        (1,1):'Heterozygous',
         (1,2):'LOH',
-        (2,0):'Homozygous',
+        (2,0):'Reference',
         (2,1):'Heterozygous',
-        (2,2):'Unknown',
+        (2,2):'Homozygous',
         }
     Somatic_status=[]
     for i in xrange(J):
