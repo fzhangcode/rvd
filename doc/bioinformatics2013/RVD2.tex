@@ -210,7 +210,7 @@ The posterior distribution over $\mu_j$ given its Markov blanket is
 
 Since the prior, $p(\mu_j | \mu_0, M_0)$, is not conjugate to the likelihood, $p(\theta_{ji} | \mu_j, M_j)$, we cannot write an analytical form for the posterior distribution. Instead, we sample from the posterior distribution using the Metropolis-Hastings algorithm.
 
-A candidate sample is generated from the symmetric proposal distribution $Q(\mu_j^* | \mu_j^{(p)}) \thicksim \mathcal{N}(\mu_j^{(p)}, \sigma_j^2)$, where $\mu_j^{(p)}$ is the $p$th from ythe posterior distribution. The acceptance probability is then
+A candidate sample is generated from the symmetric proposal distribution $Q(\mu_j^* | \mu_j^{(p)}) \thicksim \mathcal{N}(\mu_j^{(p)}, \sigma_j^2)$, where $\mu_j^{(p)}$ is the $p$th from the posterior distribution. The acceptance probability is then
 \begin{equation}
 	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
 \end{equation}
@@ -281,8 +281,8 @@ To simulate lower coverage data while retaining the error structure of real NGS 
 
 \subsection{HCC1187 Sequence Data}
 
-The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. A matched normal cells were derived from lymphoblastoid cells from whole blood~\citep{}. 
-% TODO: cite the original publication here.
+The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. A matched normal cells were derived from lymphoblastoid cells from whole blood. Sequencing libraries were prepared according to the protocol described in the original technical report~\cite{}. The raw FASTQ read files were aligned to hg19 igenome~\cite{} using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. We used samtools mpileup to generate pileup files using hg19 igenome~\cite{} as reference sequence~\citep{Navin:2010gu}. The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}.
+% TODO:cite the technical report.
 % TODO: check matched cells line origin
 % double checked by Yuting, didn't find the matched cells line origin
 % TODO: mention tumor purity here
@@ -291,12 +291,32 @@ Sequencing libraries were prepared from 500 ng of DNA using an early access vers
 % TODO: write this in own words.
 % TODO: add citation here.
 
-% TODO: discuss alignment protocol
-
+% TODO: discuss alignment protocol. Done.
+% TODO: rvd2 parameters. Done.
+% TODO: Pubmed for peer-reviewed paper on HCC1187 sample. Done
 
 \section{Results}
 
 We tested RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $\mu^{\Delta}$ to estimate the posterior probability of a variant.
+
+%TODO: This section doesn't make sense to me. Lets talk about what needs to be done here.
+Considering HCC1187 sample is diploid, we did two tests based on posterior density using RVD2. First, we compared the posterior density $\tilde\mu_j^{\Delta}$ to find out if $\tilde\mu_j$ in case sample was significantly higher than that in control sample and vice verse.Threshold $\tau$ was set at $1\times10^{-3}$ to avoid error brought by computer limitation; confidence level $1-\alpha$ was set at 0.95. We did $\chi^2$ test afterwards to further remove false callings.  % The difference is constant at 1.74*10^{-4}
+\begin{equation}\label{eqn:bayes_test_positive}
+	\Pr( \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}} \geq \tau ) > 1-\alpha,
+\end{equation}
+\begin{equation}\label{eqn:bayes_test_negative}
+	\Pr( \tilde{\mu}_j^{\text{control}} - \tilde{\mu}_j^{\text{case}} \geq \tau ) > 1-\alpha,
+\end{equation}
+
+
+Second, we identified the germline status and somatic status of HCC1187 sample by looking into posterior density of control sample and case sample independently. Basically, We computed the empirical posterior probability of $\tilde\mu_j$ across interval $[\tau_\text{l},\tau_\text{u}]$ and compare it with confidence level $1-\alpha$,
+\begin{equation}\label{eqn:bayes_test_interval}
+	\Pr( \tilde{\mu}_j \in [\tau_\text{l},\tau_\text{u}] ) > 1-\alpha.
+\end{equation}
+
+Confidence level $1-\alpha$ was set at 0.8 due to our lower confidence on germline and somatic status.Posterior density interval for reference, heterzygous mutation and homozygous mutation were set as $[0.0,0.2],[0.2,0.8],[0.8.1]$, respectively.
+% End of section that is confusing to me.
+
 
 \subsection{Performance with read depth}\label{sec:read_depth}
 
@@ -365,8 +385,7 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 
 \subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca}
 
-RVD2 identified five variants in the 44kbp PAXIP1 gene from chr7:XXX to chr7:XXX. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. 
-%TODO: add start and stop location here
+RVD2 identified five variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. 
 
 Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899C$>$T, chr7:154753635T$>$C and chr7:154780960C$>$T are called germline homozygous mutations. Positions chr7:154754371 and chr7:154758813 are called heterozygous in the normal sample. In the tumor sample we identified five mutations chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, and chr7:154780960C$>$T. Positions chr7:154754371T$>$C and chr7:154758813G$>$A are called loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the figure.
 %TODO: verify these rs positions
@@ -383,7 +402,7 @@ Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the n
 \end{figure}
 %('rvd2\results\2013-11-21_HCC1187_PAXIP1_mu_barplot_T0')
 
-The original research describing this sample used Strelka to identify mutations. They identified chr7:154760439 as variant, but did not call the other four variants. In particular Strelka missed the two LOH events.
+The original research describing this sample used Strelka to identify mutations in the same sample. They identified chr7:154760439 as variant, but did not call the other four variants. In particular strelka missed the two LOH events. % To compare the performance of RVD2 with other algorithms, we used Strelka to identify mutationin the same sample. Strelka found three positions: chr7:154754371, chr7:154758813 and chr7:154760439.
 
 \section{Discussion}
 
@@ -469,10 +488,10 @@ The error rate across positions is captured by the $M_0$ parameter shown as a ho
 \section{Parameter settings for other variant calling algorithms}
 %TODO: review grammar and completeness here
 
-\paragraph{\textbf{Samtools}}We used samtools/bcftools (v0.1.19) for variant calling. mpileup was the function to call variants and bcftools was used to save the result in standard Variant Call Format (VCF) files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid coverage cap.  mpileup was able to accept multiple replicates at one time so six bam files from each replicate group were fed into mpileup for variant calling. Read depth for each sample was kept with -D enabled, and -u was turned on to make sure the output bcf files uncompressed. 
+\paragraph{\textbf{Samtools}}We used samtools/bcftools (v0.1.19) for variant calling. mpileup was the function to call variants and bcftools was used to save the result in standard Variant Call Format (VCF) files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid coverage cap.  Samtools mpileup was able to accept multiple replicates at one time so six bam files from each replicate group were fed into mpileup for variant calling. Read depth for each sample was kept with -D enabled, and -u was turned on to make sure the output bcf files uncompressed. 
 
 \paragraph{\textbf{GATK}}
-UnifiedGenotyper is the function we used in GATK (v2.1-8) to detect mutations.We followed the general GATK recomended workflow to detect variants. Due to some format  incompatibility, we applied Picard to format read group and GATK for realignment as preprocessing. When calling variants using UnifiedGenotyper, -ploid (Number of samples in each pool $\times$ Sample Ploidy) was set at 1 because our synthetic data is haploid; we change the default setting for -dcov (default max coverage cutoff of $250\times$ ) to $10^6$ to avoid downsamplig so that the coverage was comparable to other approaches. All other parameters were set at default. Six replicates was passed to GATK for variant calling.
+UnifiedGenotyper is the function we used in GATK (v2.1-8) to detect mutations.We followed the general GATK recomended workflow to detect variants. Due to some format  incompatibility, we applied Picard to format read group and GATK for realignment as preprocessing. InUnifiedGenotyper, -ploid (Number of samples in each pool $\times$ Sample Ploidy) was set at 1 because our synthetic data is haploid; we change the default setting for -dcov (default max coverage cutoff of $250\times$ ) to $10^6$ to avoid downsamplig so that the coverage was comparable to other approaches. All other parameters were set at default. Six replicates was passed to GATK for variant calling.
 
 \paragraph{\textbf{VarScan2-mpileup}}
 VarScan2 (v2.3.4) mpileup2snp is a SNP calling program which takes multi-samples from samtools mpileup pipeline. We set -d at $10^6$ and enabled -50 for same concern previously stated. In afterwards mpileup2snp function, --min-var-freq, the only non-default parameter, was set low enough at $10^{-5}$ because the variant frequency can be as low as $10^{-3}$. Six replicates were all introduced for variant calling.
