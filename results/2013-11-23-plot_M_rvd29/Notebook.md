@@ -8,7 +8,7 @@ Evaluate the of properties of precision parameter M across positions. M is using
 Conclusions
 -----------------
 The precision parameter is low in the two ends of positions, while is fairly high in the middle positions. 
-###The M varies across positions. A important observation from dilution 100.0% and 10.0% is that the M value of the mutation locations are smaller than 100, which isn't seen in Gammar prior situation. For non-mutation locations M are generally in between 10^4 and 10^5.
+###The M varies across positions. A important observation from dilution 100.0% and 10.0% is that the M value of the mutation locations are smaller than 100, which isn't seen in other priors (Gamma, lognormal) situation. For non-mutation locations M are generally in between 10^4 and 10^5.
 ### Additionally, the distribution of M shows more normal and stable than the M without priors.
 
 Background
@@ -27,8 +27,7 @@ Experimental Protocol
 
 Results
 -----------
-![](M_loc.pdf)
-
+![](M_loc_rvd29.png) 
 
 Figure 1. Precision parameter Mj across positions. The y axis in left panels are in linear scale, while the y axis in the right panels are in log scale.
 

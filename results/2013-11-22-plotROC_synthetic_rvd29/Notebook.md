@@ -61,13 +61,13 @@ Results
 
 ### Classification using Bayesian Hypothesis Testing
 
-![](ROC_without_chi2.pdf)
+![](ROC_without_chi2_rvd29.png)
 Figure 1.ROC curve varying read depth showing detection performance of model with Bayesian Hypothesis Test.
 
 It can be seen that the model had high detection power when the read depth was at 10^5 level. At dilution rate at 0.1%, the model achieved performance with sensitivity at 99.74% and specificity at 92.86%. We missed one mutation at position 205 and had one false positive at position 8. The threshold was chosen at 0.022% which achieved the optimal sensitivity and specificity in the ROC curve. As expected, the detection power of the graphical model decreased when the read depth was reduced.
 
 ### Classification using Bayesian Hypothesis Testing and chi-square testing
-![](ROC_subplots_with_chi2.eps)
+![](ROC_subplots_with_chi2_rvd29.png)
 
 Figure 2. ROC curve varying read depth showing method performance with Bayesian Hypothesis Testing and Chi-Square Test
 
