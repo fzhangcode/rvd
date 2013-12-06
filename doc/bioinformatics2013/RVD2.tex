@@ -281,42 +281,23 @@ To simulate lower coverage data while retaining the error structure of real NGS 
 
 \subsection{HCC1187 Sequence Data}
 
-The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. A matched normal cells were derived from lymphoblastoid cells from whole blood. Sequencing libraries were prepared according to the protocol described in the original technical report~\cite{}. The raw FASTQ read files were aligned to hg19 igenome~\cite{} using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. We used samtools mpileup to generate pileup files using hg19 igenome~\cite{} as reference sequence~\citep{Navin:2010gu}. The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}.
+The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. A matched normal cells were derived from lymphoblastoid cells from whole blood. Sequencing libraries were prepared according to the protocol described in the original technical report~\cite{}. The raw FASTQ read files were aligned to hg19 igenome~\cite{} using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. The aligned data had an average read depth of 40x for the normal sample and 90x for the tumor sample with about 96\% coverage with 10 or more reads. We used samtools mpileup to generate pileup files using hg19 igenome~\cite{} as reference sequence~\citep{Navin:2010gu}. The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}.
 % TODO:cite the technical report.
 % TODO: check matched cells line origin
 % double checked by Yuting, didn't find the matched cells line origin
 % TODO: mention tumor purity here
 
-Sequencing libraries were prepared from 500 ng of DNA using an early access version of Illuminas TruSeq DNA PCR-Free kit. The libraries were sequenced on four and eight lanes of a HiSeq 2000 flow cell for the normal and tumor, respectively, using 100 bp paired-end reads. Data, analyzed using the pre-release version of the Illumina Cancer Sequencing Workflow showed an average coverage of 40x for the normal and 90x for the tumor DNA with about 96\% coverage with 10 or more reads~\cite{}.
-% TODO: write this in own words.
-% TODO: add citation here.
 
-% TODO: discuss alignment protocol. Done.
 % TODO: rvd2 parameters. Done.
-% TODO: Pubmed for peer-reviewed paper on HCC1187 sample. Done
 
 \section{Results}
 
 We tested RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $\mu^{\Delta}$ to estimate the posterior probability of a variant.
 
-%TODO: This section doesn't make sense to me. Lets talk about what needs to be done here.
-Considering HCC1187 sample is diploid, we did two tests based on posterior density using RVD2. First, we compared the posterior density $\tilde\mu_j^{\Delta}$ to find out if $\tilde\mu_j$ in case sample was significantly higher than that in control sample and vice verse.Threshold $\tau$ was set at $1\times10^{-3}$ to avoid error brought by computer limitation; confidence level $1-\alpha$ was set at 0.95. We did $\chi^2$ test afterwards to further remove false callings.  % The difference is constant at 1.74*10^{-4}
-\begin{equation}\label{eqn:bayes_test_positive}
-	\Pr( \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}} \geq \tau ) > 1-\alpha,
-\end{equation}
-\begin{equation}\label{eqn:bayes_test_negative}
-	\Pr( \tilde{\mu}_j^{\text{control}} - \tilde{\mu}_j^{\text{case}} \geq \tau ) > 1-\alpha,
-\end{equation}
+We used RVD2 to identify germline and somatic mutations in the diploid HCC1187 sample. To identify germline mutations, we used the control data in the following hypothesis test $\Pr( \tilde{\mu}_j \in [\tau_\text{l},\tau_\text{u}] ) > 1-\alpha$, where the intervals are: homozygous reference $[0, 0.5]$, heterozygous mutant $[0.25, 0.75]$, and homozygous mutant $[0.5, 1.0]$ and the size of the test is $\alpha=0.05$.
 
-
-Second, we identified the germline status and somatic status of HCC1187 sample by looking into posterior density of control sample and case sample independently. Basically, We computed the empirical posterior probability of $\tilde\mu_j$ across interval $[\tau_\text{l},\tau_\text{u}]$ and compare it with confidence level $1-\alpha$,
-\begin{equation}\label{eqn:bayes_test_interval}
-	\Pr( \tilde{\mu}_j \in [\tau_\text{l},\tau_\text{u}] ) > 1-\alpha.
-\end{equation}
-
-Confidence level $1-\alpha$ was set at 0.8 due to our lower confidence on germline and somatic status.Posterior density interval for reference, heterzygous mutation and homozygous mutation were set as $[0.0,0.2],[0.2,0.8],[0.8.1]$, respectively.
-% End of section that is confusing to me.
-
+To identify somatic mutations, we considered scenarios when the case(tumor) error rate is lower than the control(germline) error rate (e.g. loss-of-heterozygosity) as well as scenarios when the case(tumor) error rate is higher than the control(germline) error rate (e.g. homozygous somatic mutation). The two hypothesis tests are then $\Pr( \tilde{\mu}_j^{\Delta} \geq \tau ) > 1-\alpha$ and $\Pr( \tilde{\mu}_j^{\Delta} \leq \tau ) > 1-\alpha$. The size of the test is $\alpha=0.05$.
+%TODO: correct notation from \Pr to summation because we have samples, not distributions.
 
 \subsection{Performance with read depth}\label{sec:read_depth}
 
