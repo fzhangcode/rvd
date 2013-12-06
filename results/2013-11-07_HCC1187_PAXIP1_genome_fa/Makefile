@@ -4,7 +4,7 @@
 
 PILEUP2DC=../../bin/pileup2dc
 
-BAMDIR := ../2013-10-11_new_dataset_searching/HCC1187
+BAMDIR := ../../data/HCC1187
 BAMFILE := $(wildcard $(addprefix $(BAMDIR)/, *.bam)) # all pair1 & pair2
 
 PILEUPDIR = ./pileup

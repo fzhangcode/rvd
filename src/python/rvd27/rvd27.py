@@ -414,8 +414,19 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, 
     beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
 
     # set Qsd as the higher value between mu[j]/10 and 1.0E-4 for each position
-    bound = 1.0E-4*np.ones_like(mu)
-    Qsd = [max(bound[i],0.1*mu[i]) for i in range(np.shape(mu)[0])]
+    def bound(mu):
+        bound = 1.0E-4
+        if bound < mu < 1-bound:
+            return 0.1*mu
+        elif mu <= bound:
+            return 0.1*bound
+        else:
+            return 0.1*(1-bound)
+        
+    Qsd = map(bound, mu)       
+
+##    bound = 1.0E-4*np.ones_like(mu)
+##    Qsd = [max(bound[i],0.1*mu[i]) for i in range(np.shape(mu)[0])]
 
     # rvd272
     # Qsd = 0.1*np.ones_like(mu)

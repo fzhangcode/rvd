@@ -125,16 +125,16 @@ def gibbs(args):
                refb=refb)
 
 def test_main(args):
-    test(args.alpha, args.controlHDF5Name, args.caseHDF5Name, args.controlroi,\
-         args.caseroi, args.diffroi, args.N, args.outputFile, args.testtype)
+    test(args.alpha, args.controlHDF5Name, args.caseHDF5Name,
+         args.controlroi,args.caseroi, args.diffroi,
+         args.N, args.outputFile, args.testtype)
 
-def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None, \
-         controlroi=(0.0,0.2),caseroi=(0.8,1),diffroi=(0,np.inf), \
-         N=1000, outputFile=None, testtype='diff')
+def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None,
+         controlroi=(0.0,0.2),caseroi=(0.8,1),diffroi=(0,np.inf),
+         N=1000, outputFile=None, testtype='diff'):
 
     if testtype == 'diff':
-        logging.debug('Running bayes test on posterior difference distribution on sample %s and %s)'\
-                      %(controlHDF5Name, caseHDF5Name))
+        logging.debug('Running bayes test on posterior difference distribution on sample %s and %s)'%(controlHDF5Name, caseHDF5Name))
         if outputFile == None:
             outputFile = 'normal_case_diff.vcf'
         diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile)
@@ -219,8 +219,10 @@ def diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile):
             postP = f['postP'][...]
             interval = f['interval'][...]
             chi2P = f['chi2P'][...]
+            caseMu = f['caseMu'][...]
+            controlMu = f['controlMu'][...]
+            Z = f['Z'][...]
             f.close()
-           
     except IOError as e:
                   
         (Z, caseMuS, controlMuS) = sample_post_diff(caseMu-caseMu0, controlMu-controlMu0, N)
@@ -245,6 +247,9 @@ def diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile):
                 f.create_dataset('postP', data=postP)
                 f.create_dataset('interval', data=(diffroi))
                 f.create_dataset('chi2P',data=chi2P)
+                f.create_dataset('caseMu',data=caseMu)
+                f.create_dataset('controlMu',data=controlMu)
+                f.create_dataset('Z',data=Z)
                 f.close()           
 ##    pdb.set_trace()
     bayescall = postP > alpha
@@ -1064,8 +1069,10 @@ def bayes_test(Z, roi, type = 'close'):
     for i in xrange(nTest):
         for j in xrange(J):
                 if type == 'close':
+                    # somatic test
                     p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] >= roi[i][0]), (Z[j,:] <= roi[i][1]) ) ) ) / N
                 elif type == 'open':
+                    # diff test
                     p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] > roi[i][0]), (Z[j,:] < roi[i][1]) ) ) ) / N
     
     p = np.sum(p,1) # add up all the regions in each position.

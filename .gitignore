@@ -9,7 +9,7 @@ tmp*
 *.xlsx
 *.jpg
 *.png
-
+*.pdf
 *.bam
 *.pileup
 *.dc
@@ -43,3 +43,5 @@ doc/RECOMB2014/recomb2014.bbl
 results/2013-10-11_new_dataset_searching/datasets
 results/2013-10-23_HIV-1_dataset
 RVD2.bbl
+results/Notworkingexperiments
+results/2013-11-16_bayes_interval_probability
