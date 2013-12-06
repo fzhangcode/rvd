@@ -215,8 +215,7 @@ A candidate sample is generated from the symmetric proposal distribution $Q(\mu_
 	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
 \end{equation}
 
-We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j^2 = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} >0$ and $0.1$ otherwise. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position. 
-%TODO: make sure \sigma_j is correct here.
+We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} \in (10^{-3},1-10^{-3})$; otherwise, we set $\sigma_j = 10^{-4}$ if $\mu_j^{(p)}< 10^{-3}$ and $\sigma_j = 10^{-1}-10^{-4}$ if $\mu_j^{(p)}>1-10^{-3}$. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position. 
 
 
 We resample from the proposal if the sample is outside of the support of the posterior distribution. We typically discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this sampling step can be distributed across up to $J$ processors. 
@@ -262,8 +261,8 @@ We control for multiple hypothesis testing in two ways. We use Fisher's combined
 	X_j^2 = -2 \sum_{i=1}^N \ln(p_{ji}).
 \end{equation}
 
-Equation~\eqref{eqn:fisher_combined} gives a test statistic that follows a $\chi^2$ distribution with $2N$ degrees of freedom when the null hypothesis is true. Finally, we use the Bejamini-Hochberg method to control the family-wise error rate (FWER) over positions that have been called by the Bayesian hypothesis test~\eqref{eqn:bayes_test} \citep{}.
-%TODO: add two citations here
+Equation~\eqref{eqn:fisher_combined} gives a test statistic that follows a $\chi^2$ distribution with $2N$ degrees of freedom when the null hypothesis is true. Finally, we use the Bejamini-Hochberg method to control the family-wise error rate (FWER) over positions that have been called by the Bayesian hypothesis test~\eqref{eqn:bayes_test} \citep{benjamini1995controlling, efron2010large}.
+
 
 
 %%%%%%%%%%%%%%%%%%
@@ -281,19 +280,15 @@ To simulate lower coverage data while retaining the error structure of real NGS 
 
 \subsection{HCC1187 Sequence Data}
 
-The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. A matched normal cells were derived from lymphoblastoid cells from whole blood. Sequencing libraries were prepared according to the protocol described in the original technical report~\cite{}. The raw FASTQ read files were aligned to hg19 igenome~\cite{} using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. We used samtools mpileup to generate pileup files using hg19 igenome~\cite{} as reference sequence~\citep{Navin:2010gu}. The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}.
-% TODO:cite the technical report.
-% TODO: check matched cells line origin
-% double checked by Yuting, didn't find the matched cells line origin
-% TODO: mention tumor purity here
+The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}. The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. The estimated tumor purity was reported to be 0.8. A matched normal cells were derived from lymphoblastoid cells from peripheral blood. Sequencing libraries were prepared according to the protocol described in the original technical report~\citep{hcc1187techreport}. The raw FASTQ read files were aligned to hg19 using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. We used samtools mpileup to generate pileup files using hg19 ~\cite{} as reference sequence~\citep{Navin:2010gu}. 
+% TODO:cite the technical report. %Not sure the author is correct
+% HCC1187BL origin: http://www.atcc.org/products/all/CRL-2323.aspx
+% TODO: how to cite hg19?
 
-Sequencing libraries were prepared from 500 ng of DNA using an early access version of Illuminas TruSeq DNA PCR-Free kit. The libraries were sequenced on four and eight lanes of a HiSeq 2000 flow cell for the normal and tumor, respectively, using 100 bp paired-end reads. Data, analyzed using the pre-release version of the Illumina Cancer Sequencing Workflow showed an average coverage of 40x for the normal and 90x for the tumor DNA with about 96\% coverage with 10 or more reads~\cite{}.
-% TODO: write this in own words.
-% TODO: add citation here.
+%Sequencing libraries were prepared from 500 ng of DNA using an early access version of Illuminas TruSeq DNA PCR-Free kit. The libraries were sequenced on four and eight lanes of a HiSeq 2000 flow cell for the normal and tumor, respectively, using 100 bp paired-end reads. Data, analyzed using the pre-release version of the Illumina Cancer Sequencing Workflow showed an average coverage of 40x for the normal and 90x for the tumor DNA with about 96\% coverage with 10 or more reads~\cite{}.
 
-% TODO: discuss alignment protocol. Done.
 % TODO: rvd2 parameters. Done.
-% TODO: Pubmed for peer-reviewed paper on HCC1187 sample. Done
+
 
 \section{Results}
 
@@ -317,6 +312,8 @@ Second, we identified the germline status and somatic status of HCC1187 sample b
 Confidence level $1-\alpha$ was set at 0.8 due to our lower confidence on germline and somatic status.Posterior density interval for reference, heterzygous mutation and homozygous mutation were set as $[0.0,0.2],[0.2,0.8],[0.8.1]$, respectively.
 % End of section that is confusing to me.
 
+%TODO: adjust the posterior density interval $[0.0,0.2],[0.2,0.8],[0.8.1]$ and do the experiment
+%TODO: find the correct terminology for alpha.
 
 \subsection{Performance with read depth}\label{sec:read_depth}
 
@@ -388,7 +385,6 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 RVD2 identified five variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. 
 
 Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899C$>$T, chr7:154753635T$>$C and chr7:154780960C$>$T are called germline homozygous mutations. Positions chr7:154754371 and chr7:154758813 are called heterozygous in the normal sample. In the tumor sample we identified five mutations chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, and chr7:154780960C$>$T. Positions chr7:154754371T$>$C and chr7:154758813G$>$A are called loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the figure.
-%TODO: verify these rs positions
 %According to dbSNPv138 chr7:154743899 is rs1239326, chr7:154753635 is rs1239324, chr7:154754371 is rs71534174, chr7:154758813 is rs35505514, and chr7:154780960 is rs4398858.
 
 
@@ -486,27 +482,24 @@ The error rate across positions is captured by the $M_0$ parameter shown as a ho
 % Appendix D: Parameter Settings for Variant Calling Algorithms
 %%%%%%%%%%%%%%%%%
 \section{Parameter settings for other variant calling algorithms}
-%TODO: review grammar and completeness here
-
-\paragraph{\textbf{Samtools}}We used samtools/bcftools (v0.1.19) for variant calling. mpileup was the function to call variants and bcftools was used to save the result in standard Variant Call Format (VCF) files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid coverage cap.  Samtools mpileup was able to accept multiple replicates at one time so six bam files from each replicate group were fed into mpileup for variant calling. Read depth for each sample was kept with -D enabled, and -u was turned on to make sure the output bcf files uncompressed. 
+\paragraph{\textbf{Samtools}}We used samtools (v0.1.19) function mpileup to call variants and bcftools to save the result in standard VCF files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid truncating read deapth. Option -u was enabled to make sure the output bcf files were uncompressed. 
 
 \paragraph{\textbf{GATK}}
-UnifiedGenotyper is the function we used in GATK (v2.1-8) to detect mutations.We followed the general GATK recomended workflow to detect variants. Due to some format  incompatibility, we applied Picard to format read group and GATK for realignment as preprocessing. InUnifiedGenotyper, -ploid (Number of samples in each pool $\times$ Sample Ploidy) was set at 1 because our synthetic data is haploid; we change the default setting for -dcov (default max coverage cutoff of $250\times$ ) to $10^6$ to avoid downsamplig so that the coverage was comparable to other approaches. All other parameters were set at default. Six replicates was passed to GATK for variant calling.
+We used GATK (v2.1-8) UnifiedGenotyper function to detect mutations on our synthetic data following the recommended workflow. Due to some format incompatibility, we applied Picard to format read group and GATK for realignment. In UnifiedGenotyper, -ploid (Number of samples in each pool $\times$ Sample Ploidy) was set at 1 because our synthetic data is haploid; -dcov was set at $10^6$ to avoid downsamplig coverage within GATK.
 
 \paragraph{\textbf{VarScan2-mpileup}}
-VarScan2 (v2.3.4) mpileup2snp is a SNP calling program which takes multi-samples from samtools mpileup pipeline. We set -d at $10^6$ and enabled -50 for same concern previously stated. In afterwards mpileup2snp function, --min-var-freq, the only non-default parameter, was set low enough at $10^{-5}$ because the variant frequency can be as low as $10^{-3}$. Six replicates were all introduced for variant calling.
+VarScan2 (v2.3.4) mpileup2snp is a SNP calling program which takes multi-samples from samtools mpileup pipeline.We assigned parameter -C value 50 as the synthetic data was aligned using BWA and set -d at $10^6$. In mpileup2snp, --min-var-freq, the only non-default parameter, was set low enough at $10^{-5}$ because the variant frequency can be as low as $10^{-3}$. 
 
 \paragraph{\textbf{VarScan2-somatic}}
-We tested VarScan2-somatic on our six replicates synthetic data set as well. Considering that RVD2 doesn't call somatic status, we combined all the positions VarScan2-somatic called regardless the somatic status (Germline/LOH/Somatic/Unknown). --normal-purity was set at 1.00, while --tumor-purity was set as the dilution rate. --min-var-freq was set at $10^{-5}$.
+We tested VarScan2 somatic on our synthetic dataset. The parameter --normal-purity set was at 1.00, --tumor-purity at the dilution rate. The parameter --min-var-freq was set at $10^{-5}$. We combined all the positions VarScan2-somatic called regardless the somatic status (Germline/LOH/Somatic/Unknown) to compare with performance of RVD2.
 
-\paragraph{\textbf{Strelka}}
-Configuration and Analysis for Strelka is standard so we just installed the program and ran it on our data set. One thing to note is that since Strelka can not accept relicate data, we used a single replicate with a read depth that most closely matched the overall median depth of the replicates.
+\paragraph{\textbf{Strelka and muTect}}
+Since configuration and Analysis for Strelka and muTect is standardized and no parameter needs to be specified, we installed these two programs and ran them on our data set separately. 
 
-\paragraph{\textbf{muTect}}
-Similar to Strelka, we ran muTect with standard settings and only passed one replicate of synthetic data.
+Samtools mpileup takes multiple "tumor'' replicates for variant calling, so we fed six bam files from each case replicate group to mpileup. GATK, VarScan2-mpileup accept multiple ``tumor-normal'' pair replicates so we passed six pair replicates to each algorithm. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
 
-GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
-
+% TODO: modify the following section
+GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths. 
 \bibliographystyle{apalike}
 \bibliography{bioinfo}
 \end{document}  
