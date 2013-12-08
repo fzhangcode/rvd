@@ -464,7 +464,7 @@ The error rate across positions is captured by the $M_0$ parameter shown as a ho
 \paragraph{\textbf{Samtools}}We used samtools (v0.1.19) function mpileup to call variants and bcftools to save the result in standard VCF files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid truncating read deapth. Option -u was enabled to make sure the output bcf files were uncompressed. 
 
 \paragraph{\textbf{GATK}}
-We used GATK (v2.1-8) UnifiedGenotyper function to detect mutations on our synthetic data following the recommended workflow. Due to some format incompatibility, we applied Picard to format read group and GATK for realignment. In UnifiedGenotyper, -ploid (Number of samples in each pool $\times$ Sample Ploidy) was set at 1 because our synthetic data is haploid; -dcov was set at $10^6$ to avoid downsamplig coverage within GATK.
+We used GATK (v2.1-8) UnifiedGenotyper function to detect mutations on our synthetic data following the recommended workflow. Due to some format incompatibility, we applied Picard to format read group and GATK for realignment. In UnifiedGenotyper, -ploid (Number of samples in each pool $\times$ Sample Ploidy) was set at 1 because our synthetic data is haploid; -dcov was set at $10^6$ to avoid downsampling coverage within GATK.
 
 \paragraph{\textbf{VarScan2-mpileup}}
 VarScan2 (v2.3.4) mpileup2snp is a SNP calling program which takes multi-samples from samtools mpileup pipeline.We assigned parameter -C value 50 as the synthetic data was aligned using BWA and set -d at $10^6$. In mpileup2snp, --min-var-freq, the only non-default parameter, was set low enough at $10^{-5}$ because the variant frequency can be as low as $10^{-3}$. 
