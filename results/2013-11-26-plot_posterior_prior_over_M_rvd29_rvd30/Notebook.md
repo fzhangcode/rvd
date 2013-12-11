@@ -7,7 +7,7 @@ Evaluate the performance of priors and posteriors of Mj over different M values.
 
 Conclusions
 -----------------
-From the figures, The posterior distribution shows normal and stable. It doesn't show a peak at some unreasonable point or a strange shape. 
+From the figures, (1) The posterior distribution shows normal and stable. It doesn't show a peak at some unreasonable point or a strange shape. (2) The Jeffreys' prior shows more information than the lognormal prior (flat) from the posterior curve. And the prior distribution wants to search for a small value for M, but the posterior shows a peak there. Interesting!
 
 Background
 -----------------
