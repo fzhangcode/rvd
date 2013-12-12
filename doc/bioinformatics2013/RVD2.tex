@@ -1,6 +1,6 @@
 \documentclass[11pt,reqno]{amsart}
 \usepackage[top=1in, left=1in, right=1in, bottom=1in]{geometry}                % See geometry.pdf to learn the layout options. There are lots.
-\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ...
 \usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
 %\usepackage{algorithm, algorithmic}
 
@@ -52,16 +52,16 @@ Next-generation sequencing technology is increasingly being used for clinical di
 
 \section{Introduction}
 
-Next-generation sequencing (NGS) technology has enabled the systematic interrogation of the genome for a fraction of the cost of traditional assays~\citep{Koboldt:2013kw}. Protocol and platform engineering improvements have enabled the generation of $1\times10^9$ bases of sequence data in 27 hours for approximately \$1000~\citep{Quail:2012hf}. As a result, NGS is increasingly being used as a general platform for research assays for methylation state~\citep{Laird:2010ab}, DNA mutations~\citep{Consortium:2013co}, copy number variation~\citep{Alkan:2009cr}, promoter occupancy~\citep{Ouyang:2009hc} and others~\citep{Rivera:2013ee}. NGS diagnostics are being translated to clinical applications including noninvasive fetal diagnostics~\citep{Kitzman:2012hea}, infectious disease diagnostics~\citep{Capobianchi:2012em}, cancer diagnostics~\citep{Navin:2010gu}, and human microbial analysis~\citep{Consortium:2013iz}. 
+Next-generation sequencing (NGS) technology has enabled the systematic interrogation of the genome for a fraction of the cost of traditional assays~\citep{Koboldt:2013kw}. Protocol and platform engineering improvements have enabled the generation of $1\times10^9$ bases of sequence data in 27 hours for approximately \$1000~\citep{Quail:2012hf}. As a result, NGS is increasingly being used as a general platform for research assays for methylation state~\citep{Laird:2010ab}, DNA mutations~\citep{Consortium:2013co}, copy number variation~\citep{Alkan:2009cr}, promoter occupancy~\citep{Ouyang:2009hc} and others~\citep{Rivera:2013ee}. NGS diagnostics are being translated to clinical applications including noninvasive fetal diagnostics~\citep{Kitzman:2012hea}, infectious disease diagnostics~\citep{Capobianchi:2012em}, cancer diagnostics~\citep{Navin:2010gu}, and human microbial analysis~\citep{Consortium:2013iz}.
 
-Increasingly, NGS is being used to interrogate mutations in heterogeneous clinical samples. For example, NGS-based non-invasive fetal DNA testing uses maternal blood sample to sequence the minority fraction of cell-free fetal DNA~\citep{Fan:2008di}. Infectious diseases such as HIV and influenza may contain many genetically heterogeneous sub-populations~\citep{Flaherty:2011ja, Ghedin:2010ie}. DNA sequencing of individual regions of a solid tumor has revealed genetic heterogeneous within an individual sample~\citep{Navin:2010gu}.  
+Increasingly, NGS is being used to interrogate mutations in heterogeneous clinical samples. For example, NGS-based non-invasive fetal DNA testing uses maternal blood sample to sequence the minority fraction of cell-free fetal DNA~\citep{Fan:2008di}. Infectious diseases such as HIV and influenza may contain many genetically heterogeneous sub-populations~\citep{Flaherty:2011ja, Ghedin:2010ie}. DNA sequencing of individual regions of a solid tumor has revealed genetic heterogeneous within an individual sample~\citep{Navin:2010gu}.
 
-However, the primary statistical tools for calling variants from NGS data are optimized for homogeneous samples. Most analysis pipelines make use of preprocessing or postprocessing or both to eliminate error prone reads and false positives. Samtools/bcftools and GATK a naive Bayes decision rule to call a variant~\citep{}. GATK involves more sophisticate pre and post-processing steps. The genotype prior is fixed and constant across all loci and the likelihood of an allele at a locus is a function of the phred score~\citep{McKenna:2010bv}.
+However, the primary statistical tools for calling variants from NGS data are optimized for homogeneous samples. Most analysis pipelines make use of preprocessing or postprocessing or both to eliminate error prone reads and false positives. Samtools/bcftools and GATK a naive Bayes decision rule to call a variant~\citep{li2011statistical,depristo2011framework}. GATK involves more sophisticate pre- and post-processing steps. The genotype prior is fixed and constant across all loci and the likelihood of an allele at a locus is a function of the phred score~\citep{McKenna:2010bv}.
 
 Recently, researchers have developed algorithms to call low-frequency or rare variants in heterogeneous samples.  VarScan2 combines algorithmic heuristics to call genotypes in the tumor and normal sample pileup data and then applies a Fisher's exact test on the read count data to detect a significant difference in the genotype calls~\citep{Koboldt:2012cg}. Strelka uses a hierarchical Bayesian approach to model the joint distribution of the allele frequency in the tumor and normal samples at each locus~\citep{Saunders:2012fh}. With the joint distribution available, one is able to identify locations with dissimilar allele frequencies. muTect uses a Bayesian posterior probability in its decision rule to evaluate the likelihood of a mutation~\citep{Cibulskis:2013ta}.
 
 Several studies have compared the relative performance of these algorithms.
-%TODO: [DISCUSS \citet{Stead:2013fu}] and others
+%TODO: [DISCUSS \citet{Stead:2013fu}, \citet{spencer2013performance}] and others
 
 Typically such a variant calling algorithms are comprised of multiple pre- and post-filtration steps around model estimation and hypothesis testing steps~\citep{Pabinger:2013dl}. These steps may improve algorithm performance, but their presence makes it difficult to isolate what step is most responsible for the performance. Instead, we focus exclusively on the model structure and statistical inference steps. Additional filtration steps may improve performance considerably, but those aspects are subjects of intense research and separate study. We have isolated the statistical inference and hypothesis testing steps so that they may be used independently or as part of a larger variant calling pipeline.
 
@@ -77,7 +77,7 @@ RVD uses a two-stage approach for detecting for rare variants. First, it estimat
 For a given sample, the observed data consists of two matrices $r \in \RR^{J \times N}$ and $n \in \RR^{J \times N}$, where $r_{ji}$ is the number of reads with a non-reference base at location $j$ in experimental replicate $i$ and $n_{ji}$ is the total number of reads at location $j$ in replicate $i$. The model generative process is as follows:
 
 \begin{enumerate}[noitemsep]
-	\item For each location $j$: 
+	\item For each location $j$:
 	\begin{enumerate}
 		\item Draw an error rate $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$
 		\item For each replicate $i$:
@@ -102,7 +102,7 @@ RVD2 hierarchically partitions sources of variation in the data. $r_{ji} | n_{ji
 \end{center}
 \end{figure}
 
-Figure~\ref{fig:graphical_model} shows a graphical representation of the RVD2 statistical model. In this graphical model framework a shaded node represents an observed random variable, an unshaded node represents an unobserved or latent random variable and a directed edge represents a functional dependency between the two connected nodes~\citep{Jordan2004}. A rounded box or ``plate" represents replication of the nodes within the plate. The graphical model framework connects graph theory and probability theory in a way that facilitates algorithmic methods for statistical inference.
+Figure~\ref{fig:graphical_model} shows a graphical representation of the RVD2 statistical model. In this graphical model framework a shaded node represents an observed random variable, an unshaded node represents an unobserved or latent random variable and a directed edge represents a functional dependency between the two connected nodes~\citep{jordan2004graphical}. A rounded box or ``plate" represents replication of the nodes within the plate. The graphical model framework connects graph theory and probability theory in a way that facilitates algorithmic methods for statistical inference.
 
 The joint distribution over the latent and observed variables for data at location $j$ in replicate $i$ given the parameters is
 
@@ -117,7 +117,7 @@ p\left( \theta_{ji} | \mu_j; M_j \right) &= \frac{ \Gamma(M_j) } { \Gamma(\mu_j 
 p \left( r_{ji} | \theta_{ji}, n_{ji} \right) &= \frac{ \Gamma(n_{ji}+1) } { \Gamma(r_{ji}+1) \Gamma( n_{ji} - r_{ji} + 1 ) } \theta_{ji}^{r_{ji}} (1 - \theta_{ji})^{n_{ji} - r_{ji}}. \nonumber
 \end{align}
 
-Integrating over the latent variables $\theta_{ji}$ and $\mu_j$ yields the marginal distribution of the data, 
+Integrating over the latent variables $\theta_{ji}$ and $\mu_j$ yields the marginal distribution of the data,
 \begin{equation}
 p \left( r_{ji} | n_{ji} ; \mu_0, M_0, M_j \right) = \int_{\mu_j} \int_{\theta_{ji}}  p \left( r_{ji} | \theta_{ji}, n_{ji} \right) p\left( \theta_{ji} | \mu_j; M_j \right) p\left( \mu_j; \mu_0, M_0 \right) d\theta_{ji} d\mu_j.
 \end{equation}
@@ -154,8 +154,8 @@ Instead, we have developed a Metropolis-within-Gibbs  approximate inference algo
 \For {each location j} \Comment{Sample $\mu_j$}
   \State Draw T samples from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$ using M--H
   \State Set $\mu_j$ to the sample median for the T samples
-  
-  
+
+
   \For {each replicate i} \Comment{Sample $\theta_{ji}$}
 	\State Sample from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$
   \EndFor
@@ -171,30 +171,30 @@ Instead, we have developed a Metropolis-within-Gibbs  approximate inference algo
 \subsection{Initialization}
 The initial values for the model parameters and latent variables is obtained by a method-of-moments (MoM) procedure. MoM works by setting the population moment equal to the sample moment. A system of equations is formed such that the number of moment equations is equal to the number of unknown parameters and the equations are solved simultaneously to give the parameter estimates. We simply start with the data matrices $r$ and $n$ and work up the hierarchy of the graphical model solving for the parameters of each conditional distribution in turn.
 
-We present the initial parameter estimates here and provide the derivations in Appendix~\ref{sec:appendix_mom}. The MoM estimate for replicate-level parameters are 
-$\tilde{\theta}_{ji} = \frac{r_{ji}} {n_{ji}}$. 
-The estimates for the position-level parameters are 
-$\tilde{\mu}_j = \frac{1}{N} \sum_{i=1}^N \theta_{ji}$ 
-and 
-$\tilde{M_j} = \frac{ \tilde{\mu}_j (1 - \tilde{\mu}_j ) } { \frac{1}{N} \sum_{i=1}^N \theta_{ji}^2 } -1$. 
-The estimates for the genome-level parameters are 
-$\tilde{\mu}_0 = \frac{1}{J} \sum_{j=1}^J \mu_j$ 
-and 
-$\tilde{M}_0 = \frac{ \tilde{\mu}_0 (1 - \tilde{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \mu_j^2 } -1$. 
-While MoM is known to have the potential to return estimates outside the true parameter bounds, we have not encountered such behavior in this application. 
+We present the initial parameter estimates here and provide the derivations in Appendix~\ref{sec:appendix_mom}. The MoM estimate for replicate-level parameters are
+$\tilde{\theta}_{ji} = \frac{r_{ji}} {n_{ji}}$.
+The estimates for the position-level parameters are
+$\tilde{\mu}_j = \frac{1}{N} \sum_{i=1}^N \theta_{ji}$
+and
+$\tilde{M_j} = \frac{ \tilde{\mu}_j (1 - \tilde{\mu}_j ) } { \frac{1}{N} \sum_{i=1}^N \theta_{ji}^2 } -1$.
+The estimates for the genome-level parameters are
+$\tilde{\mu}_0 = \frac{1}{J} \sum_{j=1}^J \mu_j$
+and
+$\tilde{M}_0 = \frac{ \tilde{\mu}_0 (1 - \tilde{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \mu_j^2 } -1$.
+While MoM is known to have the potential to return estimates outside the true parameter bounds, we have not encountered such behavior in this application.
 
 %%%%%%%%%%%%%%%%%%
 % Sampling theta
 %%%%%%%%%%%%%%%%%%
 \subsection{Sampling from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$}
 
-Samples from the posterior distribution 
-$p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j)$ 
-are drawn analytically because of the Bayesian conjugacy between the prior 
-$p(\theta_{ji} | \mu_j, M_j) \thicksim \text{Beta}(\mu_j, M_j)$ 
-and the likelihood 
-$p(r_{ji} | n_{ji}, \theta_{ji}) \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$. 
-The posterior distribution is 
+Samples from the posterior distribution
+$p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j)$
+are drawn analytically because of the Bayesian conjugacy between the prior
+$p(\theta_{ji} | \mu_j, M_j) \thicksim \text{Beta}(\mu_j, M_j)$
+and the likelihood
+$p(r_{ji} | n_{ji}, \theta_{ji}) \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$.
+The posterior distribution is
 \begin{equation}
 	p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j) \thicksim \text{Beta}\left( \frac{r_{ji} + M_j \mu_j}{n_{ji} + M_j} , n_{ji} + M_j\right).
 \end{equation}
@@ -203,7 +203,7 @@ The posterior distribution is
 % Sampling mu
 %%%%%%%%%%%%%%%%%%
 \subsection{Sampling from $p \left( \mu_j |\theta_{ji},M_j,\mu_0,M_0\right)$}
-The posterior distribution over $\mu_j$ given its Markov blanket is 
+The posterior distribution over $\mu_j$ given its Markov blanket is
 \begin{equation}
 	p( \mu_j | \theta_{ji}, M_j, \mu_0, M_0 ) \propto p(\mu_j | \mu_0, M_0) p(\theta_{ji} | \mu_j, M_j).
 \end{equation}
@@ -215,10 +215,10 @@ A candidate sample is generated from the symmetric proposal distribution $Q(\mu_
 	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
 \end{equation}
 
-We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} \in (10^{-3},1-10^{-3})$; otherwise, we set $\sigma_j = 10^{-4}$ if $\mu_j^{(p)}< 10^{-3}$ and $\sigma_j = 10^{-1}-10^{-4}$ if $\mu_j^{(p)}>1-10^{-3}$. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position. 
+We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} \in (10^{-3},1-10^{-3})$; otherwise, we set $\sigma_j = 10^{-4}$ if $\mu_j^{(p)}< 10^{-3}$ and $\sigma_j = 10^{-1}-10^{-4}$ if $\mu_j^{(p)}>1-10^{-3}$. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position.
 
 
-We resample from the proposal if the sample is outside of the support of the posterior distribution. We typically discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this sampling step can be distributed across up to $J$ processors. 
+We resample from the proposal if the sample is outside of the support of the posterior distribution. We typically discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this sampling step can be distributed across up to $J$ processors.
 
 %%%%%%%%%%%%%%%%%%
 % Posterior Density Test
@@ -253,9 +253,9 @@ We use a $\chi^2$ goodness-of-fit test on a multinomial distribution over the no
  2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{k=1}^3 r_{ji}^{(k)} \left[\left(\frac{r_{ji}^{(k)}}{E_{ji}^{(k)}}\right)^\lambda-1\right];\lambda \in R,
 \end{equation}
 
-where $r_{ji}^{(k)}$ is the observed frequency for non-reference base $k$ at position $j$ in replicate $i$ and $E_{ji}^{(k)}$ is the corresponding expected frequency under the null hypothesis. \citet{Cressie1984} recommended $\lambda = 2/3$ when no knowledge of the alternative distribution is available and we choose that value.
+where $r_{ji}^{(k)}$ is the observed frequency for non-reference base $k$ at position $j$ in replicate $i$ and $E_{ji}^{(k)}$ is the corresponding expected frequency under the null hypothesis. \citet{cressie1984multinomial} recommended $\lambda = 2/3$ when no knowledge of the alternative distribution is available and we choose that value.
 
-We control for multiple hypothesis testing in two ways. We use Fisher's combined probability test \citep{} to combine the p-values for $N$ replicates into a single p-value at position $j$,
+We control for multiple hypothesis testing in two ways. We use Fisher's combined probability test \citep{fisher1970statistical} to combine the p-values for $N$ replicates into a single p-value at position $j$,
 
 \begin{equation}\label{eqn:fisher_combined}
 	X_j^2 = -2 \sum_{i=1}^N \ln(p_{ji}).
@@ -280,7 +280,7 @@ To simulate lower coverage data while retaining the error structure of real NGS 
 
 \subsection{HCC1187 Sequence Data}
 
-The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}. The HCC1187 cell line is derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. The estimated tumor purity was reported to be 0.8. A matched normal cells were derived from lymphoblastoid cells from peripheral blood. Sequencing libraries were prepared according to the protocol described in the original technical report~\citep{hcc1187techreport}. The raw FASTQ read files were aligned to hg19 using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. The aligned data had an average read depth of 40x for the normal sample and 90x for the tumor sample with about 96\% coverage with 10 or more reads. We used samtools mpileup to generate pileup files using hg19 as reference sequence~\citep{Navin:2010gu}. 
+The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}. The HCC1187 cell line was derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. The estimated tumor purity was reported to be 0.8. A matched normal cells were derived from lymphoblastoid cells from peripheral blood. Sequencing libraries were prepared according to the protocol described in the original technical report~\citep{hcc1187techreport}. The raw FASTQ read files were aligned to hg19 using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. The aligned data had an average read depth of 40x for the normal sample and 90x for the tumor sample with about 96\% coverage with 10 or more reads. We used samtools mpileup to generate pileup files using hg19 as reference sequence~\citep{Navin:2010gu}.
 % TODO:cite the technical report. %Not sure the author is correct
 % HCC1187BL origin: http://www.atcc.org/products/all/CRL-2323.aspx
 
@@ -316,7 +316,7 @@ We generated receiver-operating characteristic curves (ROCs) for a range of medi
 %\label{fig:MAF}
 %\end{center}
 %\end{figure}
-%% from folder '2013-11-15_synthetic_mu_barplot_optimalT', dilution rate is 0.1, downsampling rate is 0.01. 
+%% from folder '2013-11-15_synthetic_mu_barplot_optimalT', dilution rate is 0.1, downsampling rate is 0.01.
 
 
 \subsection{Empirical performance compared with other algorithms}\label{sec:comparison}
@@ -338,7 +338,7 @@ We compare the empirical performance of RVD2 to other variant calling algorithms
 
 Figure~\ref{tbl:comparison_ss} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
 
-The sensitivity for RVD2 with $\tau=0$ is low for low read depths and MAF levels and $N=1$ case and control sample. The sensitivity increases considerably with read depth at a slight expense to specificity. With $\tau^*$ the performance is much better with high sensitivity and specificity across a wide range of read depths and MAFs. However, in practice one may not know the optimal $\tau^*$ a-priori. With $N=6$ replicates, the sensitivity increases considerably for low MAF variants with a slight degradation in specificity due to false positives. When the median read depth is at least $10\times$ the MAF, RVD2 has higher specificity than all of the other algorithms tested and has a lower sensitivity in only three cases. The Matthews correlation coefficient (MCC) indicates that RVD2($\tau=0, N=1$) is more accurate than the other algorithms when the median read depth is at least $10\times$ the MAF (see Appendix~\ref{sec:app_comparison}).
+The sensitivity for RVD2 with $\tau=0$ is low for low read depths and MAF levels and $N=1$ case and control sample. The sensitivity increases considerably with read depth at a slight expense to specificity. With $\tau^*$ the performance is much better with high sensitivity and specificity across a wide range of read depths and MAFs. However, in practice one may not know the optimal $\tau^*$ a-priori. With $N=6$ replicates, the sensitivity increases considerably for low MAF variants with a slight degradation in specificity due to false positives. When the median read depth is at least $10\times$ the MAF, RVD2 has higher specificity than all of the other algorithms tested and has a lower sensitivity in only three cases.
 
 \subsubsection*{False Discovery Rate Comparison}
 Figure~\ref{tbl:comparison_fdr} shows the false discovery rate for RVD2 compared to samtools, GATK, varscan, strelka and muTect. Blank cells indicate no positive calls were made.
@@ -355,13 +355,13 @@ Samtools performs well on 100\% MAF sample and performance improves for read dep
 % from folder 'rvd2\results\2013-09-19_operating_characteristics'
 
 VarScan2-somatic is able to make calls for all but the lowest MAF and coverage level. However, the FDR is high due to many false positives. Interestingly, at a MAF of 100\% the FDR is zero for lowest read depth and over 0.9 for the highest read depth. Strelka has a better FDR than the samtools, GATK or Varscan2-somatic algorithms for almost all read depths at the 10\% and 100\% MAF. However, it does not call any variants at or below 1\% MAF.  MuTect has the best FDR performance of the other algorithms we tested over a wide range of MAF and depths. But the FDR level is relatively high at around 0.7 for 0.1\% -- 1\% MAF and 0.3 for 10\% -- 100\% MAF.
- 
+
 RVD2 has a lower FDR than other algorithms when the read depth is greater than $10\times$ the MAF with $N=1$ and $\tau$ set to the default value of zero or to the optimal value. The FDR is higher when $N=6$ because the variance of the control error rate distribution $P(\mu_j^{\text{control}} | r^{\text{control}})$ is smaller. The smaller variance yields improvements in sensitivity at the expense of more false positives. Since the FDR only considers positive calls, the performance degrades.
 
 
 \subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca}
 
-RVD2 identified five variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. 
+RVD2 identified five variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample.
 
 Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899C$>$T, chr7:154753635T$>$C and chr7:154780960C$>$T are called germline homozygous mutations. Positions chr7:154754371 and chr7:154758813 are called heterozygous in the normal sample. In the tumor sample we identified five mutations chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, and chr7:154780960C$>$T. Positions chr7:154754371T$>$C and chr7:154758813G$>$A are called loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the figure.
 %According to dbSNPv138 chr7:154743899 is rs1239326, chr7:154753635 is rs1239324, chr7:154754371 is rs71534174, chr7:154758813 is rs35505514, and chr7:154780960 is rs4398858.
@@ -395,7 +395,7 @@ Our approach does not address identification of indels, structural variants or c
 % Appendix A: Parameter Initialization
 %%%%%%%%%%%%%%%%%%%
 \section{Parameter Initialization}\label{sec:appendix_mom}
-Since $r_{ji} \thicksim \text{Binomial}(n_{ji}, \theta_{ji})$, the first population moment is  $E[r_{ji}] = \theta_{ji} n_{ji}$ and the first sample moment is simply $m_1 = r_{ji}$. Therefore the MoM estimator is 
+Since $r_{ji} \thicksim \text{Binomial}(n_{ji}, \theta_{ji})$, the first population moment is  $E[r_{ji}] = \theta_{ji} n_{ji}$ and the first sample moment is simply $m_1 = r_{ji}$. Therefore the MoM estimator is
 \begin{equation}
 	\tilde{\theta}_{ji} = \frac{r_{ji}} {n_{ji}}
 \end{equation}
@@ -421,9 +421,13 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 % Appendix B: Comparison Statistics
 %%%%%%%%%%%%%%%%%%%
 \section{Algorithm Comparison Statistics}\label{sec:app_comparison}
-%TODO: discuss this result
+Figure~\ref{fig:comparison_mcc} compares RVD2 with samtools, GATK, varscan, strelka and muTect using Matthew Correlation Coefficient (MCC)~citep(matthews1985homeostasis).
 
-\begin{figure}[h]
+Samtools and VarScan2-mpileup achieved MCC value generally higher than 0.90 on 100\% MAF sample across all read depthes, with 1.0 represents for a perfect prediction. However, both of them achieved MCC value at 0.00 when MAF is 10.0\% or lower, which indicates no better than random prediction. GATK, Varscan2-somatic, Strelka outperformed Samtools and VarScan2-mpile on the 10.0\% MAF sample, while performed similarly in other cases. GATK5, achieved relatively stable MCC between 0.65~0.88. Strelka achieved even better MCC on 10\% MAF sample, more specifically around 1.00 when read deapth is high but 0.53 when read depth is 22. There is a very obvious but unconventional decreasing trend in VarScan2-somatic MCC value across different read depth and MAF level, a phenomenon also observed by ~\citet{Stead:2013fu}. It is because VarScan2-somatic tends to call more false positives as read depth gets higher. As to Mutect, overall it seems to performs the best among all the method RVD2 is comparing to. It achieve postive MCC values (-0.02--0.43, with a single case at 0.60), though too low to be practically meaningful. Moreover, muTect achieved relatively low MCC (0.77--0.90) comparing to some other algorithms when the MAF level is 10\% and 100\%, as a counteractive of being oversensitive.
+
+RVD2 achieved MCC value at 1.00 when the MAF is 100.0\% at all read depth and 10\% when read depth is not lower than 260. The Matthews correlation coefficient (MCC) indicates that RVD2($\tau=0, N=1$) is more accurate than the other algorithms when the median read depth is at least $10\times$ the MAF.
+
+\begin{figure}[ht]
 \begin{center}
 \includegraphics[width=140mm]{pdf_figs/comparison_table_mcc.pdf}
 \caption{Matthews correlation coefficient (MCC) comparison with other variant calling algorithms.}
@@ -431,14 +435,13 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 \end{center}
 \end{figure}
 % from folder 'rvd2\results\2013-09-19_operating_characteristics'
-
-
+% from folder 'rvd2\results\2013-09-19_operating_characteristics'
 
 %%%%%%%%%%%%%%%%%
 % Appendix C: Data Set Statistics
 %%%%%%%%%%%%%%%%%
 \section{RVD2 Estimated Parameters}\label{sec:synthetic_estimate}
-The RVD2 algorithm provides estimates of model parameters and latent variables given the data. We show several of these parameters in Figure~\ref{fig:depthM}. 
+The RVD2 algorithm provides estimates of model parameters and latent variables given the data. We show several of these parameters in Figure~\ref{fig:depthM}.
 
 The left column of Figure~\ref{fig:depthM} shows the read depth for each of the six bam files (three replicates each with two read pairs) for each data set. Because the DNA was not sheared and ligated prior to sequencing, the read depth drops to zero at the boundaries. For the 100\% mutant data set, the read depth drops at the mutant locations. This is due to the parameters imposed at the alignment stage. The reads are 36bp long and we required no more than 2 mismatches. Therefore, reads that overlapped two mutations (spaced 20bp apart by design) and included one additional mutation would not align.
 
@@ -452,7 +455,7 @@ The left column of Figure~\ref{fig:depthM} shows the read depth for each of the 
 
 % from folder '22013-11-15_depthM_plot_avg10', dilution rate is 0.1.
 
-The right column of Figure~\ref{fig:depthM} shows the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, we see that $M_j$ does not change with read depth (except where the depth goes to zero) indicating that $M_j$ because $M_j$ is capturing a different process than the read depth. 
+The right column of Figure~\ref{fig:depthM} shows the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, we see that $M_j$ does not change with read depth (except where the depth goes to zero) indicating that $M_j$ because $M_j$ is capturing a different process than the read depth.
 
 The error rate across positions is captured by the $M_0$ parameter shown as a horizontal dotted line in the plots in the right column. We see that the variation between replicates is smaller than the variation between location. $M_j$ and $M_0$ are precision parameters, they are inversely proportional to the variance. Where $M_j$ is greater than $M_0$ the precision between replicates is higher than the precision across positions.
 
@@ -461,24 +464,24 @@ The error rate across positions is captured by the $M_0$ parameter shown as a ho
 % Appendix D: Parameter Settings for Variant Calling Algorithms
 %%%%%%%%%%%%%%%%%
 \section{Parameter settings for other variant calling algorithms}
-\paragraph{\textbf{Samtools}}We used samtools (v0.1.19) function mpileup to call variants and bcftools to save the result in standard VCF files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid truncating read deapth. Option -u was enabled to make sure the output bcf files were uncompressed. 
+\paragraph{\textbf{Samtools}}We used samtools (v0.1.19) function mpileup to call variants and bcftools to save the result in standard VCF files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid truncating read deapth. Option -u was enabled to make sure the output bcf files were uncompressed.
 
 \paragraph{\textbf{GATK}}
 We used GATK (v2.1-8) UnifiedGenotyper function to detect mutations on our synthetic data following the recommended workflow. Due to some format incompatibility, we applied Picard to format read group and GATK for realignment. In UnifiedGenotyper, -ploid (Number of samples in each pool $\times$ Sample Ploidy) was set at 1 because our synthetic data is haploid; -dcov was set at $10^6$ to avoid downsamplig coverage within GATK.
 
 \paragraph{\textbf{VarScan2-mpileup}}
-VarScan2 (v2.3.4) mpileup2snp is a SNP calling program which takes multi-samples from samtools mpileup pipeline.We assigned parameter -C value 50 as the synthetic data was aligned using BWA and set -d at $10^6$. In mpileup2snp, --min-var-freq, the only non-default parameter, was set low enough at $10^{-5}$ because the variant frequency can be as low as $10^{-3}$. 
+VarScan2 (v2.3.4) mpileup2snp is a SNP calling program which takes multi-samples from samtools mpileup pipeline.We assigned parameter -C value 50 as the synthetic data was aligned using BWA and set -d at $10^6$. In mpileup2snp, --min-var-freq, the only non-default parameter, was set low enough at $10^{-5}$ because the variant frequency can be as low as $10^{-3}$.
 
 \paragraph{\textbf{VarScan2-somatic}}
 We tested VarScan2 somatic on our synthetic dataset. The parameter --normal-purity set was at 1.00, --tumor-purity at the dilution rate. The parameter --min-var-freq was set at $10^{-5}$. We combined all the positions VarScan2-somatic called regardless the somatic status (Germline/LOH/Somatic/Unknown) to compare with performance of RVD2.
 
 \paragraph{\textbf{Strelka and muTect}}
-Since configuration and Analysis for Strelka and muTect is standardized and no parameter needs to be specified, we installed these two programs and ran them on our data set separately. 
+Since configuration and Analysis for Strelka and muTect is standardized and no parameter needs to be specified, we installed these two programs and ran them on our data set separately.
 
-Samtools mpileup takes multiple "tumor'' replicates for variant calling, so we fed six bam files from each case replicate group to mpileup. GATK, VarScan2-mpileup accept multiple ``tumor-normal'' pair replicates so we passed six pair replicates to each algorithm. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
+Samtools mpileup and GATK can accept multiple "tumor'' replicates for variant calling, so we fed six bam files from each case replicate group to mpileup. VarScan2-mpileup takes multiple ``tumor-normal'' pair replicates so we passed six pair replicates to each algorithm. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
 
 % TODO: modify the following section
-GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths. 
+GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths.
 \bibliographystyle{apalike}
 \bibliography{bioinfo}
-\end{document}  
+\end{document}
