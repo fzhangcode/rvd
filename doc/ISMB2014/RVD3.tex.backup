@@ -79,17 +79,9 @@ To simulate lower coverage data while retaining the error structure of real NGS 
 
 \subsection{Model Structure}\label{sec:model_structure}
 RVD3 is based on a hierarchical Bayesian model. Through hypothesis test on case and control samples by RVD3, we can call the variants sucsessfully. Now the definitions for sample data are given: $r_{ji}$ is the number of reads with a non-reference base at position $j$ in replicate $i$, and $n_{ji}$ is the total number of reads at position $j$ in replicate $i$. Three hyperparameters are:  $\mu_0$, a global error rate; $M_0$, a global precision; $M_j$, a local precision; $\mu_0$, the global error rate expected across all positions; $M_0$, the global position which estimates the variation in the error rate across the positioins. $M_j$, the local precision measures the alteration in the error rate across replicates at position $j$. 
-RVD3 hierarchically includes four levels of samplings:  $r_{ji} | n_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$ models the variation due to sampling the pool of DNA molecules on the sequencer. $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$ models the variation caused by experimental repeatability. The variation in error rate due to sequence context is modeled by $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$. Two kinds of priors for $M_{j}$ are Log-normal prior and Jeffreys prior, which enhanced the former RVD model [XX]. $ M_{j} \thicksim \text{log-normal}(\mu, \sigma)$ is the model for Log-normal prior, and $pi\left({M}_{j}\right)$ for Jeffreys prior is based on Fisher information. The graphical chart for RVD3 with different priors are shown in Figure~\ref{fig:graphical_model}.
+RVD3 hierarchically includes four levels of samplings:  $r_{ji} | n_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$ models the variation due to sampling the pool of DNA molecules on the sequencer. $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$ models the variation due to experimental repeatability. The variation in error rate due to sequence context is modeled by $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$.
 
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=40mm]{pdf_figs/RVD3_model.pdf}
-\caption{RVD2 Graphical Model}
-\label{fig:graphical_model}
-\end{center}
-\end{figure}
-
-
+ with hyperparameters, which enhanced the former RVD model [XX]
 %%%%%%%%%%%%%%%%%%
 % Inference & Hypothesis Testing
 %%%%%%%%%%%%%%%%%%
@@ -185,7 +177,7 @@ We resample from the proposal if the sample is outside of the support of the pos
 % Sampling Mj
 %%%%%%%%%%%%%%%%%%
 \subsubsection{Sampling from $p \left( M_{j} |\mu,\sigma, \theta_{ji},\mu_j\right)$}
-For Jeffreys prior,since ${\theta }_{ji}\sim Beta\left( {\mu }_{j},{M}_{j}\right)$, the Fisher information is given by
+(RVD3) For Jeffreys prior,since ${\theta }_{ji}\sim Beta\left( {\mu }_{j},{M}_{j}\right)$, the Fisher information is given by
 
 \begin{equation}\label{equ:JefferyInference}
 I\left({M}_{j}\right)={E}_{{M}_{j}}\left[ -\frac{\delta ^{2}\log p\left(\theta _{j}|\mu_{j},M_{j}\right)}{\delta M^{2}_{j}}\right]
@@ -230,7 +222,7 @@ We have $ \theta_{ji}\thicksim\text{Beta}(\mu_{j},M_{j})$, and $ M_{j} \thicksim
 %%%%%%%%%%%%%%%%%%
 % Posterior Density Test
 %%%%%%%%%%%%%%%%%%
-\subsubsection{Posterior Density Test}\label{sec:hypothesis_test}
+\subsection{Posterior Density Test}\label{sec:hypothesis_test}
 Metropolis-within-Gibbs provides samples from the posterior distribution of $\mu_j$ given the case or control data. For notational simplicity, we define the random variables associated with these two distributions $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$.
 
 A variant is called if $\tilde{\mu}_j^{\text{case}} > \tilde{\mu}_j^{\text{control}}$ with high confidence,
@@ -250,7 +242,7 @@ While we are able to compute the optimal $\tau$ threshold for a test data set, i
 %%%%%%%%%%%%%%%%%%
 % Chi^2 Test
 %%%%%%%%%%%%%%%%%%
-\subsubsection{$\chi^2$ test for non-uniform base distribution}
+\subsection{$\chi^2$ test for non-uniform base distribution}
 
 An abundance of non-reference bases at a position called by the posterior density test may be due to a true mutation or due to a random sequencing error; we would like to differentiate these two scenarios. We assume non-reference read counts caused by a non-biological mechanism results in a uniform distribution over three non-reference bases. In contrast, the distribution of counts among three non-reference bases caused by biological mutation would not be uniform.
 
@@ -293,30 +285,31 @@ Incorporate lognormal prior on $M_{j}$.
 %%%%%%%%%%%%%%%%%%
 \section{Results}
 
+
 %%%%%%%%%%%%%%%%%%
 % Sensitivity analysis of priors
 %%%%%%%%%%%%%%%%%%
 \subsection{Sensitivity analysis of priors}
-In order to examine the robustness of RVD3 to changes of different priors, we perform information prior (Log-normal) and noninformation prior (Jeffreys).
+In order to examine the robustness of RVD3 to changes of different priors, we...
 
 We found that RVD3 is robust to changing the priors.
-The RVD3 algorithm provides estimates of model parameters and latent variables given the data. We show several of these parameters in Figure~\ref{fig:M_rvd29} and Figure ~\ref{fig:M_rvd30}.
+The RVD3 algorithm provides estimates of model parameters and latent variables given the data. We show several of these parameters in Figure~\ref{fig:M_loc_rvd29} and Figure ~\ref{fig:M_loc_rvd30}.
 
 The left column of Figure~\ref{fig:depthM} shows the read depth for each of the six bam files (three replicates each with two read pairs) for each data set. Because the DNA was not sheared and ligated prior to sequencing, the read depth drops to zero at the boundaries. For the 100\% mutant data set, the read depth drops at the mutant locations. This is due to the parameters imposed at the alignment stage. The reads are 36bp long and we required no more than 2 mismatches. Therefore, reads that overlapped two mutations (spaced 20bp apart by design) and included one additional mutation would not align.
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=120mm]{figs/M_rvd29.pdf}
+\includegraphics[width=120mm]{figs/M_loc_rvd29.pdf}
 \caption{Key parameters for RVD3 model with Jeffreys prior for synthetic DNA data sets.}
-\label{fig:M_rvd29}
+\label{fig:M_loc_rvd29}
 \end{center}
 \end{figure}
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=120mm]{figs/M_rvd29.pdf}
+\includegraphics[width=120mm]{figs/M_loc_rvd29.pdf}
 \caption{Key parameters for RVD3 model with log-normal prior for synthetic DNA data sets.}
-\label{fig:M_rvd30}
+\label{fig:M_loc_rvd30}
 \end{center}
 \end{figure}
 % from folder '22013-11-15_depthM_plot_avg10', dilution rate is 0.1.
@@ -354,13 +347,13 @@ We generated receiver-operating characteristic curves (ROCs) for a range of medi
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=160mm]{tables/Sen_Speci.pdf}
+\includegraphics[width=160mm]{tables/comparison_table_ss.pdf}
 \caption{Sensitivity/Specificity comparison of RVD3 with different priors.}
-\label{tbl:SS}
+\label{tbl:table_29}
 \end{center}
 \end{figure}
 
-Figure~\ref{tbl:SS} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
+Figure~\ref{tbl:comparison_ss} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
 
 The sensitivity for RVD3 with $\tau=0$ is low for low read depths and MAF levels and $N=1$ case and control sample. The sensitivity increases considerably with read depth at a slight expense to specificity. With $\tau^*$ the performance is much better with high sensitivity and specificity across a wide range of read depths and MAFs. However, in practice one may not know the optimal $\tau^*$ a-priori. With $N=6$ replicates, the sensitivity increases considerably for low MAF variants with a slight degradation in specificity due to false positives. When the median read depth is at least $10\times$ the MAF, RVD2 has higher specificity than all of the other algorithms tested and has a lower sensitivity in only three cases. The Matthews correlation coefficient (MCC) indicates that RVD2($\tau=0, N=1$) is more accurate than the other algorithms when the median read depth is at least $10\times$ the MAF (see Appendix~\ref{sec:app_comparison}).
 
@@ -373,9 +366,9 @@ The sensitivity for RVD3 with $\tau=0$ is low for low read depths and MAF levels
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=120mm]{figs/.pdf}
-\caption{}
-\label{fig:}
+\includegraphics[width=120mm]{pdf_figs/HCC1187_MuBarPlot.pdf}
+\caption{Estimated minor allele fraction for called variants in PAXIP1 gene.}
+\label{fig:brca_MAF}
 \end{center}
 \end{figure}
 %('rvd2\results\2013-11-21_HCC1187_PAXIP1_mu_barplot_T0')
@@ -419,6 +412,17 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 %%%%%%%%%%%%%%%%%%%
 % Appendix B: Comparison Statistics
 %%%%%%%%%%%%%%%%%%%
+\section{Algorithm Comparison Statistics}\label{sec:app_comparison}
+%TODO: discuss this result
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=140mm]{pdf_figs/comparison_table_mcc.pdf}
+\caption{Matthews correlation coefficient (MCC) comparison with other variant calling algorithms.}
+\label{fig:comparison_mcc}
+\end{center}
+\end{figure}
+% from folder 'rvd2\results\2013-09-19_operating_characteristics'
 
 
 \bibliographystyle{apalike}
