@@ -138,8 +138,9 @@ def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
     
     # Sample from the posterior Z = muCase - muControl
     # Adjusting for baseline error rate for case and control
-    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu-casePhi['mu0'], controlMu-controlPhi['mu0'], N)
-    
+    #(Z, caseMuS, controlMuS) = sample_post_diff(caseMu-casePhi['mu0'], controlMu-controlPhi['mu0'], N)
+    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu, controlMu, N)
+
     # Posterior Prob that muCase is greater than muControl by T
     postP = bayes_test(Z, [(T, np.inf)]) 
     
@@ -415,13 +416,11 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, 
 
     # set Qsd as the higher value between mu[j]/10 and 1.0E-4 for each position
     def bound(mu):
-        bound = 1.0E-4
+        bound = 0.001
         if bound < mu < 1-bound:
-            return 0.1*mu
-        elif mu <= bound:
-            return 0.1*bound
+            return mu*(1-mu)
         else:
-            return 0.1*(1-bound)
+            return bound
         
     Qsd = map(bound, mu)       
 
@@ -526,7 +525,7 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
 def beta_log_pdf(x, a, b):
     return gammaln(a+b) - gammaln(a) - gammaln(b) \
             + (a-1)*np.log(x+np.finfo(np.float).eps) \
-            + (b-1)*np.log(1-x)
+            + (b-1)*np.log(1-x+np.finfo(np.float).eps)
 
 
 def ll(phi, r):
