@@ -78,13 +78,13 @@ To simulate lower coverage data while retaining the error structure of real NGS 
 \section{RVD3 Model}
 
 \subsection{Model Structure}\label{sec:model_structure}
-RVD3 is based on a hierarchical Bayesian model. Through hypothesis test on case and control samples by RVD3, we can call the variants sucsessfully. Now the definitions for sample data are given: $r_{ji}$ is the number of reads with a non-reference base at position $j$ in replicate $i$, and $n_{ji}$ is the total number of reads at position $j$ in replicate $i$. Three hyperparameters are:  $\mu_0$, a global error rate; $M_0$, a global precision; $M_j$, a local precision; $\mu_0$, the global error rate expected across all positions; $M_0$, the global position which estimates the variation in the error rate across the positioins. $M_j$, the local precision measures the alteration in the error rate across replicates at position $j$. 
+RVD3 is based on a hierarchical Bayesian model. Through hypothesis test on case and control samples by RVD3, we can call the variants sucsessfully. Now the definitions for sample data are given: $r_{ji}$ is the number of reads with a non-reference base at position $j$ in replicate $i$, and $n_{ji}$ is the total number of reads at position $j$ in replicate $i$. Three hyperparameters are:  $\mu_0$, a global error rate; $M_0$, a global precision; $M_j$, a local precision; $\mu_0$, the global error rate expected across all positions; $M_0$, the global position which estimates the variation in the error rate across the positioins. $M_j$, the local precision measures the alteration in the error rate across replicates at position $j$.
 RVD3 hierarchically includes four levels of samplings:  $r_{ji} | n_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$ models the variation due to sampling the pool of DNA molecules on the sequencer. $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$ models the variation caused by experimental repeatability. The variation in error rate due to sequence context is modeled by $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$. Two kinds of priors for $M_{j}$ are Log-normal prior and Jeffreys prior, which enhanced the former RVD model [XX]. $ M_{j} \thicksim \text{log-normal}(\mu, \sigma)$ is the model for Log-normal prior, and $pi\left({M}_{j}\right)$ for Jeffreys prior is based on Fisher information. The graphical chart for RVD3 with different priors are shown in Figure~\ref{fig:graphical_model}.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=40mm]{pdf_figs/RVD3_model.pdf}
-\caption{RVD2 Graphical Model}
+\includegraphics[width=40mm]{figs/RVD3_model.pdf}
+\caption{RVD3 Graphical Model}
 \label{fig:graphical_model}
 \end{center}
 \end{figure}
@@ -300,28 +300,27 @@ Incorporate lognormal prior on $M_{j}$.
 In order to examine the robustness of RVD3 to changes of different priors, we perform information prior (Log-normal) and noninformation prior (Jeffreys).
 
 We found that RVD3 is robust to changing the priors.
-The RVD3 algorithm provides estimates of model parameters and latent variables given the data. We show several of these parameters in Figure~\ref{fig:M_rvd29} and Figure ~\ref{fig:M_rvd30}.
+The RVD3 algorithm provides estimates of model parameters and latent variables given the data. We show several of these parameters in Figure~\ref{fig:M_jeffrey} and Figure ~\ref{fig:M_lognormal}.
 
 The left column of Figure~\ref{fig:depthM} shows the read depth for each of the six bam files (three replicates each with two read pairs) for each data set. Because the DNA was not sheared and ligated prior to sequencing, the read depth drops to zero at the boundaries. For the 100\% mutant data set, the read depth drops at the mutant locations. This is due to the parameters imposed at the alignment stage. The reads are 36bp long and we required no more than 2 mismatches. Therefore, reads that overlapped two mutations (spaced 20bp apart by design) and included one additional mutation would not align.
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=120mm]{figs/M_rvd29.pdf}
+\includegraphics[width=120mm]{figs/M_jeffrey.pdf}
 \caption{Key parameters for RVD3 model with Jeffreys prior for synthetic DNA data sets.}
-\label{fig:M_rvd29}
+\label{fig:M_jeffrey}
 \end{center}
 \end{figure}
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=120mm]{figs/M_rvd29.pdf}
+\includegraphics[width=120mm]{figs/M_lognormal.pdf}
 \caption{Key parameters for RVD3 model with log-normal prior for synthetic DNA data sets.}
-\label{fig:M_rvd30}
+\label{fig:M_lognormal}
 \end{center}
 \end{figure}
-% from folder '22013-11-15_depthM_plot_avg10', dilution rate is 0.1.
 
-The right column of Figure~\ref{fig:depthM} shows the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, we see that $M_j$ does not change with read depth (except where the depth goes to zero) indicating that $M_j$ because $M_j$ is capturing a different process than the read depth.
+The right column of Figure~\ref{fig:M_jeffrey} shows the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, we see that $M_j$ does not change with read depth (except where the depth goes to zero) indicating that $M_j$ because $M_j$ is capturing a different process than the read depth.
 
 The error rate across positions is captured by the $M_0$ parameter shown as a horizontal dotted line in the plots in the right column. We see that the variation between replicates is smaller than the variation between location. $M_j$ and $M_0$ are precision parameters, they are inversely proportional to the variance. Where $M_j$ is greater than $M_0$ the precision between replicates is higher than the precision across positions.
 
@@ -330,22 +329,22 @@ The error rate across positions is captured by the $M_0$ parameter shown as a ho
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Results of priors on synthetic data}
 \subsubsection{Performance with read depth}
-We generated receiver-operating characteristic curves (ROCs) for a range of median read depth and a range of minor allele frequencies (MAFs). For these ROC curves, we used the Bayesian test without the $\chi^2$ test. Adding the $\chi^2$ improves specificity at the expense of sensitivity. Figure~\ref{fig:ROC} shows ROC curves generated by varying the threshold $\tau$ with a fixed $\alpha=0.05$. Figure~\ref{fig:ROC}A shows ROC curves for a true 0.1\% MAF for a range of median coverage depths. At the lowest depth the sensitivity and specificity is no better than random. However, we would not expect to be able to call a 1 in 1000 variant base with a coverage of only 43. The performance improves monotonically with read depth. Figures~\ref{fig:ROC_29}B-C show a similar relationship between coverage depth and accuracy for higher MAFs.
+We generated receiver-operating characteristic curves (ROCs) for a range of median read depth and a range of minor allele frequencies (MAFs). For these ROC curves, we used the Bayesian test without the $\chi^2$ test. Adding the $\chi^2$ improves specificity at the expense of sensitivity. Figure~\ref{fig:ROC_jeffrey} and Figure~\ref{fig:ROC_lognormal} shows ROC curves generated by varying the threshold $\tau$ with a fixed $\alpha=0.05$. Figure~\ref{fig:ROC}A shows ROC curves for a true 0.1\% MAF for a range of median coverage depths. At the lowest depth the sensitivity and specificity is no better than random. However, we would not expect to be able to call a 1 in 1000 variant base with a coverage of only 43. The performance improves monotonically with read depth. Figures~\ref{fig:ROC_jeffrey}B-C show a similar relationship between coverage depth and accuracy for higher MAFs.
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=120mm]{figs/ROC_without_chi2_rvd29.pdf}
+\includegraphics[width=120mm]{figs/ROC_without_chi2_jeffrey.pdf}
 \caption{ROC curve varying read depth showing detection performance.}
-\label{fig:ROC_29}
+\label{fig:ROC_jeffrey}
 \end{center}
 \end{figure}
 
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=120mm]{figs/ROC_without_chi2_rvd30.pdf}
+\includegraphics[width=120mm]{figs/ROC_without_chi2_lognormal.pdf}
 \caption{ROC curve varying read depth showing detection performance.}
-\label{fig:ROC_30}
+\label{fig:ROC_lognormal}
 \end{center}
 \end{figure}
 
@@ -360,10 +359,17 @@ We generated receiver-operating characteristic curves (ROCs) for a range of medi
 \end{center}
 \end{figure}
 
-Figure~\ref{tbl:SS} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=160mm]{tables/FDR_ACC_MCC.pdf}
+\caption{Sensitivity/Specificity comparison of RVD3 with different priors.}
+\label{tbl:FDR_ACC_MCC}
+\end{center}
+\end{figure}
 
-The sensitivity for RVD3 with $\tau=0$ is low for low read depths and MAF levels and $N=1$ case and control sample. The sensitivity increases considerably with read depth at a slight expense to specificity. With $\tau^*$ the performance is much better with high sensitivity and specificity across a wide range of read depths and MAFs. However, in practice one may not know the optimal $\tau^*$ a-priori. With $N=6$ replicates, the sensitivity increases considerably for low MAF variants with a slight degradation in specificity due to false positives. When the median read depth is at least $10\times$ the MAF, RVD2 has higher specificity than all of the other algorithms tested and has a lower sensitivity in only three cases. The Matthews correlation coefficient (MCC) indicates that RVD2($\tau=0, N=1$) is more accurate than the other algorithms when the median read depth is at least $10\times$ the MAF (see Appendix~\ref{sec:app_comparison}).
-
+Figure~\ref{tbl:SS} shows that the sensitivity and specificity of the RVD3 with different priors. Log-normal prior shows a higher sensitivity and specificity value than the Jeffreys prior.
+Figure~\ref{tbl:FDR_ACC_MCC} shows the false discovery rate, accuracy, anc corelation coefficient of the RVD3 with different priors. Jeffreys prior shows a smaller false discovery rate and higher accuracy.
+Based on the various advantages for Jeffreys and log-normal prior, RVD3 can afford a more appropariate choice for the precision prior. Here for we chose Jeffreys prior because it needs more attention to false discovery rate and accuracy for variants calling research, compared with the clinical experiment or diagnosis which cares more on true positive rate and true negative rate.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Results of Jeffreys prior on yeast data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -371,14 +377,6 @@ The sensitivity for RVD3 with $\tau=0$ is low for low read depths and MAF levels
 
 
 
-\begin{figure}[h]
-\begin{center}
-\includegraphics[width=120mm]{figs/.pdf}
-\caption{}
-\label{fig:}
-\end{center}
-\end{figure}
-%('rvd2\results\2013-11-21_HCC1187_PAXIP1_mu_barplot_T0')
 
 The original research describing this sample used Strelka to identify mutations in the same sample. They identified chr7:154760439 as variant, but did not call the other four variants. In particular strelka missed the two LOH events. % To compare the performance of RVD2 with other algorithms, we used Strelka to identify mutationin the same sample. Strelka found three positions: chr7:154754371, chr7:154758813 and chr7:154760439.
 
