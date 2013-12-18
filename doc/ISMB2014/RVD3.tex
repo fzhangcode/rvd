@@ -275,10 +275,10 @@ Equation~\eqref{eqn:fisher_combined} gives a test statistic that follows a $\chi
 %%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Priors for precision parameter}
 \subsubsection{Improper Prior}
-Playing no prior on M is an implicit improper prior.
+Playing no prior on M is an implicit improper prior. So we coniderated about two typical priors: noninformation prior - Jeffreys prior, and information prior - log-normal prior.
 
 \subsubsection{Jeffreys Prior}
-Jeffreys Prior:Jeffreys prior is proposed for invariance by Harold Jeffreys (1946), and defined in terms of the Fisher information. For our ploblem,
+Jeffreys prior is proposed for invariance by Harold Jeffreys (1946), and defined in terms of the Fisher information. For our ploblem,
 \begin{equation}\label{eqn:JefferyPrior}
 \pi\left({M}_{j}\right)= I\left({M}_{j}\right)^{\frac{1}{2}}
 \end{equation}
@@ -297,12 +297,12 @@ Incorporate lognormal prior on $M_{j}$.
 % Sensitivity analysis of priors
 %%%%%%%%%%%%%%%%%%
 \subsection{Sensitivity analysis of priors}
-In order to examine the robustness of RVD3 to changes of different priors, we perform information prior (Log-normal) and noninformation prior (Jeffreys).
+In order to examine the robustness of RVD3 to changes of different priors, we performed information prior (Log-normal) and noninformation prior (Jeffreys).
 
 We found that RVD3 is robust to changing the priors.
 The RVD3 algorithm provides estimates of model parameters and latent variables given the data. We show several of these parameters in Figure~\ref{fig:M_jeffrey} and Figure ~\ref{fig:M_lognormal}.
 
-The left column of Figure~\ref{fig:depthM} shows the read depth for each of the six bam files (three replicates each with two read pairs) for each data set. Because the DNA was not sheared and ligated prior to sequencing, the read depth drops to zero at the boundaries. For the 100\% mutant data set, the read depth drops at the mutant locations. This is due to the parameters imposed at the alignment stage. The reads are 36bp long and we required no more than 2 mismatches. Therefore, reads that overlapped two mutations (spaced 20bp apart by design) and included one additional mutation would not align.
+The left column of Figure~\ref{fig:M_jeffrey} and Figure~\ref{fig:M_lognormal} show the read depth for each of the six bam files (three replicates each with two read pairs) for each data set. Because the DNA was not sheared and ligated prior to sequencing, the read depth drops to zero at the boundaries. For the 100\% mutant data set, the read depth drops at the mutant locations. This is due to the parameters imposed at the alignment stage.
 
 \begin{figure}[htbp]
 \begin{center}
@@ -320,16 +320,14 @@ The left column of Figure~\ref{fig:depthM} shows the read depth for each of the 
 \end{center}
 \end{figure}
 
-The right column of Figure~\ref{fig:M_jeffrey} shows the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, we see that $M_j$ does not change with read depth (except where the depth goes to zero) indicating that $M_j$ because $M_j$ is capturing a different process than the read depth.
-
-The error rate across positions is captured by the $M_0$ parameter shown as a horizontal dotted line in the plots in the right column. We see that the variation between replicates is smaller than the variation between location. $M_j$ and $M_0$ are precision parameters, they are inversely proportional to the variance. Where $M_j$ is greater than $M_0$ the precision between replicates is higher than the precision across positions.
+The right column of Figure~\ref{fig:M_jeffrey} and Figure~\ref{fig:M_lognormal} show the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, $M_j$ from Jeffreys prior [Figure~\ref{fig:M_jeffrey}] the M value drops at the mutant positions when the data is 100\% mutant, which is not shown in log-normal prior [Figure~\ref{fig:M_lognormal}]. Additionally, the error rate across positions is captured by the $M_0$ parameter shown as a horizontal dotted line in the plots in the right column. $M_j$ is greater than $M_0$ the precision between replicates is higher than the precision across positions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Results of priors on synthetic data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Results of priors on synthetic data}
 \subsubsection{Performance with read depth}
-We generated receiver-operating characteristic curves (ROCs) for a range of median read depth and a range of minor allele frequencies (MAFs). For these ROC curves, we used the Bayesian test without the $\chi^2$ test. Adding the $\chi^2$ improves specificity at the expense of sensitivity. Figure~\ref{fig:ROC_jeffrey} and Figure~\ref{fig:ROC_lognormal} shows ROC curves generated by varying the threshold $\tau$ with a fixed $\alpha=0.05$. Figure~\ref{fig:ROC}A shows ROC curves for a true 0.1\% MAF for a range of median coverage depths. At the lowest depth the sensitivity and specificity is no better than random. However, we would not expect to be able to call a 1 in 1000 variant base with a coverage of only 43. The performance improves monotonically with read depth. Figures~\ref{fig:ROC_jeffrey}B-C show a similar relationship between coverage depth and accuracy for higher MAFs.
+To evaluate the performance of RVD3 model with priors, we generated receiver-operating characteristic curves (ROCs) for median read depth and minor allele frequencies (MAFs). Here the Bayesian test is used without the $\chi^2$ test. Figure~\ref{fig:ROC_jeffrey} and Figure~\ref{fig:ROC_lognormal} shows ROC curves with a fixed $\alpha=0.05$. The performance improves when the read depth goes up. Noticed at the lowest depth (22) with 10.0\% mutant mixture, the sensitivity and specificity value are 1 and much better than the model without priors for $M_J$, which definitely demonstrates the advantage of priors.
 
 \begin{figure}[htbp]
 \begin{center}
@@ -348,9 +346,6 @@ We generated receiver-operating characteristic curves (ROCs) for a range of medi
 \end{center}
 \end{figure}
 
-
-\subsubsection{Sensitivity/Specificity/FDR}
-
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=160mm]{tables/Sen_Speci.pdf}
@@ -361,24 +356,23 @@ We generated receiver-operating characteristic curves (ROCs) for a range of medi
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=160mm]{tables/FDR_ACC_MCC.pdf}
+\includegraphics[width=160mm]{tables/FDR.pdf}
 \caption{Sensitivity/Specificity comparison of RVD3 with different priors.}
-\label{tbl:FDR_ACC_MCC}
+\label{tbl:FDR}
 \end{center}
 \end{figure}
 
-Figure~\ref{tbl:SS} shows that the sensitivity and specificity of the RVD3 with different priors. Log-normal prior shows a higher sensitivity and specificity value than the Jeffreys prior.
-Figure~\ref{tbl:FDR_ACC_MCC} shows the false discovery rate, accuracy, anc corelation coefficient of the RVD3 with different priors. Jeffreys prior shows a smaller false discovery rate and higher accuracy.
-Based on the various advantages for Jeffreys and log-normal prior, RVD3 can afford a more appropariate choice for the precision prior. Here for we chose Jeffreys prior because it needs more attention to false discovery rate and accuracy for variants calling research, compared with the clinical experiment or diagnosis which cares more on true positive rate and true negative rate.
+\subsubsection{Sensitivity/Specificity/FDR}
+
+Figure~\ref{tbl:SS} shows that the sensitivity and specificity of the RVD3 of different priors compared with the model without priors. Log-normal prior shows a higher sensitivity and specificity value than the Jeffreys prior.
+Figure~\ref{tbl:FDR} shows the false discovery rate of the RVD3 with different priors. Jeffreys prior shows a smaller false discovery rate and higher accuracy than others. It is obvious no matter which pirors, the variant detection performance acquires lower FDR than the model without priors. Based on the various advantages for Jeffreys and log-normal prior, RVD3 can afford a more appropariate choice for the precision prior. Here we chose Jeffreys prior because it needs more attention to false discovery rate and accuracy for variants calling research, compared with the clinical experiment or diagnosis which cares more on true positive rate and true negative rate.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Results of Jeffreys prior on yeast data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Results of Jeffreys prior on yeast data}
 
+We demonstrated our RVD3 model with Jeffreys piror on yeast data to identify the variants.
 
-
-
-The original research describing this sample used Strelka to identify mutations in the same sample. They identified chr7:154760439 as variant, but did not call the other four variants. In particular strelka missed the two LOH events. % To compare the performance of RVD2 with other algorithms, we used Strelka to identify mutationin the same sample. Strelka found three positions: chr7:154754371, chr7:154758813 and chr7:154760439.
 
 %%%%%%%%%%%%
 % Discussion
