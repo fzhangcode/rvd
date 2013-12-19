@@ -35,15 +35,15 @@
   \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
 }
 
-\title[RVD3]{RVD3: Variant detection model with improved robustness and accuracy for low-depth targeted next-generation sequencing data}
+\title[RVD3]{Variant detection model with improved robustness and accuracy for low-depth targeted next-generation sequencing data}
 \author{}
 %\date{}                                           % Activate to display a given date or no date
 
 \begin{document}
 
 \begin{abstract}
-Sensitivity analysis Bayesian model
-Jeffreys prior improves robustness and accuracy of Single Nucleotide Variant detection algorithm.
+
+We analyzed the Sensitivity of the Bayesian model to different priors. Jeffreys prior improves robustness and accuracy of Single Nucleotide Variant detection algorithm.
 
 \end{abstract}
 
@@ -78,12 +78,12 @@ To simulate lower coverage data while retaining the error structure of real NGS 
 \section{RVD3 Model}
 
 \subsection{Model Structure}\label{sec:model_structure}
-RVD3 is based on a hierarchical Bayesian model. Through hypothesis test on case and control samples by RVD3, we can call the variants sucsessfully. Now the definitions for sample data are given: $r_{ji}$ is the number of reads with a non-reference base at position $j$ in replicate $i$, and $n_{ji}$ is the total number of reads at position $j$ in replicate $i$. Three hyperparameters are:  $\mu_0$, a global error rate; $M_0$, a global precision; $M_j$, a local precision; $\mu_0$, the global error rate expected across all positions; $M_0$, the global position which estimates the variation in the error rate across the positioins. $M_j$, the local precision measures the alteration in the error rate across replicates at position $j$.
-RVD3 hierarchically includes four levels of samplings:  $r_{ji} | n_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$ models the variation due to sampling the pool of DNA molecules on the sequencer. $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$ models the variation caused by experimental repeatability. The variation in error rate due to sequence context is modeled by $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$. Two kinds of priors for $M_{j}$ are Log-normal prior and Jeffreys prior, which enhanced the former RVD model [XX]. $ M_{j} \thicksim \text{log-normal}(\mu, \sigma)$ is the model for Log-normal prior, and $pi\left({M}_{j}\right)$ for Jeffreys prior is based on Fisher information. The graphical chart for RVD3 with different priors are shown in Figure~\ref{fig:graphical_model}.
+RVD3 is based on a hierarchical Bayesian model. Through hypothesis test on case and control samples by RVD3, we can call the variants sucsessfully. Now the definitions for sample data are given: $r_{ji}$ is the number of reads with a non-reference base at position $j$ in replicate $i$, and $n_{ji}$ is the total number of reads at position $j$ in replicate $i$. Three parameters of the model are: $\mu_0$, a global error rate; $M_0$, the global position which estimates the variation in the error rate across the positioins; priors for $M_j$, two kinds of priors are log-normal prior and Jeffreys prior, which enhanced the former RVD model [XXX]. Here $M_j$ is the local precision measures the alteration in the error rate across replicates at position $j$. The graphical chart for RVD3 are shown in Figure~\ref{fig:graphical_model}.
+RVD3 hierarchically includes four levels of samplings: $r_{ji} | n_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$ models the variation due to sampling the pool of DNA molecules on the sequencer. $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$ models the variation caused by experimental repeatability. The variation in error rate due to sequence context is modeled by $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$. And the local precision is modeled by $ M_{j} \thicksim \text{log-normal}(\mu, \sigma)$ (log-normal prior), and $\pi\left({M}_{j}\right)$ (Jeffreys prior).
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=40mm]{figs/RVD3_model.pdf}
+\includegraphics[width=120mm]{figs/RVD3_model.pdf}
 \caption{RVD3 Graphical Model}
 \label{fig:graphical_model}
 \end{center}
@@ -94,16 +94,7 @@ RVD3 hierarchically includes four levels of samplings:  $r_{ji} | n_{ji} \thicks
 % Inference & Hypothesis Testing
 %%%%%%%%%%%%%%%%%%
 \subsection{Inference and Hypothesis Testing}
-
-The primary object of inference in this model is the joint posterior distribution function over the latent variables,
-\begin{equation}
-	p(\mu, \theta | r, n; \phi)  = \frac{ p(\mu, \theta, r | n; \phi) } {p ( r | n; \phi)},
-\end{equation}
-where the parameters are $\phi \triangleq \{\mu_0, M_0, M\}$.
-
-The Beta distribution over $\mu_j$ is conjugate to the Binomial distribution over $\theta_{ji}$, so we can write the posterior distribution as a Beta distribution. However, there is not a closed form for the product of a Beta distribution with another Beta distribution, so exact inference is intractable.
-
-Instead, we have developed a Metropolis-within-Gibbs  approximate inference algorithm shown in Algorithm~\ref{alg:metro_gibbs}. First, the hyperparameters are initialized using method-of-moments (MoM). Given those hyperparameter estimates, we sample from the marginal posterior distribution for $\mu_j$ given its Markov blanket using a Metropolis-Hasting rejection sampling rule. Finally, we sample from the marginal posterior distribution for $\theta_{ji}$ given its Markov blanket. Samples from $\theta_{ji}$ can be drawn from the posterior distribution directly  because the prior and likelihood form a conjugate pair. This sampling procedure is repeated until the chain converges to a stationary distribution then we draw samples from the posterior distribution over latent variables.
+Metropolis-within-Gibbs sampling is evolved for inference. Algorithm 1 shows the inference process and the detail are illustrated.
 
 \begin{algorithm}[ht]
 \caption{Metropolis-within-Gibbs Algorithm}
@@ -112,13 +103,13 @@ Instead, we have developed a Metropolis-within-Gibbs  approximate inference algo
 
 \State Initialize $\theta$, $\mu$, $M$, $\mu_0$, $M_0$
 \Repeat
-\For {each location j} \Comment{Sample $\mu_j$}
-  \State Draw T samples from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$ using M--H
+\For {each location j}
+  \State Draw T samples from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$ using M--H \Comment{Sample $\mu_j$}
   \State Set $\mu_j$ to the sample median for the T samples
+  \State Draw T samples from $p \left( M_{j} |\mu,\sigma, \theta_{ji},\mu_j\right)$ using M--H \Comment{Sample $M_j$}
 
-
-  \For {each replicate i} \Comment{Sample $\theta_{ji}$}
-	\State Sample from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$
+  \For {each replicate i} 
+	\State Sample from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$  \Comment{Sample $\theta_{ji}$}
   \EndFor
 
 \EndFor
@@ -170,11 +161,6 @@ The posterior distribution over $\mu_j$ given its Markov blanket is
 \end{equation}
 
 Since the prior, $p(\mu_j | \mu_0, M_0)$, is not conjugate to the likelihood, $p(\theta_{ji} | \mu_j, M_j)$, we cannot write an analytical form for the posterior distribution. Instead, we sample from the posterior distribution using the Metropolis-Hastings algorithm.
-
-A candidate sample is generated from the symmetric proposal distribution $Q(\mu_j^* | \mu_j^{(p)}) \thicksim \mathcal{N}(\mu_j^{(p)}, \sigma_j^2)$, where $\mu_j^{(p)}$ is the $p$th from the posterior distribution. The acceptance probability is then
-\begin{equation}
-	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
-\end{equation}
 
 We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} \in (10^{-3},1-10^{-3})$; otherwise, we set $\sigma_j = 10^{-4}$ if $\mu_j^{(p)}< 10^{-3}$ and $\sigma_j = 10^{-1}-10^{-4}$ if $\mu_j^{(p)}>1-10^{-3}$. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position.
 
@@ -237,38 +223,13 @@ A variant is called if $\tilde{\mu}_j^{\text{case}} > \tilde{\mu}_j^{\text{contr
 \begin{equation}\label{eqn:bayes_test}
 	\Pr( \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}} \geq \tau ) > 1-\alpha,
 \end{equation}
-where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. We draw a sample from the posterior distribution $\tilde{\mu}_j^{\Delta} \triangleq \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}}$ by simple random sampling with replacement from $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$.
-
-The threshold, $\tau$, may be set to zero or optimized for a given median depth and desired MAF detection limit. The optimal $\tau$ minimizes the sum of the false negative rate and false positive rate or, equivalently,  the $L_1$ distance to perfect classification in the ROC curve plot,
-\begin{equation}
-	\tau^* = \arg\min_\tau \left\{ (1-\text{TPR}(\tau)) + \text{FPR}(\tau) \right\}.
-\end{equation}
-
-While we are able to compute the optimal $\tau$ threshold for a test data set, in general we would not have access to $\tau^*$. With sufficient training data, one would be able to develop a lookup table or calibration curve to set $\tau$ based on read depth and MAF level of interest. Absent this information we set $\tau = 0$.
+where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. We draw a sample from the posterior distribution $\tilde{\mu}_j^{\Delta} \triangleq \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}}$ by simple random sampling with replacement from $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$. We set $\tau = 0$ in our experiment.
 
 
 %%%%%%%%%%%%%%%%%%
 % Chi^2 Test
 %%%%%%%%%%%%%%%%%%
-\subsubsection{$\chi^2$ test for non-uniform base distribution}
-
-An abundance of non-reference bases at a position called by the posterior density test may be due to a true mutation or due to a random sequencing error; we would like to differentiate these two scenarios. We assume non-reference read counts caused by a non-biological mechanism results in a uniform distribution over three non-reference bases. In contrast, the distribution of counts among three non-reference bases caused by biological mutation would not be uniform.
-
-We use a $\chi^2$ goodness-of-fit test on a multinomial distribution over the non-reference bases to distinguish these two possible scenarios. The null hypothesis is $H_0: p = (p_1, p_2, p_3)$ where $p_1=p_2=p_3=1/3$. Cressie and Read (1984) identified a power-divergence family of statistics, indexed by $\lambda$, that includes as special cases Pearson's $\chi^2 (\lambda = 1)$ statistic, the log likelihood ratio statistic $(\lambda = 0)$, the Freeman-Tukey statistic $(\lambda = -1/2)$, and the Neyman modified statistic $X^2 (\lambda = -2)$. The test statistic is
-
-\begin{equation}
- 2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{k=1}^3 r_{ji}^{(k)} \left[\left(\frac{r_{ji}^{(k)}}{E_{ji}^{(k)}}\right)^\lambda-1\right];\lambda \in R,
-\end{equation}
-
-where $r_{ji}^{(k)}$ is the observed frequency for non-reference base $k$ at position $j$ in replicate $i$ and $E_{ji}^{(k)}$ is the corresponding expected frequency under the null hypothesis. \citet{Cressie1984} recommended $\lambda = 2/3$ when no knowledge of the alternative distribution is available and we choose that value.
-
-We control for multiple hypothesis testing in two ways. We use Fisher's combined probability test \citep{} to combine the p-values for $N$ replicates into a single p-value at position $j$,
-
-\begin{equation}\label{eqn:fisher_combined}
-	X_j^2 = -2 \sum_{i=1}^N \ln(p_{ji}).
-\end{equation}
-
-Equation~\eqref{eqn:fisher_combined} gives a test statistic that follows a $\chi^2$ distribution with $2N$ degrees of freedom when the null hypothesis is true. Finally, we use the Bejamini-Hochberg method to control the family-wise error rate (FWER) over positions that have been called by the Bayesian hypothesis test~\eqref{eqn:bayes_test} \citep{benjamini1995controlling, efron2010large}.
+% Limited in the 9 pages, so maybe considering neglect the Chi^2 Test since we show the results without Chi^2 Test.
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 % Priors for precision parameter
@@ -285,7 +246,7 @@ Jeffreys prior is proposed for invariance by Harold Jeffreys (1946), and defined
 
 \subsubsection{Log-normal Prior}
 In log-normal distribution, the parameters denoted $\mu$ and $\sigma$, the mean and standard deviation respectively. Log-normal prior was used on $ M_{j}$.
-Incorporate lognormal prior on $M_{j}$.
+Incorporate log-normal prior on $M_{j}$.
 
 
 %%%%%%%%%%%%%%%%%%
@@ -297,12 +258,9 @@ Incorporate lognormal prior on $M_{j}$.
 % Sensitivity analysis of priors
 %%%%%%%%%%%%%%%%%%
 \subsection{Sensitivity analysis of priors}
-In order to examine the robustness of RVD3 to changes of different priors, we performed information prior (Log-normal) and noninformation prior (Jeffreys).
+In order to examine the robustness of RVD3 to changes of different priors, we performed information prior (Log-normal) and noninformation prior (Jeffreys). We found that RVD3 is robust to changing the priors. The RVD3 algorithm provides estimates of model parameters and latent variables given the data.
 
-We found that RVD3 is robust to changing the priors.
-The RVD3 algorithm provides estimates of model parameters and latent variables given the data. We show several of these parameters in Figure~\ref{fig:M_jeffrey} and Figure ~\ref{fig:M_lognormal}.
-
-The left column of Figure~\ref{fig:M_jeffrey} and Figure~\ref{fig:M_lognormal} show the read depth for each of the six bam files (three replicates each with two read pairs) for each data set. Because the DNA was not sheared and ligated prior to sequencing, the read depth drops to zero at the boundaries. For the 100\% mutant data set, the read depth drops at the mutant locations. This is due to the parameters imposed at the alignment stage.
+We show several of these parameters in Figure~\ref{fig:M_jeffrey} and Figure ~\ref{fig:M_lognormal}. The left column of these two figures show the read depth for each of the six bam files (three replicates each with two read pairs) for each data set. Because the DNA was not sheared and ligated prior to sequencing, the read depth drops to zero at the boundaries. For the 100\% mutant data set, the read depth drops at the mutant locations. This is due to the parameters imposed at the alignment stage.
 
 \begin{figure}[htbp]
 \begin{center}
@@ -320,19 +278,37 @@ The left column of Figure~\ref{fig:M_jeffrey} and Figure~\ref{fig:M_lognormal} s
 \end{center}
 \end{figure}
 
-The right column of Figure~\ref{fig:M_jeffrey} and Figure~\ref{fig:M_lognormal} show the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, $M_j$ from Jeffreys prior [Figure~\ref{fig:M_jeffrey}] the M value drops at the mutant positions when the data is 100\% mutant, which is not shown in log-normal prior [Figure~\ref{fig:M_lognormal}]. Additionally, the error rate across positions is captured by the $M_0$ parameter shown as a horizontal dotted line in the plots in the right column. $M_j$ is greater than $M_0$ the precision between replicates is higher than the precision across positions.
+The right column of Figure~\ref{fig:M_jeffrey} and Figure~\ref{fig:M_lognormal} show the parameter estimates $\hat{M}_j$ and $\hat{M}_0$ for each data set. $M_j$ measures the variance between replicates at location $j$. There is little variability across positions indicating that the replication variance does not change greatly across position. Furthermore, $M_j$ from Jeffreys prior [Figure~\ref{fig:M_jeffrey}] the M value drops at the mutant positions when the data is 10\% and 100\% mutant, which is not shown in log-normal prior [Figure~\ref{fig:M_lognormal}]. Additionally, the error rate across positions is captured by the $M_0$ parameter shown as a horizontal dotted line in the plots in the right column. $M_j$ is greater than $M_0$ the precision between replicates is higher than the precision across positions.
+
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=170mm]{figs/prior_post_dilu_1.pdf}
+\caption{Distribution of priors and posteriors when dilution is 1\%}
+\label{fig:dilu_1}
+\end{center}
+\end{figure}
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=170mm]{figs/prior_post_dilu_10.pdf}
+\caption{Distribution of priors and posteriors when dilution is 10\%}
+\label{fig:dilu_10}
+\end{center}
+\end{figure}
+
+Statistically, We analyzed the posteriors and priors for Jeffreys prior and log-normal prior. Figure~\ref{fig:dilu_1} and Figure~\ref{fig:dilu_10} show the distribution over different M values focused on 4 different locations (position 100 and 300 are mutant, and position 104 and 244 are non-mutant). The positions are chosen in the middle of the dase length. From the posterior distributions, non-mutant positions display normal and stable without a peak nor a strange shape. The Jeffreys' prior shows more information than the lognormal prior (flat) from the posterior curve. From the prior distribution, it shows our model wants to search for a small value for M.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Results of priors on synthetic data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Results of priors on synthetic data}
 \subsubsection{Performance with read depth}
-To evaluate the performance of RVD3 model with priors, we generated receiver-operating characteristic curves (ROCs) for median read depth and minor allele frequencies (MAFs). Here the Bayesian test is used without the $\chi^2$ test. Figure~\ref{fig:ROC_jeffrey} and Figure~\ref{fig:ROC_lognormal} shows ROC curves with a fixed $\alpha=0.05$. The performance improves when the read depth goes up. Noticed at the lowest depth (22) with 10.0\% mutant mixture, the sensitivity and specificity value are 1 and much better than the model without priors for $M_J$, which definitely demonstrates the advantage of priors.
 
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=120mm]{figs/ROC_without_chi2_jeffrey.pdf}
-\caption{ROC curve varying read depth showing detection performance.}
+\caption{ROC curve for variants detection performance by Jeffreys prior.}
 \label{fig:ROC_jeffrey}
 \end{center}
 \end{figure}
@@ -341,10 +317,12 @@ To evaluate the performance of RVD3 model with priors, we generated receiver-ope
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=120mm]{figs/ROC_without_chi2_lognormal.pdf}
-\caption{ROC curve varying read depth showing detection performance.}
+\caption{ROC curve for variants detection performance by log-normal prior.}
 \label{fig:ROC_lognormal}
 \end{center}
 \end{figure}
+
+To evaluate the performance of RVD3 model with priors, we generated receiver-operating characteristic curves (ROCs) for median read depth and minor allele frequencies (MAFs). Here the Bayesian test is used without the $\chi^2$ test. Figure~\ref{fig:ROC_jeffrey} and Figure~\ref{fig:ROC_lognormal} shows ROC curves with a fixed $\alpha=0.05$. The performance improves when the read depth goes up. (ROC shows that the model with priors performs better than improper prior situation especially on the small read depth). Noticed at the lowest depth (22) with 10.0\% mutant mixture, the sensitivity and specificity value are 1 and much better than the model without priors for $M_J$, which definitely demonstrates the advantage of priors.
 
 \begin{figure}[h]
 \begin{center}
@@ -357,10 +335,11 @@ To evaluate the performance of RVD3 model with priors, we generated receiver-ope
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=160mm]{tables/FDR.pdf}
-\caption{Sensitivity/Specificity comparison of RVD3 with different priors.}
+\caption{False Discovery Rate comparison of RVD3 with different priors.}
 \label{tbl:FDR}
 \end{center}
 \end{figure}
+
 
 \subsubsection{Sensitivity/Specificity/FDR}
 
