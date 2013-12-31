@@ -83,9 +83,10 @@ http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walker
 	Convert SAM to BAM:	
 	samtools view –bt ./Reference_GSY1135/ GSY1135_Chr10.fasta –o ./Control_Case_files/ Gen007.bam ./Control_Case_files/Gen007.sam
 	or 
-	samtools view –b –S –o ./Gen007.bam ./Gen007.sam
+	samtools view –b –S –o ./Gen007_1.bam ./Gen007.sam
 
-	(Sorted BAM file was created with Picard v1.45 FixMateInformation   http://picard.sourceforge.net/)
+	(Sorted BAM file was created with Picard v1.45 FixMateInformation   http://picard.sourceforge.net/
+	java -Xmx4g -jar FixMateInformation.jar INPUT=file.realigned.bam OUTPUT=file.realigned.fixedmateinfo.bam SO=coordinate MAX_RECORDS_IN_RAM=5000000 VALIDATION_STRINGENCY=LENIENT  CREATE_INDEX=true TMP_DIR=$TMPDIR)
 
 7.	Make pileup files for FASTA0 and FASTQ100 using Samtools
 ------
