@@ -117,7 +117,22 @@ http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walker
 10.	Test for variants between case + control -> vcf files
 -----
 
-###Notes: http://biobits.org/samtools_primer.html
+11. http://www.biostars.org/p/19446/ 
+----
+	awk 'NR%2==1 { print $0 "/1" } ; NR%2==0 { print substr($0,0,length($0)/2) }' ../BARCODE/Gen007_unmatched.fastq > gen007_test1.fastq
+
+	awk 'NR%2==1 { print $0 "/2" } ; NR%2==0 { print substr($0,length($0)/2) }' ../BARCODE/Gen007_unmatched.fastq > gen007_test2.fastq
+
+
+
+------------------
+###Notes1: http://biobits.org/samtools_primer.html
+-------------
+###Notes2: control + A + D
+------------
+		  screen -S/ -ls/ -r
+		  ls -lh 
+
 
 
 Prepared by: _________ _Fan Zhang______ Date: ____________12/20/2013____________
