@@ -23,9 +23,9 @@ Map GSY1135 to S288C (Chr10) using BWA (GSY1135: reads; S288C: references)
 
 	Align indexd fastq:    bwa aln –B 6 –t 8 –I –q 10 ./Chr10.fa ./Reference_GSY1135/SRR063399.fastq > ./SAI_files/SRR063399.sai
 
-	bwa samse ./Chr10.fa ./SAI_files/SRR063399.sai ./Reference_GSY1135/SRR063399.fastq > ./Reference_GSY1135/ SRR063399.sam
+	bwa samse ./Chr10.fa ./SAI_files/SRR063399.sai ./Reference_GSY1135/SRR063399.fastq > ./Reference_GSY1135/SRR063399.sam
 
-	Convert SAM to BAM:	samtools view –bt ./Chr10.fa –o ./Reference_GSY1135/SRR063399bam ./ Reference_GSY1135/SRR063399.sam
+	Convert SAM to BAM:	samtools view –bt ./Chr10.fa –o ./Reference_GSY1135/SRR063399bam ./Reference_GSY1135/SRR063399.sam
 
 	Sort the BAM file:	 samtools sort ./SRR063399.bam ./SRR063399.sort
 
@@ -59,22 +59,40 @@ http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walker
 -------
 	Download the SRA toolkit from http://trace.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software 
 	Decompress: Tar –zxvf sratoolkit.2.3.4-2-centos_linux64.tar.gz
-	Convert SRA to fasta: ./sratoolkit.2.3.4-2-centos_linux64/bin/fastq-dump /home/pjflaherty/flahertylab/freeze/baker_yeast/*.sra
+	Convert SRA to fastq: ./sratoolkit.2.3.4-2-centos_linux64/bin/fastq-dump /home/pjflaherty/flahertylab/freeze/baker_yeast/*.sra
 
 4.	Remove WT population using FASTX Barcode Splitter
 --------
 	http://hannonlab.cshl.edu/fastx_toolkit/commandline.html#fastx_barcode_splitter_usage
 
-	cat Gen007.fastq| /usr/local/bin/fastx_barcode_splitter.pl --bcfile mybarcodes.txt --bol --mismatches 2 \ --prefix /tmp/bla_ --suffix ".txt
+	cat SRR515969.fastq| /usr/local/bin/fastx_barcode_splitter.pl --bcfile mybarcodes.txt --bol --mismatches 2 \ --prefix /tmp/bla_ --suffix ".txt
 
-5.	Trim Nextera tag using Cutadapt	
+[Past. Trim Nextera tag using Cutadapt]	
 ------	
 	https://pypi.python.org/pypi/cutadapt
 	cutadapt –a CAAGCAGAAGACGGCATACGAGATNNNNNNCGGTCTGCCTTGCCAGCCCGCTCAG –m 15 Gen007_unmatched.fastq > Gen007_trimed.fastq 
 
-6. Map FASTQ0 and FASTQ100 to GSY1135 reference using BWA. 
+5. Get pair ends: 
+---
+	http://www.biostars.org/p/19446/
+	awk 'NR%2==1 { print $0 "/1" } ; NR%2==0 { print substr($0,0,length($0)/2) }' ../BARCODE/Gen007_unmatched.fastq > gen007_test1.fastq
+	awk 'NR%2==1 { print $0 "/2" } ; NR%2==0 { print substr($0,length($0)/2) }' ../BARCODE/Gen007_unmatched.fastq > gen007_test2.fastq
+
+6. Map FASTQ0 and FASTQ100 to GSY1135 reference using BWA.
+----
+	(Trim [1,64] or 50)	
+	bwa aln -t 8 -I -q 10 ./Reference_GSY1135/GSY1135_Chr10.fasta test/gen007_test1.fastq > test/gen007_test1.sai
+	bwa aln -t 8 -I -q 10 ./Reference_GSY1135/GSY1135_Chr10.fasta test/gen007_test2.fastq > test/gen007_test2.sai
+	(-q 10 option is necessary to make the quality consistent with the sequence.) 
+	
+	bwa mem /Reference_GSY1135/GSY1135_Chr10.fasta test/gen007_test1.fastq test/gen007_test2.fastq > gen007_test.sam
+	[errors when using sampe: bwa sampe /Reference_GSY1135/GSY1135_Chr10.fasta test/gen007_test1.sai test/gen007_test2.sai test/gen007_test1.fastq test/gen007_test2.fastq > gen007_test.sam]
+
+	samtools view -b -S -o ./test/gen007_test.bam ./test/gen007_test.sam
+
+[Former 6, Past] 
 --------
-   (Quality score: 50)	
+   (Former quality score: 50)	
 
 	Align indexd fastq:	bwa aln –B 6 –t 8 –I –q 10 ./Reference_GSY1135/GSY1135_Chr10.fasta ./BARCODE/Gen007_trimed.fastq > ./SAI_files/Gen007.sai
 
@@ -88,15 +106,30 @@ http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walker
 	(Sorted BAM file was created with Picard v1.45 FixMateInformation   http://picard.sourceforge.net/
 	java -Xmx4g -jar FixMateInformation.jar INPUT=file.realigned.bam OUTPUT=file.realigned.fixedmateinfo.bam SO=coordinate MAX_RECORDS_IN_RAM=5000000 VALIDATION_STRINGENCY=LENIENT  CREATE_INDEX=true TMP_DIR=$TMPDIR)
 
-7.	Make pileup files for FASTA0 and FASTQ100 using Samtools
+7. Make pileup files for FASTA0 and FASTQ100 using Samtools
+---
+	Add head: java -jar AddOrReplaceReadGroups.jar I=../../../../../../../freeze/baker_yeast/GSY1135/test/gen007_test.bam o=../../../../../../../freeze/baker_yeast/GSY1135/test/headgen007_test.bam LB=whatever PL=illumine PU=whatever SM=whatever
+
+	samtools sort test/headgen007_test.bam test/headgen007_test_coordinate_sorted.sort
+	[(when do the index -> error: not sorted) samtools sort -n test/headgen007_test.bam test/headgen007_test_name_sorted.sort]
+
+	samtools index test/headgen007_test_coordinate_sorted.sort.bam
+
+	Index reference sequence: samtools faidx Reference_GSY1135/GSY1135_Chr10.fasta
+
+	samtools mpileup -C 50 -uf Reference_GSY1135/GSY1135_Chr10.fasta ./test/headgen007_test_coordinate_sorted.sort.bam > ./test/gen007_test.mpileup
+
+
+[Former 7, Past]	
 ------
 	http://www.biostars.org/p/63429/#73512
 
-	Add head:   Java –jar AddOrReplaceGroups.jar I=Gen007.bam O=./headGen007.bam LB=whatever PL=illumine PU=whatever SM=whatever
+	Add head: java –jar AddOrReplaceGroups.jar I=Gen007.bam O=./headGen007.bam LB=whatever PL=illumine PU=whatever SM=whatever
 
 	Sort the BAM file:	 samtools sort -n ./Gen007.bam ./Gen007.sort
+	(-n: because of pair ends, sort by name is needed.)
 
-	Index:	Samtools index ./Gen007.sort.bam
+	Index:	samtools index ./Gen007.sort.bam
 
 	samtools mpileup –C 50 -uf ./Reference_GSY1135/GSY1135_Chr10.fasta ./Gen007.sort.bam > file.mpileup   
 
@@ -110,29 +143,30 @@ http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walker
 
 	PATH=$PATH:/home/fzhang/Research/rvd2/bin
 
-	pileup2dc
+	[error: pileup2dc -> Segmentation fault (core dumped)]
+	cd fzhang/Research/rvd2/results/2014-01-05-pileup/
+	python test_pileup2dc.py ../../../../../freeze/baker_yeast/GSY1135/test/gen007_test.mpileup
+		
+	
 
 9.	Estimate models for case + control
 -----
+
+
 10.	Test for variants between case + control -> vcf files
 -----
 
-11. http://www.biostars.org/p/19446/ 
-----
-	awk 'NR%2==1 { print $0 "/1" } ; NR%2==0 { print substr($0,0,length($0)/2) }' ../BARCODE/Gen007_unmatched.fastq > gen007_test1.fastq
 
-	awk 'NR%2==1 { print $0 "/2" } ; NR%2==0 { print substr($0,length($0)/2) }' ../BARCODE/Gen007_unmatched.fastq > gen007_test2.fastq
+###Note1: 
+	http://biobits.org/samtools_primer.html
 
+###Note2: linux
+	control + A + D
+    screen -S/ -ls/ -r
+    ls -lh 
 
-
-------------------
-###Notes1: http://biobits.org/samtools_primer.html
--------------
-###Notes2: control + A + D
-------------
-		  screen -S/ -ls/ -r
-		  ls -lh 
-
+###Note3: spiked fresh of GSY1135
+	#matched reads/(#matched+#unmatched)=spiked fresh of GSY1135
 
 
 Prepared by: _________ _Fan Zhang______ Date: ____________12/20/2013____________
