@@ -32,11 +32,11 @@ def main():
     sheet4=book.add_sheet("MCC")
     sheet4.write(0, 0, "MAF")
     sheet4.write(0, 1, "Median Depth")
-    
-    method = {'RVD2(T*)':'./../2013-10-04_optimal_threshold/vcf/L1',
-              'RVD2(T* regr311)':'./../2013-10-08_optimal_threshold_surface_fitting/vcf/fit/311',
-              'RVD2(T=0,R=6)':'./../2013-09-27_SNP_calling_RVD2_zero/vcf',
-              'RVD2(T=0,R=1)':'./../2013-10-18_one_replicate_T_zero/vcf',
+
+    method = {'RVD2(T*)(R=6)':'./../2013-12-20_experiment_set_gibbs_Qsd_mu_1_mu_over_10_minus_mu0/six_replicates_synthetic_optT/vcf/MCC',
+              'RVD2(T*)(R=1)':'./../2013-12-20_experiment_set_gibbs_Qsd_mu_1_mu_over_10_minus_mu0/one_replicate_synthetic_optT/vcf/MCC',
+              'RVD2(T=0)(R=6)':'./../2013-12-20_experiment_set_gibbs_Qsd_mu_1_mu_over_10_minus_mu0/six_replicates_synthetic_T0/vcf',
+              'RVD2(T=0)(R=1)':'./../2013-12-20_experiment_set_gibbs_Qsd_mu_1_mu_over_10_minus_mu0/one_replicate_synthetic_T0/vcf',
               'VarScan2 somatic':'./../2013-09-23_SNP_calling_using_varscan2_somatic/vcf',
               'SAMtools':'./../2013-09-10_SNP_calling_using_samtools/vcf',
               'GATK':'./../2013-09-13_SNP_calling_using_GATK/vcf',
@@ -44,9 +44,6 @@ def main():
               'Strelka':'./../2013-10-01_SNP_calling_using_strelka/vcf',
               'VarScan2 mpileup':'./../2013-09-20_SNP_calling_using_varscan2/vcf'}
     
-##    'RVD2_T*_ED':'./../2013-10-04_optimal_threshold/vcf/ED',
-##    'Strelka':'./../2013-10-01_SNP_calling_using_strelka/work',
-##    'RVD2_T*_MCC':'./../2013-10-04_optimal_threshold/vcf/MCC',
     DilutionList = (0.1, 0.3, 1.0, 10.0,100.0)
     DepthList = (10000, 1000, 100, 10)
     i=0
@@ -111,7 +108,7 @@ def main():
                     sheet3.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1,i+1,"%0.2f" %FDR)
                 if not np.isnan(FDR):
                     sheet4.write(DilutionList.index(d)*len(DepthList)+DepthList.index(r)+1,i+1,"%0.2f" %MCC)
-    book.save('character.xls')  
+    book.save('character_2013_12_30.xls')  
 
 def characteristics(RefClass = None, PredictClass = None):
 

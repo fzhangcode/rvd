@@ -34,6 +34,16 @@ Thumbs.db
 results/2013-10-01_SNP_calling_using_strelka/work
 results/2013-10-11_new_dataset_searching/datasets
 results/2013-10-11_new_dataset_searching/HCC1187
+results/2013-12-20_experiment_set_gibbs_Qsd_mu_over_10_minus_mu0
+results/2013-12-14_experiment_set_with_large_Qsd
+results/2013-11-22_experiment_set_with_Qsd_0_01
+results/2013-11-22_experiment_set_with_Qsd_0_1
+results/2013-12-05_experiment_set_with_Qsd_0_1_twoends_bounded
+results/2013-12-10_experiment_set_with_Qsd_mu_1-mu
+results/2013-12-14_experiment_set_gibbs_Qsd_mu_1-mu_over_10
+results/2013-12-14_experiment_set_gibbs_Qsd_mu_over_10
+results/2013-12-14_experiment_set_with_large_Qsd
+
 bin/strelka_workflow/opt
 bin/bedtools-2.17.0
 doc/RECOMB2014/recomb2014.log
