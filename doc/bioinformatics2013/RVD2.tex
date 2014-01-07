@@ -2,7 +2,7 @@
 \usepackage[top=1in, left=1in, right=1in, bottom=1in]{geometry}                % See geometry.pdf to learn the layout options. There are lots.
 \geometry{letterpaper}                   % ... or a4paper or a5paper or ...
 \usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
-%\usepackage{algorithm, algorithmic}
+%\usepackage{algorithm}
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -62,6 +62,12 @@ Recently, researchers have developed algorithms to call low-frequency or rare va
 
 Several studies have compared the relative performance of these algorithms.
 %TODO: [DISCUSS \citet{Stead:2013fu}, \citet{spencer2013performance}] and others
+%TODO: modify the following section
+GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths.
+
+
+
+
 
 Typically such a variant calling algorithms are comprised of multiple pre- and post-filtration steps around model estimation and hypothesis testing steps~\citep{Pabinger:2013dl}. These steps may improve algorithm performance, but their presence makes it difficult to isolate what step is most responsible for the performance. Instead, we focus exclusively on the model structure and statistical inference steps. Additional filtration steps may improve performance considerably, but those aspects are subjects of intense research and separate study. We have isolated the statistical inference and hypothesis testing steps so that they may be used independently or as part of a larger variant calling pipeline.
 
@@ -215,7 +221,7 @@ A candidate sample is generated from the symmetric proposal distribution $Q(\mu_
 	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
 \end{equation}
 
-We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j = 0.1 \cdot \mu_j^{(p)}$ if $\mu_j^{(p)} \in (10^{-3},1-10^{-3})$; otherwise, we set $\sigma_j = 10^{-4}$ if $\mu_j^{(p)}< 10^{-3}$ and $\sigma_j = 10^{-1}-10^{-4}$ if $\mu_j^{(p)}>1-10^{-3}$. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position.
+We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j = 0.1 \cdot \tilde{\mu}_j\cdot (1-\tilde{\mu}_j)$ if $\tilde{\mu}_j \in (10^{-3},1-10^{-3})$ and $\sigma_j = 10^{-4}$ otherwise, where $\tilde{\mu}_j$ is the MoM estimator of $\mu_j$. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position.
 
 
 We resample from the proposal if the sample is outside of the support of the posterior distribution. We typically discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this sampling step can be distributed across up to $J$ processors.
@@ -232,9 +238,9 @@ A variant is called if $\tilde{\mu}_j^{\text{case}} > \tilde{\mu}_j^{\text{contr
 \end{equation}
 where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. We draw a sample from the posterior distribution $\tilde{\mu}_j^{\Delta} \triangleq \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}}$ by simple random sampling with replacement from $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$.
 
-The threshold, $\tau$, may be set to zero or optimized for a given median depth and desired MAF detection limit. The optimal $\tau$ minimizes the sum of the false negative rate and false positive rate or, equivalently,  the $L_1$ distance to perfect classification in the ROC curve plot,
+The threshold, $\tau$, may be set to zero or optimized for a given median depth and desired MAF detection limit. The optimal $\tau$ maximizes the Matthews Correlation Coefficient (MCC) to perfect classification in the ROC curve plot,
 \begin{equation}
-	\tau^* = \arg\min_\tau \left\{ (1-\text{TPR}(\tau)) + \text{FPR}(\tau) \right\}.
+	\tau^* = \arg\max_\tau \left\{ \text{MCC}(\tau)\right\}.
 \end{equation}
 
 While we are able to compute the optimal $\tau$ threshold for a test data set, in general we would not have access to $\tau^*$. With sufficient training data, one would be able to develop a lookup table or calibration curve to set $\tau$ based on read depth and MAF level of interest. Absent this information we set $\tau = 0$.
@@ -289,7 +295,7 @@ The HCC1187 dataset is a well-recognized baseline dataset from Illumina for eval
 
 We tested RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $\mu^{\Delta}$ to estimate the posterior probability of a variant.
 
-We used RVD2 to identify germline and somatic mutations in the diploid HCC1187 sample. To identify germline mutations, we used the control data in the following hypothesis test $\Pr( \tilde{\mu}_j \in [\tau_\text{l},\tau_\text{u}] ) > 1-\alpha$, where the intervals are: homozygous reference $[0, 0.5]$, heterozygous mutant $[0.25, 0.75]$, and homozygous mutant $[0.5, 1.0]$ and the size of the test is $\alpha=0.05$.
+We used RVD2 to identify germline and somatic mutations in the diploid HCC1187 sample. To identify germline mutations, we used the control data in the following hypothesis test $\Pr( \tilde{\mu}_j \in [\tau_\text{l},\tau_\text{u}] ) > 1-\alpha$, where the intervals are: homozygous reference $[0, 0.2]$, heterozygous mutant $[0.1, 0.9]$, and homozygous mutant $[0.8, 1.0]$ and the size of the test is $\alpha=0.05$.
 
 To identify somatic mutations, we considered scenarios when the case(tumor) error rate is lower than the control(germline) error rate (e.g. loss-of-heterozygosity) as well as scenarios when the case(tumor) error rate is higher than the control(germline) error rate (e.g. homozygous somatic mutation). The two hypothesis tests are then $\Pr( \tilde{\mu}_j^{\Delta} \geq \tau ) > 1-\alpha$ and $\Pr( \tilde{\mu}_j^{\Delta} \leq \tau ) > 1-\alpha$. The size of the test is $\alpha=0.05$.
 %TODO: correct notation from \Pr to summation because we have samples, not distributions.
@@ -306,18 +312,6 @@ We generated receiver-operating characteristic curves (ROCs) for a range of medi
 \end{center}
 \end{figure}
 % from folder '2013-11-24_six_replicates_Compute_ROC_Synthetic_Qsd_0_1'
-
-%Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\mu_j$ for called variant positions with $\bar{n} = 5584$ and MAF = 1.0\%. All of the called positions show a clear difference between the case and control error rates. The posterior mean estimates are all shrunken towards the global error rate parameter $\mu_0 = 0.0023$ due to the hierarchical structure of the model.
-%
-%\begin{figure}[h]
-%\begin{center}
-%\includegraphics[width=120mm]{pdf_figs/Synthetic_Mubarplot_MAF1_0_Depth5584.pdf}
-%\caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
-%\label{fig:MAF}
-%\end{center}
-%\end{figure}
-%% from folder '2013-11-15_synthetic_mu_barplot_optimalT', dilution rate is 0.1, downsampling rate is 0.01.
-
 
 \subsection{Empirical performance compared with other algorithms}\label{sec:comparison}
 
@@ -338,6 +332,8 @@ We compare the empirical performance of RVD2 to other variant calling algorithms
 
 Figure~\ref{tbl:comparison_ss} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
 
+
+%TODO: double check with the following sentence
 The sensitivity for RVD2 with $\tau=0$ is low for low read depths and MAF levels and $N=1$ case and control sample. The sensitivity increases considerably with read depth at a slight expense to specificity. With $\tau^*$ the performance is much better with high sensitivity and specificity across a wide range of read depths and MAFs. However, in practice one may not know the optimal $\tau^*$ a-priori. With $N=6$ replicates, the sensitivity increases considerably for low MAF variants with a slight degradation in specificity due to false positives. When the median read depth is at least $10\times$ the MAF, RVD2 has higher specificity than all of the other algorithms tested and has a lower sensitivity in only three cases.
 
 \subsubsection*{False Discovery Rate Comparison}
@@ -361,7 +357,7 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 
 \subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca}
 
-RVD2 identified five variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the five called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample.
+RVD2 identified six variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the six called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. The remaining one is a homozygous somatic variant.
 
 Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899C$>$T, chr7:154753635T$>$C and chr7:154780960C$>$T are called germline homozygous mutations. Positions chr7:154754371 and chr7:154758813 are called heterozygous in the normal sample. In the tumor sample we identified five mutations chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, and chr7:154780960C$>$T. Positions chr7:154754371T$>$C and chr7:154758813G$>$A are called loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the figure.
 %According to dbSNPv138 chr7:154743899 is rs1239326, chr7:154753635 is rs1239324, chr7:154754371 is rs71534174, chr7:154758813 is rs35505514, and chr7:154780960 is rs4398858.
@@ -421,12 +417,7 @@ Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(
 % Appendix B: Comparison Statistics
 %%%%%%%%%%%%%%%%%%%
 \section{Algorithm Comparison Statistics}\label{sec:app_comparison}
-Figure~\ref{fig:comparison_mcc} compares RVD2 with samtools, GATK, varscan, strelka and muTect using Matthew Correlation Coefficient (MCC)~citep(matthews1985homeostasis).
-
-Samtools and VarScan2-mpileup achieved MCC value generally higher than 0.90 on 100\% MAF sample across all read depthes, with 1.0 represents for a perfect prediction. However, both of them achieved MCC value at 0.00 when MAF is 10.0\% or lower, which indicates no better than random prediction. GATK, Varscan2-somatic, Strelka outperformed Samtools and VarScan2-mpile on the 10.0\% MAF sample, while performed similarly in other cases. GATK5, achieved relatively stable MCC between 0.65~0.88. Strelka achieved even better MCC on 10\% MAF sample, more specifically around 1.00 when read deapth is high but 0.53 when read depth is 22. There is a very obvious but unconventional decreasing trend in VarScan2-somatic MCC value across different read depth and MAF level, a phenomenon also observed by ~\citet{Stead:2013fu}. It is because VarScan2-somatic tends to call more false positives as read depth gets higher. As to Mutect, overall it seems to performs the best among all the method RVD2 is comparing to. It achieve postive MCC values (-0.02--0.43, with a single case at 0.60), though too low to be practically meaningful. Moreover, muTect achieved relatively low MCC (0.77--0.90) comparing to some other algorithms when the MAF level is 10\% and 100\%, as a counteractive of being oversensitive.
-
-RVD2 achieved MCC value at 1.00 when the MAF is 100.0\% at all read depth and 10\% when read depth is not lower than 260. The Matthews correlation coefficient (MCC) indicates that RVD2($\tau=0, N=1$) is more accurate than the other algorithms when the median read depth is at least $10\times$ the MAF.
-
+Figure~\ref{fig:comparison_mcc} compares RVD2 with samtools, GATK, varscan, strelka and muTect using Matthews Correlation Coefficient (MCC)~\citep{matthews1985homeostasis}.
 \begin{figure}[ht]
 \begin{center}
 \includegraphics[width=140mm]{pdf_figs/comparison_table_mcc.pdf}
@@ -436,6 +427,10 @@ RVD2 achieved MCC value at 1.00 when the MAF is 100.0\% at all read depth and 10
 \end{figure}
 % from folder 'rvd2\results\2013-09-19_operating_characteristics'
 % from folder 'rvd2\results\2013-09-19_operating_characteristics'
+
+Samtools and VarScan2-mpileup achieved MCC value generally higher than 0.90 on 100\% MAF sample across all read depthes, with 1.0 represents for a perfect prediction. However, both of them detected no variant when MAF is 10.0\% or lower, with only one exception for samtools when MAF is 10.0\% and read depth 22. GATK, Varscan2-somatic, Strelka and GATK outperformed Samtools and VarScan2-mpile on the 10.0\% MAF sample, while approximately tied in other cases. Strelka achieved best MCC on 10\% MAF sample comparing to Varscan2-somatic and GATK, more specifically around 1.00 when read depth is 260 or higher. There is a very obvious but unconventional decreasing trend in VarScan2-somatic MCC value across different read depth and MAF level, a phenomenon also observed by ~\citet{Stead:2013fu}. It is because VarScan2-somatic tends to call more false positives as read depth gets higher. Mutect seems to performs the best among all the algorithms expect RVD2 when MAF is 1.0\% or lower. It achieves MCC values varying from -0.02 to 0.43, though too low to be practically meaningful. However, muTect achieved relatively lower MCC values when the MAF level is 10\% and 100\%, as a counteractive of being oversensitive.
+
+RVD2 achieved MCC value at 1.00 when the MAF is 100.0\% at all read depth and 10\% when read depth is not lower than 260. This indicates that RVD2($\tau=0, N=1$) is more accurate than the other algorithms when the median read depth is at least $10\times$ the MAF.
 
 %%%%%%%%%%%%%%%%%
 % Appendix C: Data Set Statistics
@@ -461,7 +456,23 @@ The error rate across positions is captured by the $M_0$ parameter shown as a ho
 
 
 %%%%%%%%%%%%%%%%%
-% Appendix D: Parameter Settings for Variant Calling Algorithms
+% Appendix D: Estimated minor allele fraction for called variants in synthetic gene.
+%%%%%%%%%%%%%%%%%
+\section{Estimated MAF for called variants in synthetic gene.}
+Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\mu_j$ for called variant positions with $\bar{n} = 5584$ and MAF = 1.0\%. All of the called positions show a clear difference between the case and control error rates. The posterior mean estimates are all shrunken towards the global error rate parameter $\mu_0 = 0.0023$ due to the hierarchical structure of the model.
+%
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=120mm]{pdf_figs/Synthetic_Mubarplot_MAF1_0_Depth5584.pdf}
+\caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
+\label{fig:MAF}
+\end{center}
+\end{figure}
+% from folder '2013-11-15_synthetic_mu_barplot_optimalT', dilution rate is 0.1, downsampling rate is 0.01.
+
+
+%%%%%%%%%%%%%%%%%
+% Appendix E: Parameter Settings for Variant Calling Algorithms
 %%%%%%%%%%%%%%%%%
 \section{Parameter settings for other variant calling algorithms}
 \paragraph{\textbf{Samtools}}We used samtools (v0.1.19) function mpileup to call variants and bcftools to save the result in standard VCF files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid truncating read deapth. Option -u was enabled to make sure the output bcf files were uncompressed.
@@ -480,8 +491,6 @@ Since configuration and Analysis for Strelka and muTect is standardized and no p
 
 Samtools mpileup and GATK can accept multiple "tumor'' replicates for variant calling, so we fed six bam files from each case replicate group to mpileup. VarScan2-mpileup takes multiple ``tumor-normal'' pair replicates so we passed six pair replicates to each algorithm. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
 
-% TODO: modify the following section
-GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, we expect those algorithms to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. \citet{Stead:2013fu} showed that varscan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We find its performance on much lower MAF variants and across a wider range of coverage depths.
 \bibliographystyle{apalike}
 \bibliography{bioinfo}
 \end{document}

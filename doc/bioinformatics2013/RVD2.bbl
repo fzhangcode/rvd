@@ -8,6 +8,19 @@ Alkan, C., Kidd, J.~M., Marques-Bonet, T., Aksay, G., Antonacci, F.,
   next-generation sequencing.}
 \newblock {\em Nature Genetics}, 41(10):1061--1067.
 
+\bibitem[Allen, 2013]{hcc1187techreport}
+Allen, E. (2013).
+\newblock Molecular characterization of tumors using next-generation
+  sequencing.
+\newblock Technical Report 770-2013-011, 2013 Illumina, Inc.
+
+\bibitem[Benjamini and Hochberg, 1995]{benjamini1995controlling}
+Benjamini, Y. and Hochberg, Y. (1995).
+\newblock Controlling the false discovery rate: a practical and powerful
+  approach to multiple testing.
+\newblock {\em Journal of the Royal Statistical Society. Series B
+  (Methodological)}, pages 289--300.
+
 \bibitem[Capobianchi et~al., 2012]{Capobianchi:2012em}
 Capobianchi, M.~R., Giombini, E., and Rozera, G. (2012).
 \newblock {Next-generation sequencing technology in clinical virology}.
@@ -82,12 +95,38 @@ Consortium, T. H. M.~P. (2013).
 \newblock {A framework for human microbiome research}.
 \newblock {\em Nature}, 486(7402):215--221.
 
+\bibitem[Cressie and Read, 1984]{cressie1984multinomial}
+Cressie, N. and Read, T.~R. (1984).
+\newblock Multinomial goodness-of-fit tests.
+\newblock {\em Journal of the Royal Statistical Society. Series B
+  (Methodological)}, pages 440--464.
+
+\bibitem[DePristo et~al., 2011]{depristo2011framework}
+DePristo, M.~A., Banks, E., Poplin, R., Garimella, K.~V., Maguire, J.~R.,
+  Hartl, C., Philippakis, A.~A., del Angel, G., Rivas, M.~A., Hanna, M., et~al.
+  (2011).
+\newblock A framework for variation discovery and genotyping using
+  next-generation dna sequencing data.
+\newblock {\em Nature genetics}, 43(5):491--498.
+
+\bibitem[Efron, 2010]{efron2010large}
+Efron, B. (2010).
+\newblock {\em Large-scale inference: empirical Bayes methods for estimation,
+  testing, and prediction}, volume~1.
+\newblock Cambridge University Press.
+
 \bibitem[Fan et~al., 2008]{Fan:2008di}
 Fan, H.~C., Blumenfeld, Y.~J., Chitkara, U., Hudgins, L., and Quake, S.~R.
   (2008).
 \newblock {Noninvasive diagnosis of fetal aneuploidy by shotgun sequencing DNA
   from maternal blood.}
 \newblock {\em PNAS}, 105(42):16266--16271.
+
+\bibitem[Fisher et~al., 1970]{fisher1970statistical}
+Fisher, S. R.~A., Genetiker, S., Fisher, R.~A., Genetician, S., Britain, G.,
+  Fisher, R.~A., and G{\'e}n{\'e}ticien, S. (1970).
+\newblock {\em Statistical methods for research workers}, volume~14.
+\newblock Oliver and Boyd Edinburgh.
 
 \bibitem[Flaherty et~al., 2011]{Flaherty:2011ja}
 Flaherty, P., Natsoulis, G., Muralidharan, O., Winters, M., Buenrostro, J.,
@@ -104,6 +143,26 @@ Ghedin, E., Laplante, J., DePasse, J., Wentworth, D.~E., Santos, R.~P., Lepow,
 \newblock {Deep Sequencing Reveals Mixed Infection with 2009 Pandemic Influenza
   A (H1N1) Virus Strains and the Emergence of Oseltamivir Resistance}.
 \newblock {\em Journal of Infectious Diseases}, 203(2):168--174.
+
+\bibitem[Howarth et~al., 2007]{howarth2007array}
+Howarth, K., Blood, K., Ng, B., Beavis, J., Chua, Y., Cooke, S., Raby, S.,
+  Ichimura, K., Collins, V., Carter, N., et~al. (2007).
+\newblock Array painting reveals a high frequency of balanced translocations in
+  breast cancer cell lines that break in cancer-relevant genes.
+\newblock {\em Oncogene}, 27(23):3345--3359.
+
+\bibitem[Howarth et~al., 2011]{howarth2011large}
+Howarth, K.~D., Pole, J.~C., Beavis, J.~C., Batty, E.~M., Newman, S., Bignell,
+  G.~R., and Edwards, P.~A. (2011).
+\newblock Large duplications at reciprocal translocation breakpoints that might
+  be the counterpart of large deletions and could arise from stalled
+  replication bubbles.
+\newblock {\em Genome Research}, 21(4):525--534.
+
+\bibitem[Jordan, 2004]{jordan2004graphical}
+Jordan, M.~I. (2004).
+\newblock Graphical models.
+\newblock {\em Statistical Science}, pages 140--155.
 
 \bibitem[Kitzman et~al., 2012]{Kitzman:2012hea}
 Kitzman, J.~O., Snyder, M.~W., Ventura, M., Lewis, A.~P., Qiu, R., Simmons,
@@ -131,6 +190,20 @@ Laird, P.~W. (2010).
 \newblock {Principles and challenges of genomewide DNA methylation analysis.}
 \newblock {\em Nature Reviews Genetics}, 11(3):191--203.
 
+\bibitem[Li, 2011]{li2011statistical}
+Li, H. (2011).
+\newblock A statistical framework for snp calling, mutation discovery,
+  association mapping and population genetical parameter estimation from
+  sequencing data.
+\newblock {\em Bioinformatics}, 27(21):2987--2993.
+
+\bibitem[Matthews et~al., 1985]{matthews1985homeostasis}
+Matthews, D., Hosker, J., Rudenski, A., Naylor, B., Treacher, D., and Turner,
+  R. (1985).
+\newblock Homeostasis model assessment: insulin resistance and $\beta$-cell
+  function from fasting plasma glucose and insulin concentrations in man.
+\newblock {\em Diabetologia}, 28(7):412--419.
+
 \bibitem[McKenna et~al., 2010]{McKenna:2010bv}
 McKenna, A., Hanna, M., Banks, E., Sivachenko, A., Cibulskis, K., Kernytsky,
   A., Garimella, K., Altshuler, D., Gabriel, S., Daly, M., and DePristo, M.~A.
@@ -145,6 +218,12 @@ Navin, N., Krasnitz, A., Rodgers, L., Cook, K., Meth, J., Kendall, J., Riggs,
   Zetterberg, A., Hicks, J., and Wigler, M. (2010).
 \newblock {Inferring tumor progression from genomic heterogeneity}.
 \newblock {\em Genome Research}, 20(1):68--80.
+
+\bibitem[Newman et~al., 2013]{newman2013relative}
+Newman, S., Howarth, K.~D., Greenman, C.~D., Bignell, G.~R., Tavar{\'e}, S.,
+  and Edwards, P.~A. (2013).
+\newblock The relative timing of mutations in a breast cancer genome.
+\newblock {\em PloS one}, 8(6):e64991.
 
 \bibitem[Ouyang et~al., 2009]{Ouyang:2009hc}
 Ouyang, Z., Zhou, Q., and Wong, W.~H. (2009).
@@ -166,6 +245,14 @@ Quail, M.~A., Smith, M., Coupland, P., Otto, T.~D., Harris, S.~R., Connor,
   Ion Torrent, PacificBiosciences and Illumina MiSeq sequencers}.
 \newblock {\em BMC Genomics}, 13(1):1--1.
 
+\bibitem[Raczy et~al., 2013]{raczy2013isaac}
+Raczy, C., Petrovski, R., Saunders, C.~T., Chorny, I., Kruglyak, S., Margulies,
+  E.~H., Chuang, H.-Y., K{\"a}llberg, M., Kumar, S.~A., Liao, A., et~al.
+  (2013).
+\newblock Isaac: Ultra-fast whole genome secondary analysis on illumina
+  sequencing platforms.
+\newblock {\em Bioinformatics}.
+
 \bibitem[Rivera and Ren, 2013]{Rivera:2013ee}
 Rivera, C.~M. and Ren, B. (2013).
 \newblock {Mapping Human Epigenomes}.
@@ -181,8 +268,8 @@ Saunders, C.~T., Wong, W. S.~W., Swamy, S., Becq, J., Murray, L.~J., and
 \bibitem[Stead et~al., 2013]{Stead:2013fu}
 Stead, L.~F., Sutton, K.~M., Taylor, G.~R., Quirke, P., and Rabbitts, P.
   (2013).
-\newblock {Accurately Identifying Low‐Allelic Fraction Variants in Single
-  Samples with Next‐Generation Sequencing: Applications in Tumor Subclone
+\newblock {Accurately Identifying Low-Allelic Fraction Variants in Single
+  Samples with Next-Generation Sequencing: Applications in Tumor Subclone
   Resolution}.
 \newblock {\em Human Mutation}, 34(10):1432--1438.
 
