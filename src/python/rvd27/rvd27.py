@@ -138,8 +138,8 @@ def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
     
     # Sample from the posterior Z = muCase - muControl
     # Adjusting for baseline error rate for case and control
-    #(Z, caseMuS, controlMuS) = sample_post_diff(caseMu-casePhi['mu0'], controlMu-controlPhi['mu0'], N)
-    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu, controlMu, N)
+    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu-casePhi['mu0'], controlMu-controlPhi['mu0'], N)
+##    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu, controlMu, N)
 
     # Posterior Prob that muCase is greater than muControl by T
     postP = bayes_test(Z, [(T, np.inf)]) 
@@ -405,7 +405,7 @@ def sampleLocMuMH(args):
         mu = mu_p
     return mu
     
-def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, thin=0, pool=None):
+def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), Qsd=0.1, burnin=0, mh_nsample=1, thin=0, pool=None):
     """ Return a sample of mu with parameters mu0 and M0.
     """
     if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
@@ -414,23 +414,6 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, 
     alpha0 = mu0*M0 + np.finfo(np.float).eps
     beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
 
-    # set Qsd as the higher value between mu[j]/10 and 1.0E-4 for each position
-    def bound(mu):
-        bound = 0.001
-        if bound < mu < 1-bound:
-            return mu*(1-mu)
-        else:
-            return bound
-        
-    Qsd = map(bound, mu)       
-
-##    bound = 1.0E-4*np.ones_like(mu)
-##    Qsd = [max(bound[i],0.1*mu[i]) for i in range(np.shape(mu)[0])]
-
-    # rvd272
-    # Qsd = 0.1*np.ones_like(mu)
-    # rvd273
-    # Qsd = 0.01*np.ones_like(mu)
     mu_s = np.zeros( (mh_nsample, J) ) 
     for ns in xrange(0, mh_nsample):
         if pool is not None:
@@ -481,7 +464,26 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
     mu[mu < np.finfo(np.float).eps*1e4] = phi['mu0']
     theta[theta < np.finfo(np.float).eps*1e4] = phi['mu0']
     phi['M'][phi['M'] < np.finfo(np.float).eps *1e4] = 1
+
+    # Set Qsd for proposal distribution according to mom of mu
     
+    def boundfn(mu):       
+        bound = 0.001
+        if bound < mu < 1-bound:
+            return mu*(1-mu)/10
+        else:
+            return bound/10
+        
+
+##    def boundfn(mu):       
+##        bound = 0.001
+##        if bound < mu < 1-bound:
+##            return mu/10
+##        else:
+##            return bound/10
+        
+    Qsd = map(boundfn, mu)       
+
     # Sample theta, mu by gibbs sampling
     theta_s = np.zeros( (N, J, gibbs_nsample) )
     mu_s = np.zeros( (J, gibbs_nsample) )
@@ -494,7 +496,7 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
         theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], phi['M'], mu=mu, mh_nsample=mh_nsample, pool=pool)
+        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], phi['M'], mu=mu, Qsd=Qsd, mh_nsample=mh_nsample, pool=pool)
         mu = np.median(mu_mh, axis=0)
         # Store the sample
         theta_s[:,:,i] = np.copy(theta)
