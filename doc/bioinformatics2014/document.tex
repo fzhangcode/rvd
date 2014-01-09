@@ -45,7 +45,7 @@ Text
 
 Next-generation sequencing (NGS) technology has enabled the systematic interrogation of the genome for a fraction of the cost of traditional assays~\citep{Koboldt:2013kw}. Protocol and platform engineering improvements have enabled the generation of $1\times10^9$ bases of sequence data in 27 hours for approximately \$1000~\citep{Quail:2012hf}. As a result, NGS is increasingly being used as a general platform for research assays for methylation state~\citep{Laird:2010ab}, DNA mutations~\citep{Consortium:2013co}, copy number variation~\citep{Alkan:2009cr}, promoter occupancy~\citep{Ouyang:2009hc} and others~\citep{Rivera:2013ee}. NGS diagnostics are being translated to clinical applications including noninvasive fetal diagnostics~\citep{Kitzman:2012hea}, infectious disease diagnostics~\citep{Capobianchi:2012em}, cancer diagnostics~\citep{Navin:2010gu}, and human microbial analysis~\citep{Consortium:2013iz}.
 
-Increasingly, NGS is being used to interrogate mutations in heterogeneous clinical samples. For example, NGS-based non-invasive fetal DNA testing uses maternal blood sample to sequence the minority fraction of cell-free fetal DNA~\citep{Fan:2008di}. Infectious diseases such as HIV and influenza may contain many genetically heterogeneous sub-populations~\citep{Flaherty:2011ja,cushing2013rvd, Ghedin:2010ie}. DNA sequencing of individual regions of a solid tumor has revealed genetic heterogeneous within an individual sample~\citep{Navin:2010gu}.
+Increasingly, NGS is being used to interrogate mutations in heterogeneous clinical samples. For example, NGS-based non-invasive fetal DNA testing uses maternal blood sample to sequence the minority fraction of cell-free fetal DNA~\citep{Fan:2008di}. Infectious diseases such as HIV and influenza may contain many genetically heterogeneous sub-populations~\citep{Flaherty:2011ja, cushing2013rvd, Ghedin:2010ie}. DNA sequencing of individual regions of a solid tumor has revealed genetic heterogeneous within an individual sample~\citep{Navin:2010gu}.
 
 However, the primary statistical tools for calling variants from NGS data are optimized for homogeneous samples.  Samtools/bcftools and GATK uses naive Bayesian decision rule to call variants~\citep{li2011statistical, depristo2011framework}. GATK involves more sophisticate pre- and post-processing steps wherein the genotype prior is fixed and constant across all loci and the likelihood of an allele at a locus is a function of the phred score~\citep{McKenna:2010bv}.
 
@@ -370,21 +370,22 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 
 \subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca}
 
-RVD2 identified six variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the six called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. The remaining one is a homozygous somatic variant.
+RVD2 identified six variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the six called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. The remaining one is a homozygous somatic variant. Because the median read depth for the case sample is 60, we set the threshold of the test for $\mu^\Delta$ to $\tau = 16\%$ to minimize the false discovery rate (Figure~\ref{tbl:comparison_fdr}). 
 
-%\iffalse
-Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, chr7:154760439A$>$C are called significantly different in tumor and normal sample MAF.  Positions chr7:154743899C$>$T, chr7:154753635T$>$C and chr7:154780960C$>$T are called germline homozygous mutations. Positions chr7:154754371 and chr7:154758813 are called heterozygous in the normal sample. In the tumor sample we identified six mutations chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, chr7:154760439A$>$C and chr7:154780960C$>$T. Through manual checking, position chr7:154743899C$>$T and chr7:154753635T$>$C are likely false positives due to insufficient sampling in the Metropolis\_within-Gibbs algorithm. Positions chr7:154754371T$>$C and chr7:154758813G$>$A are called loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the figure.
+Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154754371T$>$C, chr7:154758813G$>$A, chr7:154760439A$>$C are called significantly different in tumor and normal sample MAF. Positions chr7:154743899C$>$T, chr7:154753635T$>$C and chr7:154780960C$>$T are called germline homozygous mutations. Positions chr7:154754371 and chr7:154758813 are called heterozygous in the normal sample. In the tumor sample we identified six mutations chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, chr7:154760439A$>$C and chr7:154780960C$>$T. Positions chr7:154754371T$>$C and chr7:154758813G$>$A are called loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the figure.
 %According to dbSNPv138 chr7:154743899 is rs1239326, chr7:154753635 is rs1239324, chr7:154754371 is rs71534174, chr7:154758813 is rs35505514, and chr7:154780960 is rs4398858.
-%\fi
+
 
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=0.5\textwidth]{pdf_figs/HCC1187_MuBarPlot.pdf}
-\caption{Estimated minor allele fraction for called variants in PAXIP1 gene.}
+\caption{Estimated minor allele fraction for called variants in PAXIP1 gene. Star (*) indicates $\mu^{\text{case}} - \mu^{\text{control}} \geq \tau$.}
 \label{fig:brca_MAF}
 \end{center}
 \end{figure}
 %('rvd2\results\2013-11-21_HCC1187_PAXIP1_mu_barplot_T0')
+%TODO: add star to test that have mudelta > .16 Done.
+%TODO: set tau=0.16 for mudelta test.  Done
 
 The original research describing this sample used Strelka to identify mutations in the same sample. They identified chr7:154760439 as variant, but did not call the other five variants. In particular strelka missed the two LOH events.  % To compare the performance of RVD2 with other algorithms, we used Strelka to identify mutationin the same sample. Strelka found three positions: chr7:154754371, chr7:154758813 and chr7:154760439.
 
