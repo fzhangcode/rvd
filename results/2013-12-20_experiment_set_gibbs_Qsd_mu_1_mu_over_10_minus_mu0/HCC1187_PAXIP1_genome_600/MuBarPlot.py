@@ -10,7 +10,7 @@ import scipy.stats as ss
 # Insert the src/python/rvd27 directory at front of the path
 rvddir = os.path.join('../../../src/python/rvd27')
 sys.path.insert(0, rvddir)
-import rvd271 as rvd27
+import rvd27
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(message)s')
@@ -44,7 +44,7 @@ def main():
     except IOError as e:
         
         diffalpha = 0.95
-        diffroi = (0.00001,np.inf)
+        diffroi = (0.16,np.inf)
         N = 1000
         outputFile = 'control_case_diff_plus.vcf'
         [loc, call00, controlMu, caseMu, controlN, caseN, postP, chi2P ]= rvd27.diff_test(0.95, controlFile, caseFile, \
@@ -53,7 +53,7 @@ def main():
         caseN_median = np.median(caseN)
         controlN_median = np.median(controlN)
         
-        diffroi = (-np.inf, 0)
+        diffroi = (-np.inf, -0.16)
         [_,call01,_,_,_,_,_,_] = rvd27.diff_test(0.95, controlFile, caseFile, \
                                                 diffroi, N, outputFile = 'control_case_diff_minus.vcf')
         Interval=[[0.0,0.2],[0.1,0.9],[0.8,1.0]]
@@ -121,10 +121,13 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
         ax.set_xlabel("HG19 Genomic Location [chr7:154,000,000+X]")
         ax.set_xticks(ind+width)
         
+        for i in xrange(3):
+            #ax.text(i+width+2-width/9.0, 1.0021,'*',color='b',fontsize=15)
+            ax.text(i+width+2-width/9.0, 1.0021,'*',fontsize=15)
+            
         Loclabel = [x.split(':')[1][3:] for x in Loc]
         rslabel = ['rs1239326','rs1239324','rs71534174','rs35505514',' ','rs4398858']
 
-        pdb.set_trace()
         label = ['%s\n%s' %(Loclabel[i], rslabel[i]) for i in xrange(len(Loclabel))]
 
         ax.set_xticklabels(label)
@@ -134,7 +137,6 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
                    loc=4,ncol=1, mode="expand", borderaxespad=0., prop={'size':12})
         plt.rcParams.update({'font.size': 12, 'font.family': 'serif'})
         fig.tight_layout(rect=[0, 0, 0.95, 0.9])
-##        plt.show()
         plt.savefig(title, bbox = 'tight', bbox_extra_artists=(lgd,))
         
     else:
