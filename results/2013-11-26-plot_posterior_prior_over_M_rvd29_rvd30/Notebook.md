@@ -40,7 +40,7 @@ Mutant and non-mutant locations are chosen to see the probability distribution f
 
 Results
 -----------
-The figure covers different locations (mutation and non-mutation) to compare the performances. The mutations are chosen in the middle of the dase length.
+The figure covers different locations (mutation and non-mutation) to compare the performances. The positions are chosen in the middle of the dase length.
 
 
 ![](prior_posterior_dilu=10.png)
