@@ -27,24 +27,24 @@
 \section{Parameter Initialization}\label{sec:appendix_mom}
 Since $r_{ji} \thicksim \text{Binomial}(n_{ji}, \theta_{ji})$, the first population moment is  $E[r_{ji}] = \theta_{ji} n_{ji}$ and the first sample moment is simply $m_1 = r_{ji}$. Therefore the MoM estimator is
 \begin{equation}
-	\tilde{\theta}_{ji} = \frac{r_{ji}} {n_{ji}}
+	\hat{\theta}_{ji} = \frac{r_{ji}} {n_{ji}}
 \end{equation}
 
-We take the MoM estimate, $\tilde{\theta}_{ji}$, as data for the next conditional distribution in the hierarchical model. The distribution is $\theta_{ji} \thicksim \text{Beta}(\mu_jM_j, (1-\mu_j)M_j)$. The first and second population moments are
+We take the MoM estimate, $\hat{\theta}_{ji}$, as data for the next conditional distribution in the hierarchical model. The distribution is $\theta_{ji} \thicksim \text{Beta}(\mu_jM_j, (1-\mu_j)M_j)$. The first and second population moments are
 \begin{eqnarray}
 	E[\theta_{ji}] =& \mu_j,\\
 	\text{Var}[\theta_{ji}] =& \frac{\mu_j(1-\mu_j)} { M_j + 1 }.
 \end{eqnarray}
 The first and second sample moments are $m_1 = \frac{1}{N}\sum_{i=1}^N \theta_{ji}$ and $m_2 = \frac{1}{N}\sum_{i=1}^N \theta_{ji}^2$. Setting the population moments equal to the sample moments and solving for $\mu_j$ and $M_j$ gives
 \begin{eqnarray}
-	\tilde{\mu}_j =& \frac{1}{N} \sum_{i=1}^N \theta_{ji}, \\
-	\tilde{M_j} =& \frac{ \tilde{\mu}_j (1 - \tilde{\mu}_j ) } { \frac{1}{N} \sum_{i=1}^N \theta_{ji}^2 } -1.
+	\hat{\mu}_j =& \frac{1}{N} \sum_{i=1}^N \hat{\theta}_{ji}, \\
+	\hat{M_j} =& \frac{ \hat{\mu}_j (1 - \hat{\mu}_j ) } { \frac{1}{N} \sum_{i=1}^N \hat{\theta}_{ji}^2 } -1.
 \end{eqnarray}
 
 Following the same procedure for the parameters of $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$ gives the following MoM estimates
 \begin{eqnarray}
-	\tilde{\mu}_0 =& \frac{1}{J} \sum_{j=1}^J \mu_j \\
-	\tilde{M}_0 =& \frac{ \tilde{\mu}_0 (1 - \tilde{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \mu_j^2 } -1.
+	\hat{\mu}_0 =& \frac{1}{J} \sum_{j=1}^J \hat{\mu}_j \\
+	\hat{M}_0 =& \frac{ \hat{\mu}_0 (1 - \hat{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \hat{\mu}_j^2 } -1.
 \end{eqnarray}
 
 

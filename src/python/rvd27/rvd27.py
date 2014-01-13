@@ -56,19 +56,38 @@ def main():
                 
     # create subparser to compare two model files
     argpTest = subparsers.add_parser('test_main', 
-                        help='test if case error rate is greater than control by T')
-    argpTest.add_argument('controlHDF5Name',
+                        help='Test function with three options: \
+                            1)test the posterior differece distribution between case and control dominates in region diffroi; \
+                            2)test the posterior distribution of control and case dominates \
+                            in region controlroi and caseroi, respectively; \
+                            3)test the posterior distribution of control dominates in region controlroi, \
+                            or the posterior distribution of case dominates in region caseroi')
+
+    argpTest.add_argument('alpha', type=float, default=0.95,
+                help='poseterior test probability threshold')
+    argpTest.add_argument('controlHDF5Name', default=None,
                 help='control model file (HDF5)')
-    argpTest.add_argument('caseHDF5Name',
+    argpTest.add_argument('caseHDF5Name', default=None,
                 help='case model file (HDF5)')
-    argpTest.add_argument('-T', type=float, default=0.005,
-                help='threshold for computing variant probability (default=0.005)')
+    
+    argpTest.add_argument('controlroi', default=(0.0,0.2),
+                help='region of interest in control posterior distribution (tuple as interval)')
+    argpTest.add_argument('caseroi', default=(0.8,1.0),
+                help='region of interest in case posterior distribution (tuple as interval)')
+    argpTest.add_argument('diffroi', default=(0,np.inf),
+                help='region of interest in posterior differece distribution (tuple as interval)')
+    
     argpTest.add_argument('-N', type=int, default=1000,
                 help='Monte-Carlo sample size (default=1000)')
     argpTest.add_argument('-o', '--output', dest='outputFile', nargs='?', 
-                default='test.hdf5')
+                default=None)
+
+    argpTest.add_argument('-t', '--type', dest='testtype', nargs='?',
+                          default='diff', choices=('diff','somatic'),
+                          help='Testtype tag. To run the test function 1), namely diff_test, set it as \'diff\',\
+                            to run the test function 2), namely somatic_test, set it as \'somatic\'.')
+                          
     argpTest.set_defaults(func=test_main)
-        
                 
     # create subparser to sample the model
     argpGen = subparsers.add_parser('gen', 
@@ -105,19 +124,346 @@ def gibbs(args):
                refb=refb)
 
 def test_main(args):
-    test(args.controlHDF5Name, args.caseHDF5Name, args.T, args.N, args.outputFile)
+    test(args.alpha, args.controlHDF5Name, args.caseHDF5Name,
+         args.controlroi,args.caseroi, args.diffroi,
+         args.N, args.outputFile, args.testtype)
 
-def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
-    """ Top-level function to test for variants.
-    """
+def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None,
+         controlroi=(0.0,0.2),caseroi=(0.8,1),diffroi=(0,np.inf),
+         N=1000, outputFile=None, testtype='diff'):
+
+    if testtype == 'diff':
+        logging.debug('Running bayes test on posterior difference distribution on sample %s and %s)'%(controlHDF5Name, caseHDF5Name))
+        if outputFile == None:
+            outputFile = 'normal_case_diff.vcf'
+        diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile)
+        
+    if testtype == 'somatic':
+        if outputFile == None:
+            outputFile = 'normal_case_somatic.vcf'
+        somatic_test(alpha, controlHDF5Name, caseHDF5Name,controlroi, caseroi, outputFile)
+      
+def somatic_test(alpha, controlHDF5Name, caseHDF5Name, controlroi, caseroi, outputFile):
+
+    if (controlHDF5Name!=None) and (caseHDF5Name!=None):
+        logging.debug('Running somatic test on posterior distribution on sample %s and %s)'\
+                      %(controlHDF5Name, caseHDF5Name))
+        loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+             caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
+
+        if len(np.shape(controlroi))==1:
+            controlroi=[controlroi]
+
+        controlP = bayes_test(controlMu,controlroi, 'close')        
+        controlCall = controlP > alpha
+        
+        if len(np.shape(caseroi))==1:
+            caseroi=[caseroi]
+        caseP = bayes_test(caseMu,caseroi)
+        caseCall = caseP > alpha
+
+        call = np.logical_and(controlCall, caseCall)
+
+        write_dualvcf(outputFile,loc, call, refb, np.mean(controlMu, axis=1), \
+                      np.median(controlR,0), controlN, controlroi, \
+                      np.mean(caseMu, axis=1), np.median(caseR,0), caseN, caseroi, alpha)
+
+        return loc, call, controlMu, caseMu, controlN, caseN, controlP, caseP
+
+    else:
+
+        if (controlHDF5Name!=None) and (caseHDF5Name==None):
+            HDF5Name = controlHDF5Name
+            roi =  controlroi
+            tag = 'normal'
+            if outputFile=='normal_case_somatic.vcf':
+                outputFile='normal_somatic.vcf'
+            
+        if (controlHDF5Name==None) and (caseHDF5Name!=None):
+            HDF5Name = caseHDF5Name
+            roi =  caseroi
+            tag = 'case'
+            if outputFile=='normal_case_somatic.vcf':
+                outputFile='case_somatic.vcf'
+        logging.debug('Running somatic test on posterior distribution on sample %s)' %HDF5Name) 
+        if len(np.shape(roi))==1:
+            roi=[roi]
+            
+        (Phi, Theta, Mu, Loc, R, N) = load_model(HDF5Name)
+        P = bayes_test(Mu,roi,'close')
+        call = P > alpha
+
+        with h5py.File(HDF5Name, 'r') as f:
+            refb = f['/refb'][...]
+            f.close()
+
+
+        write_univcf(outputFile,Loc, call, refb, np.mean(Mu, axis=1), \
+                      np.median(R,0), N, roi, alpha, tag)
+
+        return loc, call, Mu, P, N
+
+        
+def diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile):
     
-    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+    loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+             caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
+
+    hdf5name = "%s.hdf5" %os.path.splitext(outputFile)[0]
+##    pdb.set_trace()
+
+    try:
+        with h5py.File(hdf5name, 'r') as f:
+            loc = f['loc'][...]
+            postP = f['postP'][...]
+            interval = f['interval'][...]
+            chi2P = f['chi2P'][...]
+            caseMu = f['caseMu'][...]
+            controlMu = f['controlMu'][...]
+            Z = f['Z'][...]
+            f.close()
+    except IOError as e:
+                  
+        (Z, caseMuS, controlMuS) = sample_post_diff(caseMu-caseMu0, controlMu-controlMu0, N)
+        if len(np.shape(diffroi))==1:
+            diffroi = [diffroi]
+        postP = bayes_test(Z, diffroi,'open')
+
+        J = len(loc)
+        # chi2 test for goodness-of-fit to a uniform distribution for non-ref bases
+        nRep = caseR.shape[0]
+        chi2Prep = np.zeros((J,nRep))
+        chi2P = np.zeros((J,1))
+        for j in xrange(J):
+                chi2Prep[j,:] = np.array([chi2test( caseR[i,j,:] ) for i in xrange(nRep)] )
+                if np.any(np.isnan(chi2Prep[j,:])):
+                    chi2P[j] = np.nan
+                else:
+                   chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
+
+        with h5py.File(hdf5name, 'w') as f:
+                f.create_dataset('loc', data=loc)
+                f.create_dataset('postP', data=postP)
+                f.create_dataset('interval', data=(diffroi))
+                f.create_dataset('chi2P',data=chi2P)
+                f.create_dataset('caseMu',data=caseMu)
+                f.create_dataset('controlMu',data=controlMu)
+                f.create_dataset('Z',data=Z)
+                f.close()           
+##    pdb.set_trace()
+    bayescall = postP > alpha
+    bayescall = bayescall.reshape(np.shape(chi2P))
+    chi2call = chi2P < 0.05/len(loc)
+    call = np.logical_and(bayescall, chi2call)
+        
+    write_diffvcf(outputFile, loc, call, refb, altb, np.mean(controlMu, axis=1),\
+                  np.median(controlR,0), controlN, np.mean(caseMu, axis=1), \
+                  np.median(caseR,0), caseN, diffroi, alpha )
+##    pdb.set_trace()
+    return loc, call, controlMu, caseMu, controlN, caseN, postP, chi2P
     
+def write_univcf(outputFile, loc, call, refb, Mu, R, N, roi, alpha, tag):
+    '''
+        Write high confidence variant calls from somatic test when there is only either control sample or case sample  to VCF 4.2 file.
+    '''
+    J = len(loc)
+    
+    today=date.today()
+    
+    chrom = [x.split(':')[0][3:] for x in loc]
+    pos = [int(x.split(':')[1]) for x in loc]
+    
+    vcfF = open(outputFile,'w')
+    
+    print("##fileformat=VCFv4.1", file=vcfF)
+    print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
+
+    print("##source=rvd2", file=vcfF)
+    #print("reference=")
+    #print("Sample name")
+    print("##ROI of allele frequency in %(tag)s sample = (%(lower)0.2f,%(upper)0.2f)" \
+          %{'lower':roi[0][0], 'upper':roi[0][1], 'tag':tag}, file=vcfF)
+
+    print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
+
+    uniquechrom = set(chrom)
+    uniquechrom = list(uniquechrom)
+
+    for i in xrange(len(uniquechrom)):
+        seq = [idx for idx, name in enumerate(chrom) if name==uniquechrom[i]]
+        seqlen = len(seq)
+        print("##contig=<ID=%(chr)s,length=%(seqlen)d>" %{'chr': uniquechrom[i],'seqlen': seqlen}, file=vcfF)
+
+    print("##INFO=<ID=AF,Number=1,Type=Float,Description=\"%s Allele Frequency\">" %tag, file=vcfF)
+
+    print("##FORMAT=<ID=AU,Number=1,Type=Integer,Description=\"Number of 'A' alleles used in fitting the model\">", file=vcfF)
+    print("##FORMAT=<ID=CU,Number=1,Type=Integer,Description=\"Number of 'C' alleles used in fitting the model\">", file=vcfF)
+    print("##FORMAT=<ID=GU,Number=1,Type=Integer,Description=\"Number of 'G' alleles used in fitting the model\">", file=vcfF)
+    print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles used in fitting the model\">", file=vcfF)
+    
+    print("#CHROM\tPOS\tID\tREF\tQUAL\tFILTER\tINFO\tFORMAT\t%s"%tag, file=vcfF)
+
+    for i in xrange(J):
+        if call[i]:
+            # restore R
+            actg = ['A','C','G','T']
+            idx = actg.index(refb[i])
+            R4 = np.zeros(4)
+            R4[idx] = np.median(N[:,i])-np.sum(R[i,:])
+            for d in xrange(idx):
+                R4[d] = R[i,d]
+            for d in xrange(3-idx):
+                R4[d+idx+1] = R[i,d+idx]
+            
+            print("chr%s\t%d\t.\t%c\t.\tPASS\tAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d" \
+                  % (chrom[i], pos[i], refb[i], Mu[i]*100.0,\
+                     R4[0], R4[1], R4[2], R4[3]), file=vcfF)
+
+    vcfF.close()
+    
+def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
+                  controlroi, caseMu, caseR, caseN, caseroi, alpha ):
+    '''
+        Write high confidence variant calls from somatic test when there are both control and case sample to VCF 4.2 file.
+    '''
+    J = len(loc)
+    
+    today=date.today()
+    
+    chrom = [x.split(':')[0][3:] for x in loc]
+    pos = [int(x.split(':')[1]) for x in loc]
+    
+    vcfF = open(outputFile,'w')
+    
+    print("##fileformat=VCFv4.1", file=vcfF)
+    print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
+
+    print("##source=rvd2", file=vcfF)
+    #print("reference=")
+    #print("Sample name")
+
+    print("##ROI of allele frequency in cancer-paired control sample = (%(lower)0.2f,%(upper)0.2f)" \
+          %{'lower':controlroi[0][0],'upper':controlroi[0][1]}, file=vcfF)
+    print("##ROI of allele frequency in cancer-paired control sample = (%(lower)0.2f,%(upper)0.2f)" \
+          %{'lower':caseroi[0][0],'upper':caseroi[0][1]}, file=vcfF)
+
+    print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
+        
+    uniquechrom = set(chrom)
+    uniquechrom = list(uniquechrom)
+
+    for i in xrange(len(uniquechrom)):
+        seq = [idx for idx, name in enumerate(chrom) if name==uniquechrom[i]]
+        seqlen = len(seq)
+        print("##contig=<ID=%(chr)s,length=%(seqlen)d>" %{'chr': uniquechrom[i],'seqlen': seqlen}, file=vcfF)
+
+    
+    print("##INFO=<ID=COAF,Number=1,Type=Float,Description=\"Control Allele Frequency\">", file=vcfF)
+    print("##INFO=<ID=CAAF,Number=1,Type=Float,Description=\"Case Allele Frequency\">", file=vcfF)
+
+    print("##FORMAT=<ID=AU,Number=1,Type=Integer,Description=\"Number of 'A' alleles used in fitting the model\">", file=vcfF)
+    print("##FORMAT=<ID=CU,Number=1,Type=Integer,Description=\"Number of 'C' alleles used in fitting the model\">", file=vcfF)
+    print("##FORMAT=<ID=GU,Number=1,Type=Integer,Description=\"Number of 'G' alleles used in fitting the model\">", file=vcfF)
+    print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles used in fitting the model\">", file=vcfF)
+    
+    print("#CHROM\tPOS\tID\tREF\tQUAL\tFILTER\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
+    
+    for i in xrange(J):
+##        pdb.set_trace()
+        if call[i]:
+            # restore R
+            actg = ['A','C','G','T']
+            idx = actg.index(refb[i])
+            caseR4 = np.zeros(4)
+            controlR4 = np.zeros(4)
+            caseR4[idx] = np.median(caseN[:,i])-np.sum(caseR[i,:])
+            controlR4[idx] = np.median(controlN[:,i])-np.sum(controlR[i,:])
+            for d in xrange(idx):
+                caseR4[d] = caseR[i,d]
+                controlR4[d] = controlR[i,d]
+            for d in xrange(3-idx):
+                caseR4[d+idx+1] = caseR[i,d+idx]
+                controlR4[d+idx+1] = controlR[i,d+idx]
+            
+            print ("chr%s\t%d\t.\t%c\t.\tPASS\tCOAF=%0.3f;CAAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
+                       % (chrom[i], pos[i], refb[i], controlMu[i]*100.0, caseMu[i]*100.0,\
+                          controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
+                          caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
+    vcfF.close()
+
+def write_diffvcf(outputFile, loc, call, refb, altb, controlMu,\
+                  controlR, controlN, caseMu, caseR, caseN, roi, alpha):
+    '''
+        Write high confidence variant calls from posterior density difference test to VCF 4.2 file.
+    '''
+    J = len(loc)
+        
+    today=date.today()
+
+    chrom = [x.split(':')[0][3:] for x in loc]
+    pos = [int(x.split(':')[1]) for x in loc]
+
+    vcfF = open(outputFile,'w')
+
+    print("##fileformat=VCFv4.1", file=vcfF)
+    print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
+
+    print("##source=rvd2", file=vcfF)
+    #print("reference=")
+    #print("Sample name")
+
+    print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
+    print("##Chi square test with Bonferroni Correction is included", file=vcfF)
+
+    uniquechrom = set(chrom)
+    uniquechrom = list(uniquechrom)
+
+    for i in xrange(len(uniquechrom)):
+        seq = [idx for idx, name in enumerate(chrom) if name==uniquechrom[i]]
+        seqlen = len(seq)
+        print("##contig=<ID=%(chr)s,length=%(seqlen)d>" %{'chr': uniquechrom[i],'seqlen': seqlen}, file=vcfF)
+
+    print("##INFO=<ID=COAF,Number=1,Type=Float,Description=\"Control Allele Frequency\">", file=vcfF)
+    print("##INFO=<ID=CAAF,Number=1,Type=Float,Description=\"Case Allele Frequency\">", file=vcfF)
+
+    print("##FORMAT=<ID=AU,Number=1,Type=Integer,Description=\"Number of 'A' alleles used in fitting the model\">", file=vcfF)
+    print("##FORMAT=<ID=CU,Number=1,Type=Integer,Description=\"Number of 'C' alleles used in fitting the model\">", file=vcfF)
+    print("##FORMAT=<ID=GU,Number=1,Type=Integer,Description=\"Number of 'G' alleles used in fitting the model\">", file=vcfF)
+    print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles used in fitting the model\">", file=vcfF)
+    
+    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
+##    pdb.set_trace()
+    for i in xrange(J):
+        if call[i]:           
+            # restore R
+            actg = ['A','C','G','T']
+##            pdb.set_trace()
+            idx = actg.index(refb[i])
+            caseR4 = np.zeros(4)
+            controlR4 = np.zeros(4)
+            caseR4[idx] = np.median(caseN[:,i])-np.sum(caseR[i,:])
+            controlR4[idx] = np.median(controlN[:,i])-np.sum(controlR[i,:])
+            for d in xrange(idx):
+                caseR4[d] = caseR[i,d]
+                controlR4[d] = controlR[i,d]
+            for d in xrange(3-idx):
+                caseR4[d+idx+1] = caseR[i,d+idx]
+                controlR4[d+idx+1] = controlR[i,d+idx]
+            
+            print ("chr%s\t%d\t.\t%c\t%s\t.\tPASS\tCOAF=%0.3f;CAAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
+                       % (chrom[i], pos[i], refb[i], altb[i], controlMu[i]*100.0, caseMu[i]*100.0,\
+                          controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
+                          caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
+    vcfF.close()
+            
+def load_dualmodel(controlHDF5Name, caseHDF5Name):
+    '''
+        Load and synchonize the Case and Control Model files 
+    '''
     # Load the Case and Control Model files
-    logging.debug(controlHDF5Name)
     (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(controlHDF5Name)
     (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(caseHDF5Name)
-    
+
     # Extract the common locations in case and control
     caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
     controlLocIdx = [i for i in xrange(len(controlLoc)) if controlLoc[i] in caseLoc]
@@ -126,38 +472,18 @@ def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
     controlMu = controlMu[controlLocIdx,:]
     caseR = caseR[:,caseLocIdx,:]
     controlR = controlR[:,controlLocIdx,:]
-    caseLoc = caseLoc[caseLocIdx]
-    controlLoc = controlLoc[controlLocIdx]
+
+    loc = caseLoc[caseLocIdx]
+
     J = len(caseLoc)
-    
+
     with h5py.File(controlHDF5Name, 'r') as f:
         refb = f['/refb'][...]
         f.close()
     refb = refb[controlLocIdx]
-    
-    
-    # Sample from the posterior Z = muCase - muControl
-    # Adjusting for baseline error rate for case and control
-    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu-casePhi['mu0'], controlMu-controlPhi['mu0'], N)
-##    (Z, caseMuS, controlMuS) = sample_post_diff(caseMu, controlMu, N)
 
-    # Posterior Prob that muCase is greater than muControl by T
-    postP = bayes_test(Z, [(T, np.inf)]) 
-    
-    # chi2 test for goodness-of-fit to a uniform distribution for non-ref bases
-    nRep = caseR.shape[0]
-    chi2Prep = np.zeros((J,nRep))
-    chi2P = np.zeros(J)
-    for j in xrange(J):
-	    chi2Prep[j,:] = np.array([chi2test( caseR[i,j,:] ) for i in xrange(nRep)] )
-	    if np.any(np.isnan(chi2Prep[j,:])):
-	        chi2P[j] = np.nan
-	    else:
-	       chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
-
-    # Call variants that have postP > 0.95 
-    call = []
     altb = []
+    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
     for i in xrange(J):
         r = np.squeeze(caseR[:,i,:]) # replicates x bases
         
@@ -169,30 +495,13 @@ def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
             altb_r = acgt_r[np.argmax(r, axis=-1)]
         else:
             altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
-        
-        if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
-##        if postP[i] >0.95: 
-            altb.append(altb_r[0]) # TODO: find a better way to report all alternate bases
-            call.append(True)
-        else:
-            altb.append(None)
-            call.append(False)
-     
-    if outputFile is not None:
-        # Save the test results
-        with h5py.File(outputFile+'.hdf5', 'w') as f:
-            f.create_dataset('loc', data=caseLoc)
-            f.create_dataset('postP', data=postP)
-            f.create_dataset('T', data=T)
-            f.create_dataset('chi2pvalue',data=chi2P)
-            f.close()
-    
-        write_vcf(outputFile+'.vcf', caseLoc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(controlMu, axis=1) )
-        
-    return caseLoc, caseMu, controlMu, postP, chi2P, call
+        altb.append(altb_r[0])
+
+    return loc, refb, altb, controlMu, controlPhi['mu0'], controlR, controlN,\
+           caseMu, casePhi['mu0'], caseR, caseN
 
 def write_vcf(outputFile, loc, call, refb, altb, caseMu, controlMu):
-    """ Write high confidence variant calls to VCF 4.2 file.
+    """ Write high confidence variant calls to VCF 4.2 file.   //for compatible to previous programms before test functions adapted for somatic test.
     """
     
     #TODO: get dbSNP id for chrom:pos
@@ -690,20 +999,26 @@ def sample_post_diff(muCaseG, muControlG, N):
 
     return (Z, muCaseS, muControlS)
  
-def bayes_test(Z, roi):
+def bayes_test(Z, roi, type = 'close'):
     """ Return posterior probabilities in regions defined in list of tuples (roi)
         from samples in columns of Z. """
-
     (J,N)=np.shape(Z)
     
     nTest = len(roi) # get the number of regions to compute probabilities 
-    
+
     p = np.zeros((J,nTest))
     for i in xrange(nTest):
         for j in xrange(J):
-		p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] >= roi[i][0]), (Z[j,:] < roi[i][1]) ) ) ) / N
-
-    return p
+                if type == 'close':
+                    # somatic test
+                    p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] >= roi[i][0]), (Z[j,:] <= roi[i][1]) ) ) ) / N
+                elif type == 'open':
+                    # diff test
+                    p[j,i] = np.float( np.sum( np.logical_and( (Z[j,:] > roi[i][0]), (Z[j,:] < roi[i][1]) ) ) ) / N
+    
+    p = np.sum(p,1) # add up all the regions in each position.
+    
+    return p # combine probabilities from all regions.
     
 if __name__ == '__main__':
     main()

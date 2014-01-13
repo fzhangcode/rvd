@@ -36,9 +36,9 @@ Next-generation sequencing technology is increasingly being used for clinical di
 We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over a wide range of median read depth and minor allele frequency. We identify six mutations in the PAXP1 gene in a matched clinical breast ductal carcinoma tumor sample; two of which are loss-of-heterozygosity events.
 
 \section{Availability:}
-Text
+\href{http://genomics.wpi.edu/rvd2/rvd2.html}{http://genomics.wpi.edu/rvd2/rvd2.html}
 
-\section{Contact:} \href{pjflaherty@wpi.edu}{pjflaherty}
+\section{Contact:} \href{pjflaherty@wpi.edu}{pjflaherty@wpi.edu}
 \end{abstract}
 
 \section{Introduction}
@@ -49,9 +49,9 @@ Increasingly, NGS is being used to interrogate mutations in heterogeneous clinic
 
 However, the primary statistical tools for calling variants from NGS data are optimized for homogeneous samples.  Samtools/bcftools and GATK uses naive Bayesian decision rule to call variants~\citep{li2011statistical, depristo2011framework}. GATK involves more sophisticate pre- and post-processing steps wherein the genotype prior is fixed and constant across all loci and the likelihood of an allele at a locus is a function of the phred score~\citep{McKenna:2010bv}.
 
-Recently, researchers have developed algorithms to call low-frequency or rare variants in heterogeneous samples.  VarScan2 combines algorithmic heuristics to call genotypes in the tumor and normal sample pileup data and then applies a Fisher's exact test on the read count data to detect a significant difference in the genotype calls~\citep{Koboldt:2012cg}. Strelka uses a hierarchical Bayesian approach to model the joint distribution of the allele frequency in the tumor and normal samples at each locus~\citep{Saunders:2012fh}. With the joint distribution available, one is able to identify locations with dissimilar allele frequencies. muTect uses a Bayesian posterior probability in its decision rule to evaluate the likelihood of a mutation~\citep{Cibulskis:2013ta}. RVD uses a hierarchical Bayesian model to capture the error structure of the data and call variants~\citep{}. However, that algorithm requires a very high read depth to estimate the sequencing error rate and call variants.
+Recently, researchers have developed algorithms to call low-frequency or rare variants in heterogeneous samples.  VarScan2 combines algorithmic heuristics to call genotypes in the tumor and normal sample pileup data and then applies a Fisher's exact test on the read count data to detect a significant difference in the genotype calls~\citep{Koboldt:2012cg}. Strelka uses a hierarchical Bayesian approach to model the joint distribution of the allele frequency in the tumor and normal samples at each locus~\citep{Saunders:2012fh}. With the joint distribution available, one is able to identify locations with dissimilar allele frequencies. muTect uses a Bayesian posterior probability in its decision rule to evaluate the likelihood of a mutation~\citep{Cibulskis:2013ta}. RVD uses a hierarchical Bayesian model to capture the error structure of the data and call variants~\citep{Flaherty:2011ja, cushing2013rvd}. However, that algorithm requires a very high read depth to estimate the sequencing error rate and call variants.
 
-Several studies have compared the relative performance of these algorithms. \citet{spencer2013performance} demonstrated  that VarScan-somatic performed the best comparing with SAMtools, GATK and SPLINTER in detecting minor allele frequencies (MAFs) of 1\% to 8\%, with $ > $500× coverage required for optimal performance. However, \citet{spencer2013performance} also highlighted the fact that VarScan2 yielded more false positives at high read depth. \citet{Stead:2013fu} showed that VarScan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. We test their performance on much lower MAF variants and across a wider range of coverage depths.
+Several studies have compared the relative performance of these algorithms. \citet{spencer2013performance} demonstrated  that VarScan-somatic performed the best comparing with SAMtools, GATK and SPLINTER in detecting minor allele frequencies (MAFs) of 1\% to 8\%, with $ > $500× coverage required for optimal performance. However, \citet{spencer2013performance} also highlighted the fact that VarScan2 yielded more false positives at high read depth. \citet{Stead:2013fu} showed that VarScan-somatic outperformed Strelka had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. %We test their performance on much lower MAF variants and across a wider range of coverage depths.
 
 The remainder of this article is organized as follows. In the next section we describe the statistical model structure of our new algorithm, RVD2. Then, we derive a sampling algorithm for computing the posterior distribution over latent variables in the model and use those samples in a Bayesian posterior distribution hypothesis test to call variants. We compare the performance of RVD2 to several other variant calling algorithms for a range of read depths and minor allele fractions. Finally, we show that RVD2 is able to call variants on a heterogeneous clinical sample and identify two novel loss-of-heterozygosity events. 
 
@@ -186,15 +186,15 @@ Instead, we have developed a Metropolis-within-Gibbs  approximate inference algo
 The initial values for the model parameters and latent variables is obtained by a method-of-moments (MoM) procedure. MoM works by setting the population moment equal to the sample moment. A system of equations is formed such that the number of moment equations is equal to the number of unknown parameters and the equations are solved simultaneously to give the parameter estimates. We simply start with the data matrices $r$ and $n$ and work up the hierarchy of the graphical model solving for the parameters of each conditional distribution in turn.
 
 We present the initial parameter estimates here and provide the derivations in Supplementary Information. The MoM estimate for replicate-level parameters are
-$\tilde{\theta}_{ji} = \frac{r_{ji}} {n_{ji}}$.
+$\hat{\theta}_{ji} = \frac{r_{ji}} {n_{ji}}$.
 The estimates for the position-level parameters are
-$\tilde{\mu}_j = \frac{1}{N} \sum_{i=1}^N \theta_{ji}$
+$\hat{\mu}_j = \frac{1}{N} \sum_{i=1}^N \hat{\theta}_{ji}$
 and
-$\tilde{M_j} = \frac{ \tilde{\mu}_j (1 - \tilde{\mu}_j ) } { \frac{1}{N} \sum_{i=1}^N \theta_{ji}^2 } -1$.
+$\hat{M_j} = \frac{ \hat{\mu}_j (1 - \hat{\mu}_j ) } { \frac{1}{N} \sum_{i=1}^N \hat{\theta}_{ji}^2 } -1$.
 The estimates for the genome-level parameters are
-$\tilde{\mu}_0 = \frac{1}{J} \sum_{j=1}^J \mu_j$
+$\hat{\mu}_0 = \frac{1}{J} \sum_{j=1}^J \hat{\mu}_j$
 and
-$\tilde{M}_0 = \frac{ \tilde{\mu}_0 (1 - \tilde{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \mu_j^2 } -1$.
+$\hat{M}_0 = \frac{ \hat{\mu}_0 (1 - \hat{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \hat{\mu}_j^2 } -1$.
 %While MoM is known to have the potential to return estimates outside the true parameter bounds, we have not encountered such behavior in this application.
 
 %%%%%%%%%%%%%%%%%%
@@ -229,7 +229,7 @@ A candidate sample is generated from the symmetric proposal distribution $Q(\mu_
 	a = \frac{ p(\mu_j^* | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^*, M_j) } {p(\mu_j^{(p)} | \mu_0, M_0) p(\theta^{(p+1)}_{ji} | \mu_j^{(p)}, M_j)}
 \end{equation}
 
-We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j = 0.1 \cdot \tilde{\mu}_j\cdot (1-\tilde{\mu}_j)$ if $\tilde{\mu}_j \in (10^{-3},1-10^{-3})$ and $\sigma_j = 10^{-4}$ otherwise, where $\tilde{\mu}_j$ is the MoM estimator of $\mu_j$. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position.
+We fixed the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration to $\sigma_j = 0.1 \cdot \hat{\mu}_j\cdot (1-\hat{\mu}_j)$ if $\hat{\mu}_j \in (10^{-3},1-10^{-3})$ and $\sigma_j = 10^{-4}$ otherwise, where $\hat{\mu}_j$ is the MoM estimator of $\mu_j$. Though it is not theoretically necessary, we have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position.
 
 
 We resample from the proposal if the sample is outside of the support of the posterior distribution. We typically discard 20\% of the sample for burn-in and thin the chain by a factor of 2 to reduce autocorrelation among samples. Since, each position $j$ is exchangeable given the global hyperparameters $\mu_0$ and $M_0$ this sampling step can be distributed across up to $J$ processors.
@@ -370,21 +370,22 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 
 \subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca}
 
-RVD2 identified six variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the six called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. The remaining one is a homozygous somatic variant.
+RVD2 identified six variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the six called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. The remaining one is a homozygous somatic variant. Because the median read depth for the case sample is 60, we set the threshold of the test for $\mu^\Delta$ to $\tau = 16\%$ to minimize the false discovery rate (Figure~\ref{tbl:comparison_fdr}). 
 
-%\iffalse
-Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, chr7:154760439A$>$C are called significantly different in tumor and normal sample MAF.  Positions chr7:154743899C$>$T, chr7:154753635T$>$C and chr7:154780960C$>$T are called germline homozygous mutations. Positions chr7:154754371 and chr7:154758813 are called heterozygous in the normal sample. In the tumor sample we identified six mutations chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, chr7:154760439A$>$C and chr7:154780960C$>$T. Through manual checking, position chr7:154743899C$>$T and chr7:154753635T$>$C are likely false positives due to insufficient sampling in the Metropolis\_within-Gibbs algorithm. Positions chr7:154754371T$>$C and chr7:154758813G$>$A are called loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the figure.
+Figure~\ref{fig:brca_MAF} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154754371T$>$C, chr7:154758813G$>$A, chr7:154760439A$>$C are called significantly different in tumor and normal sample MAF. Positions chr7:154743899C$>$T, chr7:154753635T$>$C and chr7:154780960C$>$T are called germline homozygous mutations. Positions chr7:154754371 and chr7:154758813 are called heterozygous in the normal sample. In the tumor sample we identified six mutations chr7:154743899C$>$T, chr7:154753635T$>$C, chr7:154754371T$>$C, chr7:154758813G$>$A, chr7:154760439A$>$C and chr7:154780960C$>$T. Positions chr7:154754371T$>$C and chr7:154758813G$>$A are called loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the figure.
 %According to dbSNPv138 chr7:154743899 is rs1239326, chr7:154753635 is rs1239324, chr7:154754371 is rs71534174, chr7:154758813 is rs35505514, and chr7:154780960 is rs4398858.
-%\fi
+
 
 \begin{figure}[h]
 \begin{center}
 \includegraphics[width=0.5\textwidth]{pdf_figs/HCC1187_MuBarPlot.pdf}
-\caption{Estimated minor allele fraction for called variants in PAXIP1 gene.}
+\caption{Estimated minor allele fraction for called variants in PAXIP1 gene. Star (*) indicates $\mu^{\text{case}} - \mu^{\text{control}} \geq \tau$.}
 \label{fig:brca_MAF}
 \end{center}
 \end{figure}
 %('rvd2\results\2013-11-21_HCC1187_PAXIP1_mu_barplot_T0')
+%TODO: add star to test that have mudelta > .16 Done.
+%TODO: set tau=0.16 for mudelta test.  Done
 
 The original research describing this sample used Strelka to identify mutations in the same sample. They identified chr7:154760439 as variant, but did not call the other five variants. In particular strelka missed the two LOH events.  % To compare the performance of RVD2 with other algorithms, we used Strelka to identify mutationin the same sample. Strelka found three positions: chr7:154754371, chr7:154758813 and chr7:154760439.
 
@@ -402,7 +403,7 @@ The availability of clinical sequence data is increasing as the technical capabi
 \section*{Acknowledgement}
 We would like to thank Fan Zhang for careful review of this manuscript and helpful comments.
 
-\paragraph{Funding\textcolon}  
+\paragraph{Funding\textcolon}  P.F. and Y.E. were supported by seed funding from Worcester Polytechnic Institute.
 
 \bibliographystyle{natbib}
 \bibliography{bioinfo}
