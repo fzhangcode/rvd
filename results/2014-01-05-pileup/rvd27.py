@@ -586,6 +586,7 @@ def make_depth(pileupFileName):
       #      logging.debug("Depth chart file exists: %s" % dcFileName) 
    # except IOError:
     #    logging.debug("Converting %s to depth chart." % pileupFileName)
+
     with open(dcFileName, 'w') as fout:
         subprocess.call(callString, stdout=fout)
     return dcFileName
