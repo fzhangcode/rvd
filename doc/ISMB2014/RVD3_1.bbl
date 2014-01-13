@@ -99,6 +99,14 @@ McKenna, A., Hanna, M., Banks, E., Sivachenko, A., Cibulskis, K., Kernytsky,
   next-generation DNA sequencing data}.
 \newblock {\em Genome Research\/}, {\bf 20}(9), 1297--1303.
 
+\bibitem[Roth {\em et~al.}(2012)Roth, Ding, Morin, Crisan, Ha, Giuliany,
+  Bashashati, Hirst, Turashvili, Oloumi, {\em et~al.}]{roth2012jointsnvmix}
+Roth, A., Ding, J., Morin, R., Crisan, A., Ha, G., Giuliany, R., Bashashati,
+  A., Hirst, M., Turashvili, G., Oloumi, A., {\em et~al.} (2012).
+\newblock Jointsnvmix: a probabilistic model for accurate detection of somatic
+  mutations in normal/tumour paired next-generation sequencing data.
+\newblock {\em Bioinformatics\/}, {\bf 28}(7), 907--913.
+
 \bibitem[Saunders {\em et~al.}(2012)Saunders, Wong, Swamy, Becq, Murray, and
   Cheetham]{Saunders:2012fh}
 Saunders, C.~T., Wong, W. S.~W., Swamy, S., Becq, J., Murray, L.~J., and
@@ -106,6 +114,14 @@ Saunders, C.~T., Wong, W. S.~W., Swamy, S., Becq, J., Murray, L.~J., and
 \newblock {Strelka: accurate somatic small-variant calling from sequenced
   tumor-normal sample pairs.}
 \newblock {\em Bioinformatics\/}, {\bf 28}(14), 1811--1817.
+
+\bibitem[Shiraishi {\em et~al.}(2013)Shiraishi, Sato, Chiba, Okuno, Nagata,
+  Yoshida, Shiba, Hayashi, Kume, Homma, {\em et~al.}]{shiraishi2013empirical}
+Shiraishi, Y., Sato, Y., Chiba, K., Okuno, Y., Nagata, Y., Yoshida, K., Shiba,
+  N., Hayashi, Y., Kume, H., Homma, Y., {\em et~al.} (2013).
+\newblock An empirical bayesian framework for somatic mutation detection from
+  cancer genome sequencing data.
+\newblock {\em Nucleic acids research\/}, {\bf 41}(7), e89--e89.
 
 \bibitem[Silverman(1986)Silverman]{silverman1986density}
 Silverman, B.~W. (1986).
