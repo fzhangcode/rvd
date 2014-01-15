@@ -24,7 +24,7 @@ sys.path.insert(0, rvddir)
 import rvd29
 
 ##pool =None
-pool = mp.Pool(processes=4)
+pool = mp.Pool(processes=58)
 
 gibbs_nsample = 4000
 mh_nsample = 5
@@ -33,28 +33,32 @@ logging.debug("Gibbs step size=%d" % gibbs_nsample)
 logging.debug("mh sample size=%d" % mh_nsample)
 
 # Estimate the model for the control
-"""logging.debug("Processing control data.")
+logging.debug("Processing control data.")
 h5FileName = "Control.hdf5"
 try:
     with h5py.File(h5FileName, 'r') as f:
         pass
 except IOError as e:
-    filename = "headgen007_test_coordinate_sorted.sort.dc"
-    controlFileList = ["../2014-01-09-downsample_yeast_data/depth_chart/10000/%s" % filename]
+#    filename = "headgen007_test_coordinate_sorted.sort.dc"
+#    controlFileList = ["../2014-01-09-downsample_yeast_data/depth_chart/10000/%s" % filename]
+    filename = "gen007_test_4.dc"
+    controlFileList = ["../2014-01-05-pileup/%s" % filename]
     (r, n, loc, refb) = rvd29.load_depth(controlFileList)
     phi, theta_s, mu_s, M_s = rvd29.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
     logging.debug("Saving model in %s" % h5FileName)
     rvd29.save_model(h5FileName, phi, mu=mu_s, M=M_s, theta=theta_s, r=r, n=n, loc=loc,
            refb=refb)
-"""
+
 # Estimate the model for the cases
 h5FileName = "Case.hdf5" 
 try:
     with h5py.File(h5FileName, 'r') as f:
         pass
 except IOError as e:
-    filename = "headgen133_test_coordinate_sorted.sort.dc"
-    caseFileList = ["../2014-01-09-downsample_yeast_data/depth_chart/10000/%s" % filename]
+#    filename = "headgen133_test_coordinate_sorted.sort.dc"
+#    controlFileList = ["../2014-01-09-downsample_yeast_data/depth_chart/10000/%s" % filename]
+    filename = "gen133_test_4.dc"
+    caseFileList = ["../2014-01-05-pileup/%s" % filename]
     (r, n, loc, refb) = rvd29.load_depth(caseFileList)
     phi, theta_s, mu_s, M_s = rvd29.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
     logging.debug("Saving model in %s" % h5FileName)
