@@ -89,6 +89,19 @@ Li, H. and Durbin, R. (2009).
   transform.
 \newblock {\em Bioinformatics\/}, {\bf 25}(14), 1754--1760.
 
+\bibitem[Li {\em et~al.}(2009)Li, Handsaker, Wysoker, Fennell, Ruan, Homer,
+  Marth, Abecasis, Durbin, {\em et~al.}]{li2009sequence}
+Li, H., Handsaker, B., Wysoker, A., Fennell, T., Ruan, J., Homer, N., Marth,
+  G., Abecasis, G., Durbin, R., {\em et~al.} (2009).
+\newblock The sequence alignment/map format and samtools.
+\newblock {\em Bioinformatics\/}, {\bf 25}(16), 2078--2079.
+
+\bibitem[Liao {\em et~al.}(2014)Liao, Mcmurry, and Berg]{liao2014prior}
+Liao, J., Mcmurry, T., and Berg, A. (2014).
+\newblock Prior robust empirical bayes inference for large-scale data by
+  conditioning on rank with application to microarray data.
+\newblock {\em Biostatistics\/}, {\bf 15}(1), 60--73.
+
 \bibitem[McKenna {\em et~al.}(2010)McKenna, Hanna, Banks, Sivachenko,
   Cibulskis, Kernytsky, Garimella, Altshuler, Gabriel, Daly, and
   DePristo]{McKenna:2010bva}
@@ -134,5 +147,13 @@ Stein, C. (1965).
 \newblock {\em Approximation of improper prior measures by prior probability
   measures\/}.
 \newblock Springer.
+
+\bibitem[Wang {\em et~al.}(2013)Wang, Jia, Li, Chen, Ji, Hucks, Dahlman, Pao,
+  and Zhao]{wang2013detecting}
+Wang, Q., Jia, P., Li, F., Chen, H., Ji, H., Hucks, D., Dahlman, K.~B., Pao,
+  W., and Zhao, Z. (2013).
+\newblock Detecting somatic point mutations in cancer genome sequencing data: a
+  comparison of mutation callers.
+\newblock {\em Genome\/}, {\bf 5}(10), 91.
 
 \end{thebibliography}
