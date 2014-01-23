@@ -45,11 +45,11 @@ def main():
         print (norm)
         ax.semilogy(M, p/sum)
         ax.semilogy(M, kernel(M).T/norm)
-        ax.legend( ['prior','posterior'],loc=10, ncol=10)
+        ax.legend( ['prior','posterior'],loc=9, ncol=9)
         subtitle='position='+str(loc)
         ax.set_title(subtitle)
         if locationList.index(loc)==0:
-           ax.set_ylabel('Probability(Jeffrey)',fontsize=10)
+           ax.set_ylabel('Probability of Jeffreys prior',fontsize=15)
 
     """ Probability of lognormal prior from rvd30"""
     logging.debug("Plot rvd30 prior and posterior")
@@ -68,19 +68,19 @@ def main():
         norm = kernel.integrate_box(0,10000)		
         ax.semilogy(M, p/sum)
         ax.semilogy(M, kernel(M).T/norm)
-        ax.set_title('location %d' % loc, fontsize=10)
+        ax.set_title('location %d' % loc, fontsize=15)
         subtitle='position='+str(loc)
         ax.set_title(subtitle)
-        ax.legend( ['prior','posterior'],loc=10, ncol=10)
+        ax.legend( ['prior','posterior'],loc=8, ncol=8)
         subtitle='position='+str(loc)
         ax.set_title(subtitle)
-        ax.set_xlabel('M value',fontsize=10)
+        ax.set_xlabel('M value',fontsize=15)
         if locationList.index(loc)==0:
-           ax.set_ylabel('Probability(lognormal)',fontsize=10)
+           ax.set_ylabel('Probability of log-normal prior',fontsize=15)
         #ax.set_xlim((-0.03,1.03))
         #ax.set_ylim((-0.03,1.03))
 
-    title='prior_posterior'
+    title='post_prior_10'
     figformat='.pdf'
     plt.savefig(title+figformat)
 

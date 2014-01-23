@@ -1,8 +1,22 @@
+
+[ ] Write the log-likelihood function. Need to use sampling to integrate over latent variables. These folks did something similar. http://www.dcs.gla.ac.uk/~srogers/lpd/lpd.html
+
+[ ] Add attributes to HDF5 file output.
+
+[ ] Should we use pytables instead of h5py? h5py is more compatible and
+direct. But pytables has potential to be much faster access in parallel
+
+[ ] Implement parallel processing using pp module
+
+[ ] Add test case for load_model and save_model.
+
+[ ] document command-line interface
+
+[ ] refactor testing code
+
 [x] Write a function that tests whether a position has a uniform distribution over non-reference bases. If not, then it is more likely to be a true mutation.
 
 [x] Test different parameter levels and see what is a good setting for number of samples
-
-[ ] Write the log-likelihood function. Need to use sampling to integrate over latent variables. These folks did something similar. http://www.dcs.gla.ac.uk/~srogers/lpd/lpd.html
 
 [x] Write a python script to take bam files directly into "depth chart" type files that can be evaluated by this algorithm.
 
@@ -15,12 +29,3 @@
 [x] We need to take a sample data set and downsample it to look at the performance of the algorithm as we decrease the read depth on real data.
 
 [x] How do we optimize the proposal distributions in the M-H sampling steps?
-
-[ ] Add attributes to HDF5 file output.
-
-[ ] Should we use pytables instead of h5py? h5py is more compatible and
-direct. But pytables has potential to be much faster access in parallel
-
-[ ] We should port this algorithm to map-reduce /  hadoop
-
-[ ] Add test case for load_model and save_model.

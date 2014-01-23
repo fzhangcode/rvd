@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-
-"""rvd27.py: Compute MAP estimates for RVD2.7 model."""
+# Log-normal prior for Mj
 
 from __future__ import print_function
 from __future__ import division
@@ -23,6 +22,10 @@ from datetime import date
 import re
 import pdb
 import time
+
+
+
+
 def main():
     import argparse
 
@@ -55,7 +58,7 @@ def main():
                 
                 
     # create subparser to compare two model files
-    argpTest = subparsers.add_parser('test_main', 
+    argpTest = subparsers.add_parser('test', 
                         help='test if case error rate is greater than control by T')
     argpTest.add_argument('controlHDF5Name',
                 help='control model file (HDF5)')
@@ -107,7 +110,7 @@ def gibbs(args):
 def test_main(args):
     test(args.controlHDF5Name, args.caseHDF5Name, args.T, args.N, args.outputFile)
 
-def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
+def test(controlHDF5Name, caseHDF5Name, T=0.005, N=1000, outputFile=None):
     """ Top-level function to test for variants.
     """
     
@@ -115,8 +118,8 @@ def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
     
     # Load the Case and Control Model files
     logging.debug(controlHDF5Name)
-    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(controlHDF5Name)
-    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(caseHDF5Name)
+    (controlPhi, controlM, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(controlHDF5Name)
+    (casePhi, caseM, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(caseHDF5Name)
     
     # Extract the common locations in case and control
     caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
@@ -154,7 +157,7 @@ def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
 	    else:
 	       chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
 
-    # Call variants that have postP > 0.95 
+    # Call variants that have postP > 0.95 and chi2pvalue < 0.05 after Bonferroni correction
     call = []
     altb = []
     for i in xrange(J):
@@ -164,10 +167,7 @@ def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
         acgt_r = ['A','C','G','T']
         del acgt_r[ acgt[refb[i]] ]
 
-        if not np.iterable(np.argmax(r, axis=-1)):
-            altb_r = acgt_r[np.argmax(r, axis=-1)]
-        else:
-            altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
+        altb_r = [acgt_r[x] for x in np.argmax(r, axis=1)]
         
         if postP[i] >0.95 and chi2P[i] < 0.05/J: # Bonferroni Correction
 ##        if postP[i] >0.95: 
@@ -186,7 +186,7 @@ def test(controlHDF5Name, caseHDF5Name, T=0, N=1000, outputFile=None):
             f.create_dataset('chi2pvalue',data=chi2P)
             f.close()
     
-        write_vcf(outputFile+'.vcf', caseLoc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(controlMu, axis=1) )
+        write_vcf(outputFile+'.vcf', caseLoc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(caseMu, axis=1))
         
     return caseLoc, caseMu, controlMu, postP, chi2P, call
 
@@ -206,23 +206,22 @@ def write_vcf(outputFile, loc, call, refb, altb, caseMu, controlMu):
     print("##fileformat=VCFv4.1", file=vcfF)
     print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
     
-    print("##INFO=<ID=COAF,Number=1,Type=Float,Description=\"Control Allele Frequency\">", file=vcfF)
-    print("##INFO=<ID=CAAF,Number=1,Type=Float,Description=\"Case Allele Frequency\">", file=vcfF)
+    print("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele Frequency\">", file=vcfF)
+    print("##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele Frequency\">", file=vcfF)
     
     print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO", file=vcfF)
     for i in xrange(J):
         if call[i]:
             print("%s\t%d\t.\t%c\t%s\t.\tPASS\tCOAF=%0.3f;CAAF=%0.3f" % (chrom[i], pos[i], refb[i], altb[i], controlMu[i]*100.0, caseMu[i]*100.0), file=vcfF)
-    
     vcfF.close()
     
 
 def sample_run():
-    n = 1000
-    J = 10
-    phi = {'mu0': 0.20, 'M0': 2e3, 'a': 1e6, 'b': 1}
-    r, theta, mu, M = generate_sample(phi, n=n, J=J, seedint=10)
-    r[:, int(J / 2)] = n * np.array([0.50, 0.55, 0.45])
+    n = 100
+    J = 100
+    M = [100 for i in range(J)]
+    r, theta, mu, M = generate_sample(M, J, n);
+    r[:, int(J/2)] = n * np.array([0.50, 0.55, 0.45])
 
     phi, theta_s, mu_s = mh_sample(r, n, 
                                         nsample=100, 
@@ -231,7 +230,7 @@ def sample_run():
 
 
 def load_model(h5Filename):
-    """ Returns the RVD2.7 model samples and parameters.
+    """ Returns the RVD30 model samples and parameters.
     Takes an hdf5 filename and returns phi and other parameters
     """
 
@@ -241,9 +240,15 @@ def load_model(h5Filename):
         # Load phi - it always exists
         phi = {'mu0': h5file['phi/mu0'][()],
                'M0': h5file['phi/M0'][()],
-               'M': h5file['phi/M'][...]}
+               'mu_M': h5file['phi/mu_M'][()],
+               'delta': h5file['phi/delta'][...]}
         out.append(phi)
         
+        # Load M if it exists
+        if u"M" in h5file.keys():
+            M = h5file['M'][...]
+            out.append(M)
+
         # Load theta if it exists
         if u"theta" in h5file.keys():
             theta = h5file['theta'][...]
@@ -270,12 +275,10 @@ def load_model(h5Filename):
 
             
     return tuple(out)
-    
-    
-
-def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, refb=None):
-    """ Save the RVD2.7 model samples and parameters """
-    
+      
+def save_model(h5Filename, phi, mu=None, M=None, theta=None, r=None, n=None, loc=None, refb=None):
+    """ Save the RVD30 model samples and parameters """
+   
     # TODO add attributes to hdf5 file
     h5file = h5py.File(h5Filename, 'w')
     
@@ -283,11 +286,13 @@ def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, r
     h5file.create_group('phi')
     h5file['phi'].create_dataset('mu0', data=phi['mu0'])
     h5file['phi'].create_dataset('M0', data=phi['M0'])
-    h5file['phi'].create_dataset('M', data=phi['M'], 
+    h5file['phi'].create_dataset('mu_M', data=phi['mu_M'])
+    h5file['phi'].create_dataset('delta', data=phi['delta'])
+    h5file.create_dataset('M', data=M, 
                                       chunks=True, 
                                       fletcher32=True, 
                                       compression='gzip')
-    
+
     # Save the latent variables if available.
     if mu is not None:
         h5file.create_dataset('mu', data=mu, 
@@ -295,6 +300,7 @@ def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, r
     if theta is not None:
         h5file.create_dataset('theta', data=theta, 
                               chunks=True, fletcher32=True, compression='gzip')
+
     
     # Save the data used for fitting the model if available
     if r is not None:
@@ -314,28 +320,32 @@ def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, r
     h5file.close()
 
 
-def generate_sample(phi, n=100, N=3, J=100, seedint=None):
-    """Returns a sample with n reads, N replicates, and
-    J locations. The parameters of the model are in the structure phi.
-    """
-    
+def generate_sample(delta=1.4, mu_M=3, mu0=0.25, M0=10, n=100, N=3, J=100, seedint=None):
+    """Returns a sample with reads, N replicates, and
+    J locations. The parameters of the model are M0, mu0, a, b."""
     if seedint is not None: 
         np.random.seed(seedint)
-    
+        
     # Draw J location-specific error rates from a Beta
-    alpha0 = phi['M0']*phi['mu0']
-    beta0 = phi['M0']*(1-phi['mu0'])
+    # mu0 = float(mu0)
+    alpha0 = M0*mu0
+    beta0 = M0*(1-mu0)
     mu = ss.beta.rvs(alpha0, beta0, size=J)
+   
+    # Draw J location-specific precisions from a Gamma
+    # M = ss.gamma.rvs(a, scale=b, size=J) 
+    M = ss.lognorm.rvs(delta,scale=np.exp(mu_M),size=J)
     
     # Draw sample error rate and error count
     theta=np.zeros((N,J))
     r = np.zeros((N,J))
     for j in xrange(0, J):
-        alpha = mu[j]*phi['M'][j]
-        beta = (1-mu[j])*phi['M'][j]
+        alpha = mu[j]*M[j]
+        beta = (1-mu[j])*M[j]
         theta[:,j] = ss.beta.rvs(alpha, beta, size=N)
         r[:,j] = ss.binom.rvs(n, theta[:,j])
-    return r, theta, mu
+    return r, theta, mu, M
+
 
 def complete_ll(phi, r, n, theta, mu):
     """ Return the complete data log-likelihood.
@@ -366,16 +376,22 @@ def estimate_mom(r, n):
     
     mu0 = np.mean(mu)
     M0 = (mu0*(1-mu0))/(np.var(mu) + np.finfo(np.float).eps)
-
-    # estimate M. If there is only one replicate, set M as 10 times of M0.
-    # If there is multiple replicates, set M according to the moments of beta distribution
-    if np.shape(theta)[0] is 1:
-        M = 10*M0*np.ones_like(mu)
-    else:
-        M = (mu*(1-mu))/(np.var(theta, 0) + np.finfo(np.float).eps )    
-
-    phi = {'mu0':mu0, 'M0':M0, 'M':M}
-    return phi, mu, theta
+    
+    M = (mu*(1-mu))/(np.var(theta, 0) + np.finfo(np.float).eps ) 
+    
+    if np.ndim(r) == 1: 
+        m1 = M
+        m2 = M*M
+    elif np.ndim(r) > 1: 
+        m1 = np.mean(M, 0)
+        m2 = np.var(M)
+        
+    
+    delta2_M = np.log(1 + m2/(m1*m1 + np.finfo(np.float).eps))
+    mu_M = np.log(m1) - delta2_M/2.0
+    
+    phi = {'mu0':mu0, 'M0':M0, 'mu_M':mu_M, 'delta':np.sqrt(delta2_M)}
+    return phi, mu, theta, M
     
 def sampleLocMuMH(args):
     # Sample from the proposal distribution at a particular location
@@ -412,26 +428,8 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, 
         
     alpha0 = mu0*M0 + np.finfo(np.float).eps
     beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
-
-    # set Qsd as the higher value between mu[j]/10 and 1.0E-4 for each position
-    def bound(mu):
-        bound = 1.0E-4
-        if bound < mu < 1-bound:
-            return 0.1*mu
-        elif mu <= bound:
-            return 0.1*bound
-        else:
-            return 0.1*(1-bound)
-        
-    Qsd = map(bound, mu)       
-
-##    bound = 1.0E-4*np.ones_like(mu)
-##    Qsd = [max(bound[i],0.1*mu[i]) for i in range(np.shape(mu)[0])]
-
-    # rvd272
-    # Qsd = 0.1*np.ones_like(mu)
-    # rvd273
-    # Qsd = 0.01*np.ones_like(mu)
+    
+    Qsd = mu/10
     mu_s = np.zeros( (mh_nsample, J) ) 
     for ns in xrange(0, mh_nsample):
         if pool is not None:
@@ -451,9 +449,63 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), burnin=0, mh_nsample=1, 
     
     return mu_s
     
-def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=None):
-    """ Return MAP parameter and latent variable estimates obtained by 
 
+def sampleLocMMH(args):
+    M, Qsd, theta, mu, mu_M, delta = args
+    # Sample from the proposal distribution
+    while True:
+        M_p = ss.norm.rvs(M, Qsd)
+        if M_p > 0: break
+        
+    # Log-likelihood for the proposal M
+    alpha_p = mu*M_p + np.finfo(np.float).eps
+    beta_p = (1-mu)*M_p + np.finfo(np.float).eps
+    logPM_p = np.sum(beta_log_pdf(theta, alpha_p, beta_p)) \
+                + ss.lognorm.logpdf(M_p, delta, scale=np.exp(mu_M)) # ss.gamma.logpdf(M_p, a, scale=b)    ss.lognorm.rvs(s/delta,scale=np.exp(mu_M),size=J)
+                    
+    # Log-likelihood for the current M
+    alpha = mu*M + np.finfo(np.float).eps
+    beta = (1-mu)*M + np.finfo(np.float).eps
+    logPM = np.sum(beta_log_pdf(theta, alpha, beta)) \
+                + ss.lognorm.logpdf(M_p, delta, scale=np.exp(mu_M)) # ss.gamma.logpdf(M, a, scale=b)
+
+    # Accept new M if it increases posterior pdf or by probability
+    loga = logPM_p - logPM
+    # if j==0: print (M_p, M[j], logPM_p, logPM)
+    if (loga > 0 or np.log(np.random.random()) < loga): 
+        M = np.copy(M_p)
+    return M
+
+
+def sampleMMH(theta, mu, mu_M, delta, M=ss.lognorm.rvs(1), burnin=0, mh_nsample=1, thin=0, pool=None):
+    """ Return a sample of M with parameters mu_M, delta
+    """
+    if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
+    elif np.ndim(theta) > 1: (N, J) = np.shape(theta)
+    
+    Qsd = M/10 # keep the std, dev of the proposal
+    M_s = np.zeros( (mh_nsample, J) ) 
+    for ns in xrange(0, mh_nsample):
+        if pool is not None:
+            args = zip(M, Qsd, theta.T, mu, repeat(mu_M, J), repeat(delta, J))
+            M = pool.map(sampleLocMMH, args)
+        else:
+            for j in xrange(0, J):
+                args = (M[j], Qsd[j], theta[:,j], mu[j], mu_M, delta)
+                M[j] = sampleLocMMH(args)
+        M_s[ns,:] = np.copy(M)
+    
+    if burnin > 0.0:
+        M_s = np.delete(M_s, np.s_[0:np.int(burnin*mh_nsample):], 0)
+    if thin > 0:
+        M_s = np.delete(M_s, np.s_[::thin], 0)
+    return M_s
+
+
+
+def mh_sample(r, n, gibbs_nsample=10000, mh_nsample=10, burnin=0.2, thin=2, pool=None):
+    
+    """Return MAP parameter and latent variable estimates obtained by 
     Metropolis-Hastings sampling.
     By default, sample 10000 M-H with a 20% burn-in and thinning factor of 2. 
     Stop when the change in complete data log-likelihood is less than 0.01%.
@@ -471,35 +523,53 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
     h5file.create_group('phi')
     h5file['phi'].create_dataset('mu0', (1,), dtype='f')
     h5file['phi'].create_dataset('M0', (1,), dtype='f')
-    h5file['phi'].create_dataset('M', (J,), dtype='f')
+    h5file['phi'].create_dataset('delta', (1,), dtype='f')     
+    h5file['phi'].create_dataset('mu_M', (1,), dtype='f')
+    #h5file['phi'].create_dataset('M', (J,), dtype='f')
     h5file.create_dataset('theta_s', (N, J, gibbs_nsample), dtype='f')
     h5file.create_dataset('mu_s', (J, gibbs_nsample), dtype='f')
-    # Initialize estimates using MoM
-    phi, mu, theta = estimate_mom(r, n)
-    logging.debug("MoM: mu0 = %0.3e; M0 = %0.3e." % (phi['mu0'], phi['M0']) )
+    h5file.create_dataset('M_s', (J, gibbs_nsample), dtype='f')
 
+    # Initialize estimates using MoM
+    phi, mu, theta, M = estimate_mom(r, n)
+    
+    #logging.debug("MoM: mu0 = %0.3e; M0 = %0.3e." % (phi['mu0'], phi['M0']) )
+    #logging.debug("MoM: delta = %0.3e; mu_M = %0.3e." % (phi['delta'], phi['mu_M']))
+    logging.debug("MoM Parameter Estimate mu0 = %0.3e; M0 = %0.3e; delta = %0.3e; mu_M = %0.3e." %(phi['mu0'], phi['M0'], phi['delta'], phi['mu_M']))
+    
+    
     # Correct MoM estimates to be non-trivial
     mu[mu < np.finfo(np.float).eps*1e4] = phi['mu0']
     theta[theta < np.finfo(np.float).eps*1e4] = phi['mu0']
-    phi['M'][phi['M'] < np.finfo(np.float).eps *1e4] = 1
+    M[M < np.finfo(np.float).eps *1e4] = 1
     
     # Sample theta, mu by gibbs sampling
     theta_s = np.zeros( (N, J, gibbs_nsample) )
     mu_s = np.zeros( (J, gibbs_nsample) )
+    M_s = np.zeros( (J, gibbs_nsample) )
+    
     for i in xrange(gibbs_nsample):
         if i % 100 == 0 and i > 0: logging.debug("Gibbs Iteration %d" % i)
             
         # Draw samples from p(theta | r, mu, M) by Gibbs
-        alpha = r + mu*phi['M'] + np.finfo(np.float).eps
-        beta = (n - r) + (1-mu)*phi['M'] + np.finfo(np.float).eps
+        alpha = r + mu*M +  + np.finfo(np.float).eps
+        beta = (n - r) + (1-mu)*M + np.finfo(np.float).eps
         theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], phi['M'], mu=mu, mh_nsample=mh_nsample, pool=pool)
+        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], M, mu=mu, mh_nsample=mh_nsample, pool=pool)
+        
+        
+        # Draw sample from p(M | theta, delta, mu_M) by Metropolis-Hastings
+        M_mh = sampleMMH(theta, mu, phi['mu_M'], phi['delta'], M=M, mh_nsample=mh_nsample, pool=pool)
+        
         mu = np.median(mu_mh, axis=0)
+        M = np.median(M_mh, axis=0)
+        
         # Store the sample
         theta_s[:,:,i] = np.copy(theta)
         mu_s[:,i] = np.copy(mu)
+        M_s[:,i] = np.copy(M)
         # Update parameter estimates
         # phi['mu0'] = np.mean(mu)
         # phi['M0'] = (phi['mu0']*(1-phi['mu0']))/(np.var(mu) + np.finfo(np.float).eps)
@@ -508,20 +578,28 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
         # Store the current model
         h5file['phi']['mu0'][0] = phi['mu0']
         h5file['phi']['M0'][0] = phi['M0']
-        h5file['phi']['M'][...] = phi['M']
+        h5file['phi']['delta'][0] = phi['delta']
+        h5file['phi']['mu_M'][0]=phi['mu_M']
         h5file['theta_s'][:,:,i] = theta
         h5file['mu_s'][:,i] = mu
+        h5file['M_s'][:,i] = M
         h5file.flush()
+    
     # Apply the burn-in and thinning
     if burnin > 0.0:
         mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*gibbs_nsample):], 1)
         theta_s = np.delete(theta_s, np.s_[0:np.int(burnin*gibbs_nsample):], 2)
+        # identity the paramter
+        M_s = np.delete(M_s, np.s_[0:np.int(burnin*gibbs_nsample):], 1)
     if thin > 1:
         mu_s = np.delete(mu_s, np.s_[::thin], 1)
         theta_s = np.delete(theta_s, np.s_[::thin], 2)
+        # identity the paramter
+        M_s = np.delete(M_s, np.s_[::thin], 1)
     
     h5file.close()
-    return (phi, theta_s, mu_s)
+    return (phi, theta_s, mu_s, M_s)
+
 
 def beta_log_pdf(x, a, b):
     return gammaln(a+b) - gammaln(a) - gammaln(b) \
@@ -582,11 +660,10 @@ def make_depth(pileupFileName):
     dcFileName = os.path.join("depth_chart", 
                                   "%s.dc" % dcFileName.split(".", 1)[0])
     #try:
-     #   with open(dcFileName, 'r'):
-      #      logging.debug("Depth chart file exists: %s" % dcFileName) 
-   # except IOError:
-    #    logging.debug("Converting %s to depth chart." % pileupFileName)
-
+    #    with open(dcFileName, 'r'):
+#		logging.debug("Depth chart file exists: %s" % dcFileName) 
+    #except IOError:
+    logging.debug("Converting %s to depth chart." % pileupFileName)
     with open(dcFileName, 'w') as fout:
         subprocess.call(callString, stdout=fout)
     return dcFileName
@@ -606,8 +683,8 @@ def load_depth(dcFileNameList):
             header = dcFile.readline().strip()
             dc = dcFile.readlines()
             dc = [x.strip().split("\t") for x in dc]
-            loc1 = [x[1]+':'+str(x[2]).strip('\000') for x in dc if x[4] in acgt.keys()]
             
+            loc1 = [x[1]+':'+str(x[2]).strip('\000') for x in dc if x[4] in acgt.keys()]
 	    loc.append( loc1 )
             
             refb1 = dict(zip(loc1, [x[4] for x in dc if x[4] in acgt.keys()]))
@@ -615,7 +692,7 @@ def load_depth(dcFileNameList):
             cd.append( dict(zip(loc1, [map(int, x[5:9]) for x in dc if x[4] in acgt.keys()])) )
             
     loc = list(reduce(set.intersection, map(set, loc)))
-    
+
     def stringSplitByNumbers(x):
         r = re.compile('(\d+)')
         l = r.split(x)
@@ -644,7 +721,7 @@ def load_depth(dcFileNameList):
         r.append(c)
     r = np.array(r)
     n = np.array(n)
-    
+
     return (r, n, loc, refb)
 
 def chi2test(X, lamda=2.0/3, pvector=np.array([1.0/3]*3)):

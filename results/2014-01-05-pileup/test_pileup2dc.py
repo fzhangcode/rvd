@@ -9,7 +9,7 @@ def test_pileup2dc(pileupFileName):
     rvd27.make_depth(pileupFileName)
 
 if __name__ == '__main__':
-    pileupFileName="../../../../../freeze/baker_yeast/GSY1135/test/gen007_test.mpileup"
+    pileupFileName="../../../../../freeze/baker_yeast/GSY1135/test/gen007_test_4.pileup"
     test_pileup2dc(pileupFileName)
 
     

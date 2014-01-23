@@ -1,4 +1,4 @@
-Variants Calling on Yeast Data Experiment Outline - 10 Steps
+Variants Calling on Yeast Data Experiment Outline
 =============
 
 Goal: What are the mutations?  At generation 0 vs generation 100? Choose GSY1135_Chr10. Look for where is CYR1 in E1)
@@ -115,10 +115,19 @@ http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walker
 
 	samtools index test/headgen007_test_coordinate_sorted.sort.bam
 
+	(headgen007_test_coordinate_sorted.sort.bam is the final bam file!)
+
 	Index reference sequence: samtools faidx Reference_GSY1135/GSY1135_Chr10.fasta
 
+	(wrong output by:
 	samtools mpileup -C 50 -uf Reference_GSY1135/GSY1135_Chr10.fasta ./test/headgen007_test_coordinate_sorted.sort.bam > ./test/gen007_test.mpileup
+	or try
+	samtools mpileup -d 100000 -S -B -C 50 -P Illumina -f Reference_GSY1135/GSY1135_Chr10.fasta test/headgen007_test_coordinate_sorted.sort.bam > test/gen007_test_2.mpileup
+	or try
+	samtools mpileup -BQ0 -d 100000 -C 50 -f Reference_GSY1135/GSY1135_Chr10.fasta test/headgen007_test_coordinate_sorted.sort.bam > test/gen007_test_3.mpileup
+	)
 
+    samtools mpileup -C 50 -d 100000 -f Reference_GSY1135/GSY1135_Chr10.fasta ./test/headgen007_test_coordinate_sorted.sort.bam > ./test/gen007_test_4.pileup
 
 [Former 7, Past]	
 ------
@@ -136,24 +145,40 @@ http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walker
 8.	Make depthchart files using pileup2dc
 ------
 	cd src/pileup2dc
-
 	gcc -o pileup2dc main.c
-
 	mv pileup2dc ../../bin/
+	PATH=$PATH:/home/fzhang/Research/rvd2/bin
+	cd fzhang/Research/rvd2/results/2014-01-05-pileup/
+	python test_pileup2dc.py      
+	[error: -> Segmentation fault (core dumped) or the output file is empty!]
 
+    Problem solved: Copy main.c to 2014-01-05-pileup, and revise the "allocate space for the depth chart" with pile_t pile[1], so the segmentation fault won't be happened.
+	cd results/2014-01-05-pileup/backup/ 
+    gcc -o pileup2dc main.c
+    ./pileup2dc ../../../../../freeze/baker_yeast/GSY1135/test/gen007_test_4.pileup gen007_test_4.dc      (The output file is gen007_test_4.dc)
+	
+9. Downsampling the bam files and acquire the dc files at last.
+--
+	cd results/2014-01-05-pileup/ 
+    gcc -o pileup2dc main.c
+	mv pileup2dc ../../bin/
 	PATH=$PATH:/home/fzhang/Research/rvd2/bin
 
-	[error: pileup2dc -> Segmentation fault (core dumped)]
-	cd fzhang/Research/rvd2/results/2014-01-05-pileup/
-	python test_pileup2dc.py ../../../../../freeze/baker_yeast/GSY1135/test/gen007_test.mpileup
-		
+	Start downsampling from the bam files, step 7 & 8 can be included in this  one step:
 	
+	cd fzhang/Research/rvd2/results/2014-01-09-downsample_yeast_data/
+	make clean
+	make -f Makefile
+	Change the DFRAC and DRATE in Makefile to 10000, 1000, 100, 10, and run respectively.
 
-9.	Estimate models for case + control
+10.	Estimate models for case + control
 -----
+	Under folder results/2014-01-05-Yeast_data_rvd29_Jeffreys_prior_experiment
+	Get hdf5 file: python runall.py
+	Hypotheses test: python test_rvd29.py
+	Summary the results: python character.py
 
-
-10.	Test for variants between case + control -> vcf files
+11.	Test for variants between case + control -> vcf files
 -----
 
 
