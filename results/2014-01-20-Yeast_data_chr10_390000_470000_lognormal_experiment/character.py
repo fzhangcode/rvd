@@ -11,7 +11,7 @@ import xlwt
 # Insert the source directory at front of the path
 rvddir = os.path.join('./')
 sys.path.insert(0, rvddir)
-import rvd29
+import rvd30
 
 def main():
     book=xlwt.Workbook(encoding="utf-8")
@@ -31,7 +31,7 @@ def main():
     sheet4.write(0, 0, "MAF")
     sheet4.write(0, 1, "Median Depth")
     
-    method = {'RVD3(T=0)':'./vcf'}
+    method = {'RVD3 with lognormal prior(T=0)':'./vcf'}
     
     DilutionList = (0,)
     
@@ -62,7 +62,7 @@ def main():
                 print hdf5Dir
                 caseFile = 'Case%s.hdf5' %str(d).replace('.','_')
                 caseFile = "%(dir)s/%(file)s" %{'dir':hdf5Dir,'file':caseFile}
-                (_, _, _, _, _, _, caseN) = rvd29.load_model(caseFile)
+                (_, _, _, _, _, _, caseN) = rvd30.load_model(caseFile)
                 cov = int(np.median(caseN))
 
                 # print the median coverage
