@@ -52,6 +52,12 @@ Flaherty, P., Natsoulis, G., Muralidharan, O., Winters, M., Buenrostro, J.,
   targeted resequencing}.
 \newblock {\em Nucleic Acids Research\/}.
 
+\bibitem[Gelman(2006)Gelman]{gelman2006prior}
+Gelman, A. (2006).
+\newblock Prior distributions for variance parameters in hierarchical models
+  (comment on article by browne and draper).
+\newblock {\em Bayesian analysis\/}, {\bf 1}(3), 515--534.
+
 \bibitem[Jeffreys(1946)Jeffreys]{jeffreys1946invariant}
 Jeffreys, H. (1946).
 \newblock An invariant form for the prior probability in estimation problems.
