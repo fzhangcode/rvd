@@ -130,7 +130,6 @@ where,
 
 \subsubsection{Derivation of $ q(\mu) $}
 \begin{equation}
-\label{now}
 \begin{split}
 \log q_\mu^*(\mu) &= E_\theta\left[ \log p\left(r,\mu,\theta | n; \phi \right) \right] \\
 &= E_\theta \left[ \log p\left(r | \theta, n \right)\right] + E_\theta \left[ \log p\left(\theta | \mu; M \right)\right] + E_\theta \left[ \log p\left(\mu ; \mu_0, M_0 \right)\right] \\
@@ -146,11 +145,6 @@ where,
 It can be seen that the distribution function of $ q_\mu^*(\mu) $ is not any known distribution. We propose to approximate $ q_\mu^*(\mu) $ using Beta distribution.
 \begin{align}
 \mu_j \thicksim \text{Beta}(\delta_j, \gamma_j)
-\end{align}
-where,
-\begin{align}
-\delta_j &=  \nonumber \\
-\gamma_j &=  \nonumber
 \end{align}
 
 
@@ -199,8 +193,13 @@ Writing out ELBO $ \mathcal{L}(q, \phi) $, we have
 \label{r}
 E_q \left[ \log p\left(r | \theta, n \right)\right] &= \sum_{j=1}^{J} \sum_{i=1}^{N} E_q  \left[ \log p \left( r_{ji} | \theta_{ji}, n_{ji} \right) \right] \\
 &= \sum_{j=1}^{J} \sum_{i=1}^{N}  E_q  \left[ \log \left( \frac{ \Gamma(n_{ji}+1) } { \Gamma(r_{ji}+1) \Gamma( n_{ji} - r_{ji} + 1 ) } \theta_{ji}^{r_{ji}} (1 - \theta_{ji})^{n_{ji} - r_{ji}} \right) \right] \\
-&= \sum_{j=1}^{J} \sum_{i=1}^{N}  E_q  \left[ r_{ji} \log \theta_{ji} + (n_{ji} - r_{ji}) \log (1 - \theta_{ji}) \right] + con. \\
-&= \sum_{j=1}^{J} \sum_{i=1}^{N} \left\lbrace r_{ji} E_q \left[ \log \theta_{ji} \right] + (n_{ji} - r_{ji}) E_q  \left[  \log (1 - \theta_{ji}) \right] \right\rbrace + con. \\
+%&= \sum_{j=1}^{J} \sum_{i=1}^{N}  E_q  \left[ r_{ji} \log \theta_{ji} + (n_{ji} - r_{ji}) \log (1 - \theta_{ji}) \right] + con. \\
+%&= \sum_{j=1}^{J} \sum_{i=1}^{N} \left\lbrace r_{ji} E_q \left[ \log \theta_{ji} \right] + (n_{ji} - r_{ji}) E_q  \left[  \log (1 - \theta_{ji}) \right] \right\rbrace + con. \\
+%
+&= \sum_{j=1}^{J} \sum_{i=1}^{N} \log \left( \frac{ \Gamma(n_{ji}+1) } { \Gamma(r_{ji}+1) \Gamma( n_{ji} - r_{ji} + 1 ) }\right)  \\
+&\quad + \sum_{j=1}^{J} \sum_{i=1}^{N}  E_q  \left[ r_{ji} \log \theta_{ji} + (n_{ji} - r_{ji}) \log (1 - \theta_{ji}) \right] \\
+&= \sum_{j=1}^{J} \sum_{i=1}^{N} \log \left( \frac{ \Gamma(n_{ji}+1) } { \Gamma(r_{ji}+1) \Gamma( n_{ji} - r_{ji} + 1 ) }\right)  \\
+&\quad + \sum_{j=1}^{J} \sum_{i=1}^{N} \left\lbrace r_{ji} E_q \left[ \log \theta_{ji} \right] + (n_{ji} - r_{ji}) E_q  \left[  \log (1 - \theta_{ji}) \right] \right\rbrace \\
 \end{split}
 \end{equation}
 
@@ -244,28 +243,91 @@ Therefore, in order to compute ELBO, we need to compute the following expectatio
 
 From 
 \begin{align}
-\theta_{ji} &\thicksim \text{Binomial}(\alpha_{ji}, \beta_{ji}) \nonumber \\
+\theta_{ji} &\thicksim \text{Beta}(\alpha_{ji}, \beta_{ji}) \nonumber \\
 \mu_j &\thicksim \text{Beta}(\delta_j, \gamma_j) \nonumber
 \end{align}
 
 We know
 \begin{align}
-E_q \left[ \log \theta_{ji} \right] &= \psi(\alpha_{ji}) - \psi(\beta_{ji}) \nonumber \\
-E_q\left[ \log \left( 1 - \theta_{ji}\right) \right]&= \nonumber \\
+E_q \left[ \log \theta_{ji} \right] &= \psi(\alpha_{ji}) - \psi(\alpha_{ji}+\beta_{ji}) \nonumber \\
+E_q\left[ \log \left( 1 - \theta_{ji}\right) \right]&= \psi(\beta_{ji}) - \psi(\alpha_{ji}+\beta_{ji}) \nonumber \nonumber \\
 E_q \left[ \mu_j \right] &= \frac{\delta_j}{\delta_j + \gamma_j} \nonumber \\
-E_q  \left[ \log \mu_j \right] &= \psi(\delta_j) - \psi(\gamma_j) \nonumber \\
-E_q  \left[ \log (1 - \mu_j)\right] &= \nonumber \\
-E_q  \left[ \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right) \right]&= \nonumber 
+E_q  \left[ \log \mu_j \right] &= \psi(\delta_j) - \psi(\delta_j+\gamma_j) \nonumber \\
+E_q  \left[ \log (1 - \mu_j)\right] &= \psi(\gamma_j) - \psi(\delta_j+\gamma_j)\nonumber \\
 \end{align}
 
-\subsubsection{LIB function Approximation} \
+To compute $ E_q  \left[ \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right) \right] $, suppose
+\iffalse
+\begin{equation}
+\begin{split}
+f(u_j) &= \log\left( \frac{\Gamma(M_j)}{\Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j ))}\right) \nonumber \\
+\end{split}
+\end{equation}
 
-There are two conditions that we are satisfied:
-\begin{enumerate}[noitemsep]
-	\item the trigamma function $ \psi ' (.)  $ is a positive monotonously decreasing function;
-	\item For each location $j$:
-\end{enumerate}
+then
+\begin{align}
+f'(\mu_j) &= -M_j \psi (\mu_j M_j) + M_j \psi(M_j (1-\mu_j )) \nonumber \\
+f''(\mu_j) &= -M_j^2 \psi ' (\mu_j M_j) - M_j^2 \psi '(M_j (1-\mu_j )) <0 \nonumber \\
+\end{align}
 
+where $ \psi(\mu_j) $ is the Digamma function, and $ \psi'(\mu_j)= \frac{\partial \psi(\mu_j)}{\partial \mu_j}$ is the Trigamma function. Trigamma function $ \psi'(\mu_j) $ is a positive monotonously decreasing function, then $ f''(\mu_j) $ is positive, and $ f(\mu_j) $ is a convex function. Considering the convexity of function $ f (\mu_j) $, we can approximate $ f(\mu_j) $ around point $ \mu_j^{\circ} $ using first-order Taylor expansion, which is
+
+\begin{equation}
+\begin{split}
+\label{now}
+%f(\mu) &\geq f(\mu_0) + f'(\mu_0) \cdot (\mu-\mu_0) \nonumber \\
+%&= \log\left( \frac{\Gamma(M)}{\Gamma(\mu_0 M) \Gamma(M (1-\mu_0 ))}\right) + \left( -M \psi (\mu_0 M) + M \psi(M (1-\mu_0 ))\right) \cdot (\mu-\mu_0)
+f(\mu) &\geq f(\bar{\mu}) + f'(\bar{\mu}) \cdot (\mu-\bar{\mu}) \nonumber \\
+&= \log\left( \frac{\Gamma(M)}{\Gamma(\bar{\mu} M) \Gamma(M (1-\bar{\mu} ))}\right) + \left( -M \psi (\bar{\mu} M) + M \psi(M (1-\bar{\mu} ))\right) \cdot (\mu-\bar{\mu})
+\end{split}
+\end{equation}
+\fi
+
+\begin{equation}
+\begin{split}
+f(u) &= \log\left( \frac{\Gamma(M)}{\Gamma(\mu M) \Gamma(M (1-\mu ))}\right) \nonumber \\
+\end{split}
+\end{equation}
+
+then
+\begin{align}
+f'(\mu) &= -M \psi (\mu M) + M \psi(M (1-\mu )) \nonumber \\
+f''(\mu) &= -M^2 \psi ' (\mu M) - M^2 \psi '(M (1-\mu )) <0 \nonumber \\
+\end{align}
+
+where $ \psi(\mu) $ is the Digamma function, and $ \psi'(\mu)= \frac{\partial \psi(\mu)}{\partial \mu}$ is the Trigamma function. Trigamma function $ \psi'(\mu) $ is a positive monotonously decreasing function, then $ f''(\mu) $ is positive, and $ f(\mu) $ is a convex function. Considering the convexity of function $ f (\mu) $, we can approximate $ f(\mu) $ using first-order Taylor expansion around point $ \mu^{\circ} $, which is
+
+\begin{equation}
+\begin{split}
+\label{now}
+%f(\mu) &\geq f(\mu_0) + f'(\mu_0) \cdot (\mu-\mu_0) \nonumber \\
+%&= \log\left( \frac{\Gamma(M)}{\Gamma(\mu_0 M) \Gamma(M (1-\mu_0 ))}\right) + \left( -M \psi (\mu_0 M) + M \psi(M (1-\mu_0 ))\right) \cdot (\mu-\mu_0)
+f(\mu) &\geq f(\mu^{\circ}) + f'(\mu^{\circ}) \cdot (\mu-\mu^{\circ}) \nonumber \\
+&= \log\left( \frac{\Gamma(M)}{\Gamma(\mu^{\circ} M) \Gamma(M (1-\mu^{\circ} ))}\right) + \left( -M \psi (\mu^{\circ} M) + M \psi(M (1-\mu^{\circ} ))\right) \cdot (\mu-\mu^{\circ}).
+\end{split}
+\end{equation}
+
+A lower bound approximation for $ E_q  \left[ \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right) \right] $ around point $ \mu_j^{\circ} $ can be represented as
+\begin{equation}
+\begin{split}
+\label{now}
+E_q  \left[ \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right) \right] &\geq \log\left( \frac{\Gamma(M_j)}{\Gamma(\mu_j^{\circ} M_j) \Gamma(M_j (1-\mu_j^{\circ} ))}\right) \\
+\quad &+ \left( -M_j \psi (\mu_j^{\circ} M_j) + M_j \psi(M_j (1-\mu_j^{\circ} ))\right) \cdot (E_q(\mu_j)-\mu_j^{\circ}).\nonumber
+\end{split}
+\end{equation}
+
+Point $ \mu_j^{\circ} $ is the MoM estimation for $ \mu_j $ for the first iteration or the expectation for  $ \mu_j $ from the last iteration, represented as $ \mu_j^{\circ} = \frac{\delta_j^{\circ}}{\delta_j^{\circ} + \gamma_j^{\circ}} $.
+
+Finally, 
+\begin{equation}
+\begin{split}
+\label{now}
+E_q  \left[ \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right) \right] &\geq \log\left( \frac{\Gamma(M_j)}{\Gamma(\mu_j^{\circ} M_j) \Gamma(M_j (1-\mu_j^{\circ} ))}\right) \\
+\quad &+ \left( -M_j \psi (\mu_j^{\circ} M_j) + M_j \psi(M_j (1-\mu_j^{\circ} ))\right) \cdot (\frac{\delta_j}{\delta_j + \gamma_j}-\frac{\delta_j^{\circ}}{\delta_j^{\circ} + \gamma_j^{\circ}}).\nonumber
+\end{split}
+\end{equation}
+
+\appendix
 
 %\bibliographystyle{apalike}
 %\bibliography{bioinfo}
