@@ -407,6 +407,40 @@ The partial derivative is
 
 the update for $ M_j $ can be numerically computed.
 
+\begin{algorithm}[ht]
+  \caption{RVD2 Variational Inference}
+  \label{alg:rvd2_vi}
+  \begin{algorithmic}[1]
+
+  \State Initialize $ q(\theta, \mu) $ and $\hat{\phi}$
+
+  \Repeat
+  
+	\Repeat
+	
+		\For {j = 1 to J}					
+			\For {i = 1 to N}				
+			\State Optimize $\mathcal{L}(q, \hat{\phi})$ over $q(\theta_{ji}; \delta_{ji}) = \text{Beta} (\delta_{ji})$				
+			\EndFor			
+		\EndFor
+		
+	
+		\For {j = 1 to J} 		
+			\State Optimize $\mathcal{L}(q, \hat{\phi})$ over $q(\mu_j; \gamma_j) = \text{Beta} (\gamma_j)$			                  
+		\EndFor
+	
+	\Until{change in $\mathcal{L}(q,\hat{\phi})$ is small}
+
+  \State Set $\hat{\phi} \leftarrow \arg \max\limits_{\phi}
+            \mathcal{L}(q,\phi)$
+  \Until {change in $\mathcal{L}(q,\hat{\phi})$ is small}
+
+  \end{algorithmic}
+  
+\end{algorithm}
+
+
+
 
 \appendix
 
