@@ -222,6 +222,7 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
 
 
     (J, N) = n.shape
+
     ## Initialize model parameters
 	if phi is None:
 		phi, mu, theta = estimate_mom(r, n)
@@ -253,12 +254,10 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
     delta_elbo_pct = np.inf
 
     while moditer < MAXITER and delta_elbo_pct > ELBOTOLPCT:
-    # E-step: Update the variational distribution
-
-
-    variter = 0
-    var_elbo = [ elbo[-1] ]
-    (norm_delta_delta, norm_delta_gam) = (np.inf, np.inf)
+        # E-step: Update the variational distribution
+        variter = 0
+        var_elbo = [ elbo[-1] ]
+        (norm_delta_delta, norm_delta_gam) = (np.inf, np.inf)
 
         while variter < MAXVARITER \
             and delta_elbo_pct > ELBOTOLPCT \
@@ -268,24 +267,47 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
             (delta_prev, gam_prev) = (np.copy(delta), np.copy(gam))
 
             #Update the variational distribution
-            delta = opt_delta()
-            gam = opt_gam()
+            delta = opt_delta(r, n, M, mu0, M0, delta, gam)
+            gam = opt_gam(r, n, M, mu0, M0, delta, gam)
 
             #Test for convergence
+            var_elbo.append(ELBO(r, n, M, mu0, M0, delta, gam))
+            delta_varelbo_pct = 100(var_elbo[-1] - var_elbo[-2])/abs(var_elbo[2])
+            logging.info("Variational Step ELBO: %0.2f; Percent Change: %0.3f%%" % (var_elbo[-1], delta_varelbo_pct))
+          
+            norm_delta_delta = linalg.norm(delta - delta_prev)
+            norm_delta_gam = linalg.norm(gam - gam_prev)
+            logging.debug("||delta - delta_prev|| = %0.2f; ||gam - gam_prev|| = %0.2f" \
+                    % (norm_delta_delta, delta_norm_gam))
+
+            variter += 1
 
         # M-step: Update model parameters
-        mu0 = opt_mu0()
-        M0 = opt_M0()
-        M = opt_M()
+        mu0 = opt_mu0(r, n, M, mu0, M0, delta, gam)
+        M0 = opt_M0(r, n, M, mu0, M0, delta, gam)
+        M = opt_M(r, n, M, mu0, M0, delta, gam)
+
+        elbo.append(ELBO(r, n, M, mu0, M0, delta, gam))
+        delta_elbo_pct = 100*(elbo[-1] - elbo[-2])/abs(elbo[-2])
+        moditer += 1
 
         # ibic
 
         # Display results for debugging
+        logging.info("Iteration %d of %d." % (moditer, MAXITER))
+        logging.info("ELBO: %0.2f; Percent Change: %0.2f%%" \
+                    % (elbo[-1], delta_elbo_pct))
+        
+        logging.info("M0 = %0.2e" % M0)
+        logging.info("mu0 = %0.2f" % mu0)
 
         # Store the model for viewing
+        phi = {'mu0':mu0, 'M0':M0, 'M':M}
+        q = {'delta':delta, 'gam':gam}
+        save_model(h5file.name, r, n, phi, q)
 
-    phi = {}
-    q = {}
+        phi = {'mu0':mu0, 'M0':M0, 'M':M}
+        q = {'delta':delta, 'gam':gam}
 
     return(phi, q)
 
