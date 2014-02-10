@@ -16,22 +16,18 @@ import tempfile
 import logging
 import time
 
-
+import pdb
 
 def main():
     log_level = logging.DEBUG # default logging level
-    logging.basicConfig(level=log_level,
-        format='%(levelname)s:%(module)s:%(message)s')
-    
-  ## load the data
-    
-    pool = None
-    #pool = mp.Pool(processes=2)
-  ## model optimization  
-    (phi, q) = varlap_opt(y, K=2, seed=10241978, pool=pool)
+    logging.basicConfig(level=log_level, format='%(levelname)s:%(module)s:%(message)s')
 
-  ## save the parameters.
+    ## Generate simulation data
 
+    ## model optimization  
+    # (phi, q) = varlap_opt(y, K=2, seed=10241978, pool=pool)
+
+    ## save the parameters.
     save_model('model.hdf5', y, phi, q)
     
 
@@ -70,46 +66,45 @@ def kernel(gam, mu, M):
 def BetaEntropy(x):
 	# To compute EqlogQmu and EqlogQtheta
 	#return betaln(delta,gam) - (delta-1)psi(delta) - (gam - 1) psi(gam) +(delta + gam -2) psi(delta + gam)
-	return betaln(x[0],x[1]) - (x[0]-1)psi(x[0]) - (x[1] - 1) psi(x[1]) +(x[0] + x[1] -2) psi(x[0] + x[1])
+	return betaln(x[0],x[1]) - (x[0]-1) * psi(x[0]) - (x[1] - 1) * psi(x[1]) +(x[0] + x[1] -2) * psi(x[0] + x[1])
 
 
 ## compute ELBO
 def ELBO(r, n, M, mu0, M0, delta, gam):
-	(J,N) = n.shape
+    (J,N) = n.shape
+    Mu = [EqMu(gam[j,:]) for j in xrange(J)]
+    logMu = [EqlogMu(gam[j,:]) for j in xrange(J)]
+    log1_Mu = [Eqlog1_Mu(gam[j,:]) for j in xrange(J)]
+    logTheta = [EqlogTheta(delta[j,i,:]) for j in xrange(J) for i in xrange(N)]
+    log1_Theta = [Eqlog1_Theta(delta[j,i,:]) for j in xrange(J) for i in xrange(N)]
 
-	Mu = [EqMu(gam[j,:]) for j in xrange(J)]
-	logMu = [EqlogMu(gam[j,:]) for j in xrange(J)]
-	log1_Mu = [Eqlog1_Mu(gam[j,:]) for j in xrange(J)]
-	logTheta = [EqlogTheta(delta[j,i,:]) for j in xrange(J) for i in xrange(N)]
-	log1_Theta = [Eqlog1_Theta(delta[j,i,:]) for j in xrange(J) for i in xrange(N)]
+    EqlogPr = 0.0
+    for j in xrange(J):
+        for i in xrange(N):
+            EqlogPr += - betaln(r[j,i] + 1, n[j,i] - r[j,i] +1)
+            EqlogPr += r[j,i]*logTheta[j,i] + (n[j,i] - r[j,i]) * logTheta[j,i]
 
-	EqlogPr = 0.0
-	for j in xrange(J):
-		for i in xrange(N):
-			EqlogPr += - betaln(r[j,i] + 1, n[j,i] - r[j,i] +1)
-			EqlogPr += r[j,i]*logTheta[j,i] + (n[j,i] - r[j,i]) * logTheta[j,i]
+    EqlogPtheta = 0.0
+    for j in xrange(J):
+        EqlogPtheta += EqlogGamma(gam[j,:], M[j])
+        for i in xrange(N):
+            EqlogPtheta += (M[j]* Mu[j]- 1)*logTheta[j,i] +\
+            (M[j]*(1 - Mu[j]) - 1)*log1_Theta[j,i]
 
-	EqlogPtheta = 0.0
-	for j in xrange(J):
-		EqlogPtheta += EqlogGamma(gam[j,:], M[j])
-		for i in xrange(N):
-			EqlogPtheta += (M[j]* Mu[j]- 1)*logTheta[j,i] +\
-			(M[j]*(1 - Mu[j]) - 1)*log1_Theta[j,i]
+    EqlogPmu = -betaln(mu0*M0, (1-mu0)*M0)
+    for j in xrange(J):
+        EqlogPmu += (M0*mu0-1)*logMu[j] + (M0*(1-mu0)-1)*log1_Mu[j]
 
-	EqlogPmu = -betaln(mu0*M0, (1-mu0)*M0)
-	for j in xrange(J):
-		EqlogPmu += (M0*mu0-1)*logMu[j] + (M0*(1-mu0)-1)*log1_Mu[j]
+    EqlogQtheta = 0.0
+    for j in xrange(J):
+        for i in xrange(N):
+            EqlogQtheta += BetaEntropy(delta[j,i,:])
 
-	EqlogQtheta = 0.0
-	for j in xrange(J):
-		for i in xrange(N):
-			EqlogQtheta += BetaEntropy(delta[j,i,:])
-
-	EqlogQmu = 0.0
-	for j in xrange(J):
-			EqlogQmu += BetaEntropy(gam[j,i,:])
-
+    EqlogQmu = 0.0
+    for j in xrange(J):
+        EqlogQmu += BetaEntropy(gam[j,i,:])
     return EqlogPr + EqlogPtheta + EqlogPmu - EqlogQtheta - EqlogQmu
+
 
 def neg_ELBO_delta(logdelta, gam, r, n, M, mu0, M0):
     return -ELBO(r, n, M, mu0, M0, np.exp(logdelta), gam)
@@ -174,19 +169,19 @@ def opt_M(r, n, M, mu0, M0, delta, gam):
     bnds = np.repeat(bnds, J, axis = 0)
     args = (r, n, mu0, M0, delta, gam)
 
-    logM = opt_par(neg_ELBO_M, np.log(M)k, args, bnds, 'M')
+    logM = opt_par(neg_ELBO_M, np.log(M), args, bnds, 'M')
     M = np.exp(logM)
     return M
 
 
 def opt_par(func, x, args, bnds, par):
-      res = so.minimize(func, x, \
-        args=args, bounds=bnds, \
+    res = so.minimize(func, x, 
+        args=args, bounds=bnds, 
         method='L-BFGS-B')
     
     if res.success == False:
-        res = so.minimize(func, x, \
-            args=args, bounds=bnds, \
+        res = so.minimize(func, x, 
+            args=args, bounds=bnds, 
             method='Nelder-Mead')
 
     if res.success == False:
@@ -196,7 +191,7 @@ def opt_par(func, x, args, bnds, par):
     
     if res.success == False or np.any ( np.isnan(res.x) ):
         logging.warning("Could not optimize %s or %s is NaN." %(par, par))
-        if bnds.dim = 1:
+        if bnds.dim == 1:
             size = 1
         else:
             size = np.shape(bnds)  
@@ -209,10 +204,18 @@ def opt_par(func, x, args, bnds, par):
 
 
 def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
-	if seed is not None: np.random.seed(seed = seed)
+
+    if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
+    elif np.ndim(r) == 2: N, J = np.shape(r)
+    elif np.ndim(r) == 3: 
+        r = np.sum(r, 2) # sum over non-reference bases
+    r = r.T
+    n = n.T
+
+    if seed is not None: np.random.seed(seed = seed)
 
     h5file = tempfile.NamedTemporaryFile(suffix='.hdf5')
-    logging.info('Storing model updates in %s' % h5file.name)	
+    logging.info('Storing model updates in %s' % h5file.name)   
 
     ## Define optimization stopping criterion
     MAXITER = 20
@@ -224,23 +227,23 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
     (J, N) = n.shape
 
     ## Initialize model parameters
-	if phi is None:
-		phi, mu, theta = estimate_mom(r, n)
-	else:
-		_, mu, theta = estimate_mom(r, n)
-	mu0 = phi['mu0']
-	M0 = phi['M0']
-	M = phi['M']
+    if phi is None:
+        phi, mu, theta = estimate_mom(r, n)
+    else:
+        _, mu, theta = estimate_mom(r, n)
+    mu0 = phi['mu0']
+    M0 = phi['M0']
+    M = phi['M']
 
-	## Initialize the variational parameters
-	if q is None:
+    ## Initialize the variational parameters
+    if q is None:
         delta = [r + mu*M+ np.finfo(np.float).eps, (n - r) + (1-mu)*M+ np.finfo(np.float).eps]
-        gam = np.random.uniform(low=0.1, high=100, size(J,2))
-	else:
-		delta = q['delta']
-		gam = q['gam']
+        gam = np.random.uniform(low=0.1, high=100, size = (J,2))
+    else:
+        delta = q['delta']
+        gam = q['gam']
 
-    phi = {'mu0':mu0, 'M0':lam, 's2':s2}
+    phi = {'mu0':mu0, 'M0':M0, 'M':M}
     q = {'delta':delta, 'gam':gam}
     #save_model('initial_value.hdf5', r, n, phi, q)  
 
@@ -277,8 +280,8 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
           
             norm_delta_delta = linalg.norm(delta - delta_prev)
             norm_delta_gam = linalg.norm(gam - gam_prev)
-            logging.debug("||delta - delta_prev|| = %0.2f; ||gam - gam_prev|| = %0.2f" \
-                    % (norm_delta_delta, delta_norm_gam))
+            logging.debug("||delta - delta_prev|| = %0.2f; ||gam - gam_prev|| = %0.2f" 
+                % (norm_delta_delta, delta_norm_gam))
 
             variter += 1
 
@@ -316,7 +319,7 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
 def estimate_mom(r, n):
     """ Return model parameter estimates using method-of-moments.
     """
-
+    # pdb.set_trace()
     theta = r/(n + np.finfo(np.float).eps) # make sure this is non-truncating division
     if np.ndim(r) == 1: mu = theta
     elif np.ndim(r) > 1: mu = np.mean(theta, 0)
