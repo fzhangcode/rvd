@@ -9,7 +9,7 @@ Call the gene CYR1. CYR1 is found in Chr10 on position 428286 (Ref:A->Alt:C) by 
 
 Conclusions
 -----------------
-The log-normal prior on RVD3 works well because in calls mutations without false positive.
+
 
 Background
 -----------------
