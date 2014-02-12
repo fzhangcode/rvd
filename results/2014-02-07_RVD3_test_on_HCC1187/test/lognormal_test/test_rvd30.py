@@ -15,13 +15,13 @@ import rvd30
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)s:%(message)s')
-T= 10/50
+
     
 def main():
     controlFile = "./Control.hdf5"
     caseFile = "./Case.hdf5"
     outputFile='./vcf'
-    rvd30.test(controlFile,caseFile,T=T,N=1000,outputFile=outputFile)
+    rvd30.test(controlFile,caseFile,T=0,N=1000,outputFile=outputFile)
     
 if __name__ == '__main__':
     main()

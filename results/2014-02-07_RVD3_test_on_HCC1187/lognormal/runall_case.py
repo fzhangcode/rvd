@@ -32,7 +32,7 @@ try:
         pass
 except IOError as e:
     filename = "HCC1187C_S1.dc"
-    caseFileList = ["../../../../../../yhe2/Research/rvd2/results/2013-11-07_HCC1187_PAXIP1_hg19masked/depth_chart/%s" % filename]
+    caseFileList = ["../../../../../../yhe2/Research/rvd2/data/HCC1187_PAXIP1_genome_depth_chart_600/%s" % filename]
     (r, n, loc, refb) = rvd30.load_depth(caseFileList)
     phi, theta_s, mu_s, M_s = rvd30.mh_sample(r, n, gibbs_nsample=gibbs_nsample,mh_nsample=mh_nsample, burnin=0.2, pool=pool)
     logging.debug("Saving model in %s" % h5FileName)
