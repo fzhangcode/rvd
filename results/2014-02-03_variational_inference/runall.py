@@ -23,8 +23,8 @@ sys.path.insert(0, rvddir)
 import rvd27
 import rvd_var
 
-##pool =None
-pool = mp.Pool(processes=5)
+
+pool = mp.Pool(processes=60)
 tocfilename = "../../data/synthetic_toc_p1.txt"
 toc = pd.read_table(tocfilename)
 
@@ -40,9 +40,10 @@ except IOError as e:
     controlFileList = ["../2013-08-06_Downsample_Read_Depth/depth_chart/10/%s"\
      % filename for filename in toc.Filename[toc.isRef=='Y']]
     (r, n, loc, refb) = rvd27.load_depth(controlFileList)
-    (casephi, caseq) = rvd_var.ELBO_opt(r, n, seed = seed)
-    logging.debug("Control data processing is done.")
+    (controlphi, controlq) = rvd_var.ELBO_opt(r, n, seed = seed, pool = pool)
+    save_model(h5FileName, r, n, controlphi, controlq)
 
+    logging.debug("Control data processing is done.")
 
 # Estimate the model for the cases
 for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
@@ -57,4 +58,7 @@ for dilution in np.unique(toc[toc.isRef=='N'].Dilution):
         caseFileList = ["../2013-08-06_Downsample_Read_Depth/depth_chart/10/%s" \
         % filename for filename in toc.Filename[toc.Dilution==dilution]]
         (r, n, loc, refb) = rvd27.load_depth(caseFileList)
+        (casephi, caseq) = rvd_var.ELBO_opt(r, n, seed = seed, pool = pool)
+        save_model(h5FileName, r, n, casephi, caseq)
         logging.debug("Dilution: %0.1f processing is done." % dilution)
+

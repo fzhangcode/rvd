@@ -159,7 +159,6 @@ def opt_delta(r, n, M, delta, gam, pool = None):
 
     st = time.time()
     if pool is not None:
-        bnds = repeat(bnds, J)
         for i in xrange(N):
             args = zip (r[i,:], n[i,:], M, delta[i,:,:], gam)
             temp = pool.map(opt_delta_ij, args)
@@ -349,8 +348,8 @@ def opt_par(func, x, args, bnds, parlable):
     return x
 
 def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
-    f = open('ELBO.txt','w')
     t = str(datetime.now)
+    f = open('%s.txt' %t,'w')
 
     print("ELBO optimization trace starting from %s: \n" %t, file=f)
 
