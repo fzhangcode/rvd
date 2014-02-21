@@ -464,13 +464,13 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
             
             #Test for convergence
             var_elbo.append(ELBO(r, n, M, mu0, M0, delta, gam))
-            delta_varelbo_pct = 100(var_elbo[-1] - var_elbo[-2])/abs(var_elbo[-2])
+            delta_varelbo_pct = 100.0*(var_elbo[-1] - var_elbo[-2])/abs(var_elbo[-2])
             logging.info("Variational Step ELBO: %0.2f; Percent Change: %0.3f%%" % (var_elbo[-1], delta_varelbo_pct))
           
             norm_delta_delta = linalg.norm(delta - delta_prev)
             norm_delta_gam = linalg.norm(gam - gam_prev)
             logging.debug("||delta - delta_prev|| = %0.2f; ||gam - gam_prev|| = %0.2f" 
-                % (norm_delta_delta, delta_norm_gam))
+                % (norm_delta_delta, norm_delta_gam))
 
             variter += 1
 
