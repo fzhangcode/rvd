@@ -27,14 +27,45 @@ def main():
     logging.basicConfig(level=log_level, format='%(levelname)s:%(module)s:%(message)s')
 
     ## Generate simulation data
-
+    J = 5 # number of positions
+    N = 3 # number of replicates
+    
+    n = np.empty([N,J], dtype=np.int64) # read depth (rep, location)
+    n.fill(100)
+    
+    phi = {'M0':100, 'mu0':0.1, 'M':[1000]*J}
+    (r, theta, mu) = generate_sample(phi, N, J, n, seedint=10241978)
+    
     ## model optimization  
-    # (phi, q) = varlap_opt(y, K=2, seed=10241978, pool=pool)
+    (phiHat, qHat) = ELBO_opt(r, n, seed = 10241978, pool = None)
 
     ## save the parameters.
-    # save_model('model.hdf5', y, phi, q)
+    #save_model('model.hdf5', r, n, phiHat, qHat)
     
-
+def generate_sample(phi, N=3, J=100, n=100, seedint=None):
+    """Returns a sample with n reads, N replicates, and
+    J locations. The parameters of the model are in the structure phi.
+    """
+    
+    if seedint is not None: 
+        np.random.seed(seedint)
+    
+    #TODO: test for size of n and make an array if a scalar
+    
+    # Draw J location-specific error rates from a Beta
+    alpha0 = phi['M0']*phi['mu0']
+    beta0 = phi['M0']*(1-phi['mu0'])
+    mu = ss.beta.rvs(alpha0, beta0, size=J)
+    
+    # Draw sample error rate and error count
+    theta=np.zeros((N,J))
+    r = np.zeros((N,J))
+    for j in xrange(0, J):
+        alpha = mu[j]*phi['M'][j]
+        beta = (1-mu[j])*phi['M'][j]
+        theta[:,j] = ss.beta.rvs(alpha, beta, size=N)
+        r[:,j] = ss.binom.rvs(n[:,j], theta[:,j])
+    return r, theta, mu
     
 
 ## compute sufficient statistics
@@ -62,7 +93,7 @@ def Eqlog1_Mu(gam):
 # 	return integrate.romb(y, dx = 0.1/(2^N+1))
 
 def EqlogGamma(gam, M):
-    logGamma = integrate.quad(kernel, 0, 1, args = (gam, M))
+    logGamma = integrate.quad(kernel, 0, 1, args=(gam, M), full_output=1)
     return logGamma[0]
 
 def kernel(mu, gam, M):
@@ -95,7 +126,7 @@ def ELBO(r, n, M, mu0, M0, delta, gam):
     EqlogPr = 0.0
     for j in xrange(J):
         for i in xrange(N):
-            EqlogPr += - betaln(r[i,j] + 1, n[i,j] - r[i,j] +1)
+            EqlogPr += -betaln(r[i,j] + 1, n[i,j] - r[i,j] +1)
             EqlogPr += r[i,j]*logTheta[i,j] + (n[i,j] - r[i,j]) * logTheta[i,j]
 
     EqlogPtheta = 0.0
@@ -168,8 +199,11 @@ def opt_delta(r, n, M, delta, gam, pool = None):
         logging.debug('Optimizing delta in single thread')
         for i in xrange(N):
             for j in xrange(J):
+                logging.debug('Optimizing position %d of %d and replicate %d of %d' % (j,J,i,N))
                 args = (r[i,j], n[i,j], M[j], delta[i,j,:], gam[j,:])
                 delta[i,j,:] = opt_delta_ij(args)
+    
+    return delta
 
 def ELBO_gam_j( M, mu0, M0, delta, gam):
     ## partial ELBO depending on gam from each position j
@@ -224,6 +258,7 @@ def opt_gam(M, mu0, M0, delta, gam, pool = None):
 
     else:
         for j in xrange(J):
+            logging.debug("Optimizing gamma %d of %d" % (j, J))
             args = ( M[j], mu0, M0, delta[:,j,:], gam[j] )
             gam[j] = opt_gam_j(args)
 
@@ -429,7 +464,7 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
             
             #Test for convergence
             var_elbo.append(ELBO(r, n, M, mu0, M0, delta, gam))
-            delta_varelbo_pct = 100(var_elbo[-1] - var_elbo[-2])/abs(var_elbo[2])
+            delta_varelbo_pct = 100(var_elbo[-1] - var_elbo[-2])/abs(var_elbo[-2])
             logging.info("Variational Step ELBO: %0.2f; Percent Change: %0.3f%%" % (var_elbo[-1], delta_varelbo_pct))
           
             norm_delta_delta = linalg.norm(delta - delta_prev)
