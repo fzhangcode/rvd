@@ -1,0 +1,191 @@
+
+\documentclass[11pt,reqno]{amsart}
+\usepackage[top=1in, left=1in, right=1in, bottom=1in]{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ...
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+%\usepackage{algorithm, algorithmic}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage{graphicx}
+
+\usepackage{verbatim}
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+\usepackage{enumitem}
+
+\usepackage{setspace}
+\doublespacing
+
+\usepackage{natbib}
+
+%\usepackage{epstopdf}
+%\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\newcommand{\RR}{I\!\!R} %real numbers
+\DeclareMathOperator{\diag}{diag}
+
+\algnewcommand{\Inputs}[1]{%
+  \State \textbf{Inputs:}
+  \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
+}
+\algnewcommand{\Initialize}[1]{%
+  \State \textbf{Initialize:}
+  \Statex \hspace*{\algorithmicindent}\parbox[t]{.8\linewidth}{\raggedright #1}
+}
+
+\title[RVD3]{Variant detection model with improved robustness and accuracy for low-depth targeted next-generation sequencing data}
+\author{}
+%\date{}                                           % Activate to display a given date or no date
+
+\begin{document}
+
+\section{Inference and Hypothesis Testing}
+
+Metropolis-within-Gibbs sampling is evolved for inference. Algorithm 1 shows the inference process and the detail are also illustrated.
+
+\begin{algorithm}
+\caption{Inference process for Metropolis-within-Gibbs}
+\label{alg:metro_gibbs}
+\begin{algorithmic}[1]
+
+\State Initialize $\theta$, $\mu$, $M_j$, $\mu_0$, $M_0$
+\Repeat
+\For {each location j}
+  \State Samples from $p \left( \mu_j |\theta_{ij},\mu_0,M_0\right)$ \Comment{Sample $\mu_j$}
+  \State Set $\mu_j$ to the sample median for the samples
+  \State Samples from $p \left( M_{j} |\mu,\sigma, \theta_{ji},\mu_j\right)$ \Comment{Sample $M_j$}
+
+  \For {each replicate i}
+	\State Sample from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$ \Comment{Sample $\theta_{ji}$}
+  \EndFor
+
+\EndFor
+\Until {sample size sufficient}
+\end{algorithmic}
+\end{algorithm}
+
+%%%%%%%%%%%%%
+% Initialization
+%%%%%%%%%%%%%
+\subsection{Initialization}
+[This paragrah COPIED]The initial values for the model parameters and latent variables is obtained by a method-of-moments (MoM) procedure. MoM works by setting the population moment equal to the sample moment.
+A system of equations is formed such that the number of moment equations is equal to the number of unknown parameters and the equations are solved simultaneously to give the parameter estimates.
+We simply start with the data matrices $r$ and $n$ and work up the hierarchy of the graphical model solving for the parameters of each conditional distribution in turn.
+
+The initial parameter estimates and derivations are provided in Appendix~\ref{sec:appendix_mom}. Below is the MoM estimate for replicate-level parameters
+$\tilde{\theta}_{ji} = \frac{r_{ji}} {n_{ji}}$.
+The estimates for the position-level parameters are
+$\tilde{\mu}_j = \frac{1}{N} \sum_{i=1}^N \theta_{ji}$
+and
+$\tilde{M_j} = \frac{ \tilde{\mu}_j (1 - \tilde{\mu}_j ) } { \frac{1}{N} \sum_{i=1}^N \theta_{ji}^2 } -1$.
+The estimates for the genome-level parameters are
+$\tilde{\mu}_0 = \frac{1}{J} \sum_{j=1}^J \mu_j$
+and
+$\tilde{M}_0 = \frac{ \tilde{\mu}_0 (1 - \tilde{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \mu_j^2 } -1$.
+
+%%%%%%%%%%%%%%%%%%
+% Sampling theta
+%%%%%%%%%%%%%%%%%%
+\subsection{Sampling from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$}
+
+Because the Bayesian conjugacy between the prior
+$p(\theta_{ji} | \mu_j, M_j) \thicksim \text{Beta}(\mu_j, M_j)$
+and the likelihood
+$p(r_{ji} | n_{ji}, \theta_{ji}) \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$,
+we draw the samples from the posterior distribution
+$p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j)$
+The posterior distribution is
+\begin{equation}
+	p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j) \thicksim \text{Beta}\left( \frac{r_{ji} + M_j \mu_j}{n_{ji} + M_j} , n_{ji} + M_j\right).
+\end{equation}
+
+%%%%%%%%%%%%%%%%%%
+% Sampling mu
+%%%%%%%%%%%%%%%%%%
+\subsection{Sampling from $p \left( \mu_j |\theta_{ji},M_j,\mu_0,M_0\right)$}
+Based on Markov blanket, the posterior distribution over $\mu_j$ is
+\begin{equation}
+	p( \mu_j | \theta_{ji}, M_j, \mu_0, M_0 ) \propto p(\mu_j | \mu_0, M_0) p(\theta_{ji} | \mu_j, M_j).
+\end{equation}
+
+[This paragrah COPIED]Since the prior, $p(\mu_j | \mu_0, M_0)$, is not conjugate to the likelihood, $p(\theta_{ji} | \mu_j, M_j)$, we sample from the posterior distribution using the Metropolis-Hastings algorithm.
+By experience when $\mu_j^{(p)} \in (10^{-3},1-10^{-3})$, the proposal distribution variance for all the Metropolis-Hastings steps within a Gibbs iteration is set to $\sigma_j = 0.1 \cdot \mu_j^{(p)}$ ;
+otherwise, we set $\sigma_j = 10^{-4}$ if $\mu_j^{(p)}< 10^{-3}$ and $\sigma_j = 10^{-1}-10^{-4}$ if $\mu_j^{(p)}>1-10^{-3}$.
+We have found that the algorithm performance improves when we take the median of five or more M-H samples as a single Gibbs step for each position.
+
+We resampled from the proposal if the sample is outside of the support of the posterior distribution.
+We throw away a burn-in period - 20\% of the samples, and thin the chain by a factor 2 to reduce autocorrelation among samples, resulting in a sample with size 1600 from the posterior distribution.
+
+%%%%%%%%%%%%%%%%%%
+% Sampling Mj
+%%%%%%%%%%%%%%%%%%
+\subsection{Sampling from $p \left( M_{j} |\mu,\sigma, \theta_{ji},\mu_j\right)$}
+Since Jeffreys prior is from the Fisher information and in RVD3 model ${\theta }_{ji}\sim Beta\left( {\mu }_{j},{M}_{j}\right)$,
+
+\begin{equation}\label{equ:JefferyInference}
+I\left({M}_{j}\right)={E}_{{M}_{j}}\left[ -\frac{\delta ^{2}\log p\left(\theta _{j}|\mu_{j},M_{j}\right)}{\delta M^{2}_{j}}\right]
+\end{equation}
+
+We calculated the equations Appendix~\ref{sec:appendix_Jeffreys} and obtained the Jeffreys' prior for $M_j$:
+
+\begin{equation}
+[-\left(\Psi_{1}(M_{j}) - \Psi_{1}(\mu_{j} M_{j})\mu_{j}^{2} - \Psi_{1}((1-\mu_{j})M_{j}){(1-\mu_{j})^{2}}\right)]^{\frac{1}{2}}
+\end{equation}
+
+For log-normal prior, the posterior distribution over $M_{j}$ given its Markov blanket is
+
+\begin{equation}
+	p( M_{j} |\mu, \sigma, \theta_{ji},\mu_j) \propto p(\theta_{ji} | \mu_j, M_j) p(M_{j} | \mu, \sigma)
+\end{equation}
+
+We have $ \theta_{ji}\thicksim\text{Beta}(\mu_{j},M_{j})$, and $ M_{j} \thicksim \text{log-normal}(\mu, \sigma)$.
+Instead of computing the posterior distribution directly, Metropolis-Hastings algorithm was taken to sample from the posterior distribution.
+
+%%%%%%%%%%%%%%%%%%
+% Posterior Density Test
+%%%%%%%%%%%%%%%%%%
+\subsection{Posterior Density Test}\label{sec:hypothesis_test}
+Posterior distributions of $\mu_j$ for the control and case are achieved -  $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$, by Metropolis-within-Gibbs.
+So we called a variant when $\tilde{\mu}_j^{\text{case}} > \tilde{\mu}_j^{\text{control}}$ with $1-\alpha$ confidence,
+\begin{equation}\label{eqn:bayes_test}
+	\Pr( \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}} \geq \tau ) > 1-\alpha,
+\end{equation}
+where $\tau$ is a detection threshold and $1-\alpha$ is the confidence level. We set $\tau = 0$ in our experiment [XXX].
+
+
+%%%%%%%%%%%%%%%%%%
+% Chi^2 Test
+%%%%%%%%%%%%%%%%%%
+\subsection{$\chi^2$ test for non-uniform base distribution}
+[This part is COPIED]
+
+An abundance of non-reference bases at a position called by the posterior density test may be due to a true mutation or due to a random sequencing error;
+we would like to differentiate these two scenarios. We assume non-reference read counts caused by a non-biological mechanism results in a uniform distribution over three non-reference bases.
+In contrast, the distribution of counts among three non-reference bases caused by biological mutation would not be uniform.
+
+We use a $\chi^2$ goodness-of-fit test on a multinomial distribution over the non-reference bases to distinguish these two possible scenarios.
+The null hypothesis is $H_0: p = (p_1, p_2, p_3)$ where $p_1=p_2=p_3=1/3$.
+Cressie and Read (1984) identified a power-divergence family of statistics, indexed by $\lambda$,
+that includes as special cases Pearson's $\chi^2 (\lambda = 1)$ statistic, the log likelihood ratio statistic $(\lambda = 0)$, the Freeman-Tukey statistic $(\lambda = -1/2)$, and the Neyman modified statistic $X^2 (\lambda = -2)$.
+The test statistic is
+
+\begin{equation}
+ 2nI^\lambda = \frac{2}{\lambda(\lambda+1)}\sum_{k=1}^3 r_{ji}^{(k)} \left[\left(\frac{r_{ji}^{(k)}}{E_{ji}^{(k)}}\right)^\lambda-1\right];\lambda \in R,
+\end{equation}
+
+where $r_{ji}^{(k)}$ is the observed frequency for non-reference base $k$ at position $j$ in replicate $i$ and $E_{ji}^{(k)}$ is the corresponding expected frequency under the null hypothesis.
+ \citet{cressie1984multinomial} recommended $\lambda = 2/3$ when no knowledge of the alternative distribution is available and we choose that value.
+
+We control for multiple hypothesis testing in two ways. We use Fisher's combined probability test \citep{fisher1970statistical} to combine the p-values for $N$ replicates into a single p-value at position $j$,
+
+\begin{equation}\label{eqn:fisher_combined}
+	X_j^2 = -2 \sum_{i=1}^N \ln(p_{ji}).
+\end{equation}
+
+Equation~\eqref{eqn:fisher_combined} gives a test statistic that follows a $\chi^2$ distribution with $2N$ degrees of freedom when the null hypothesis is true.
+Finally, we use the Bejamini-Hochberg method to control the family-wise error rate (FWER) over positions that have been called by the Bayesian hypothesis test~\eqref{eqn:bayes_test} \citep{benjamini1995controlling, efron2010large}.
+
+\end{document} 
