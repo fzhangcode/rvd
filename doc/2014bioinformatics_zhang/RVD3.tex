@@ -89,7 +89,7 @@ Variants calling ability is tested and analyzed both on the synthetic sequence d
 
 In this article, RVD3 model - a novel Bayesian structure to accurately identify SNVs with small false discovery rate is first described in detail.
 Secondly, Metropolis-within-Gibbs sampling is evolved for inference. And then to detect variants, a Bayesian posterior distribution is taken for hypothesis test.
-Furthermore, we analyze the sensitivity of the Bayesian model to different priors - Jeffrey's prior and log-normal prior, and apply the different priors on the synthetic sequence data.
+Furthermore, we analyze the sensitivity of the Bayesian model to different priors - Jeffrey's prior, log-normal prior, and improper prior.
 Finally, we choose Jeffrey's prior for the RVD3 model and demonstrate its performance on the yeast sequence data.
 Thus our Bayesian model achieves a enhanced robustness and accuracy when calling variants for the low read depth and minor allele frequencies.
 
@@ -151,20 +151,22 @@ And the local precision is modeled by $ M_{j} \thicksim \text{log-normal}(\mu, \
 % Priors for precision parameter
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Priors for precision parameter}
-The prior distribution characterizes the knowledge of the parameters in the statistical model. Including prior information in the Bayesian approach is difficult but meaningful.
+The prior distribution characterizes the knowledge of the parameters in the statistical model. Including prior information in the Bayesian approach is difficult but meaningful. A way to choose the prior function is to use the Schwarz criterion or Bayesian information criterion (BIC) \citep{weakliem1999critique}. Besides, the Bayes factor does tend to be more sensitive to access the prior distributions on the model parameters \citep{kass1995bayes}. To consider the Bayesian sensitivity analysis, a more practical way is to consider the range of posterior quantities of interest- the posterior mean or posterior probability \citep{bayarri1998robust}. Based on this theory, we analyze the posterior and prior probability of the precision hyper-parameter.
+For this purpose, a bunch of different priors should be chosen for analysis \citep{gelman2006prior}. In a polygenic modeling with Bayesian sparse linear mixed model research, the results don't change dramatically by changing the prior measurement which reveals that the prior specification for the hyper-parameters are fine \citep{zhou2013polygenic}. So we performed three different plausible prior distributions: improper prior, informative prior (log-normal), and non-informative prior (Jeffrey's).
+
 An improper prior is the prior distribution integrates to infinity, and may cause an improper posterior which results in an invalid inferences \citep{lesaffre2012bayesian}.
 Furthermore when the Markov chain Monte Carlo method is taken to derive the posterior, it is possibly hard to sniff out the improper posterior.
 Even though no problems happened in estimation by improper prior, other troubles could be caused in the Bayesian inference and analysis by it \citep{stein1965approximation}.
 Playing no prior on $ M_{j}$ is exactly an implicit improper prior. Therefore we considered about non-informative prior and informative prior for sensitivity analysis.
 
-Non-information prior seems to be more unbiased and objective.
-Various non-informative prior distributions have been suggested for parameters in hierarchical models.
-Jeffrey's prior, as a typical and influential one, is proposed to establish a least informative prior that is automatically invariant to transformations by Harold Jeffreys \citep{jeffreys1946invariant}.
-It is defined in terms of the Fisher information and works well with a single parameter. In our research Jeffrey's prior for $M_j$ is the square root of Fisher information of $M_j$.
-
 Informative prior distribution is the most specific type of prior. A good informative prior is imperative to promote accurate posterior estimates.
 In our study, log-normal prior is a proper prior for the beta density's parameters, $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$.
 The parameters of it denoted $\mu$ (mean) and $\sigma$ (standard deviation) respectively.
+
+Non-informative prior seems to be more unbiased and objective.
+Various non-informative prior distributions have been suggested for parameters in hierarchical models.
+Jeffrey's prior, as a typical and influential one, is proposed to establish a least informative prior that is automatically invariant to transformations by Harold Jeffreys \citep{jeffreys1946invariant}.
+It is defined in terms of the Fisher information and works well with a single parameter. In our research Jeffrey's prior for $M_j$ is the square root of Fisher information of $M_j$.
 
 %%%%%%%%%%%%%%%%%%
 % Results
@@ -175,21 +177,18 @@ The parameters of it denoted $\mu$ (mean) and $\sigma$ (standard deviation) resp
 % Sensitivity analysis of priors
 %%%%%%%%%%%%%%%%%%
 \subsection{Sensitivity analysis}
-A way to choose the prior function is to use the Schwarz criterion or Bayesian information criterion (BIC) \citep{weakliem1999critique}. Besides, the Bayes factor does tend to be more sensitive to access the prior distributions on the model parameters \citep{kass1995bayes}. To consider the Bayesian sensitivity analysis, another way is to consider the range of posterior quantities of interest, such as the posterior mean or posterior probability \citep{bayarri1998robust}. Based on this theory, we use analysis the sensitivity of our model by analyzing the posterior and prior probability. Different plausible prior distributions can be utilized for this purpose\citep{gelman2006prior}.
-We performed two main classes of priors: informative prior (log-normal) and non-informative prior (Jeffrey's).
 
 The Bayesian posterior predictive distributions and the priors distributions are shown in Figure~\ref{fig:dilu_10}.
 These plots indicate the probability distribution over different M values when dilution is 10\% at $100\times$ read depth rate.
 The positions are chosen in the middle of the base length- position 104 and 244 are mutant, and position 100 and 300 are non-mutant.
 The posterior probability distributions are estimated by Gaussian Kernel Density \citep{silverman1986density}.
-Generally the non-mutant positions display normal and stable without a peak nor a strange shape.
+Generally the distribution plots display normal and stable without a peak nor a strange shape.
 The two distributions show different ways of the prior and posterior.
 The log-normal prior attributes a higher prior probability to M values between 0 and 2000.
 The Jeffrey's prior assigns more information than the log-normal prior (flat) from the posterior curve.
 They both want to search for a small value for M from the prior curve.
 
-There is little variability across positions indicating that the replication variance does not change greatly across position.
-The proper prior (log-normal) and non-informative prior (Jeffrey¡¯s) are performed to compare with the improper prior. We show several key parameters of the model in Figure~\ref{fig:priors_compare}. A key model parameter M is less variable with a log-normal and improper prior compared to the Jeffrey¡¯s prior.
+The proper prior (log-normal) and non-informative prior (Jeffrey¡¯s) are performed to compare with the improper prior. There is little variability across positions indicating that the replication variance does not change greatly across position. We show several key parameters of the model in Figure~\ref{fig:priors_compare}. A key model parameter M is less variable with a log-normal and improper prior compared to the Jeffrey¡¯s prior.
 Additionally, the error rate across positions is captured by the $M_0$ parameter shown as a horizontal dotted line in the plots. $M_j$ is greater than $M_0$ shows that the precision between replicates is higher than the precision across positions.
 
 \begin{figure*}[!tbp]
@@ -243,9 +242,9 @@ Noticed at the lowest depth (22) with 10.0\% mutant mixture, the sensitivity and
 Figure~\ref{fig:SS} shows that the sensitivity and specificity of the RVD3 of different priors compared with the model with improper priors.
 Log-normal prior shows a higher sensitivity and specificity value than the Jeffrey's prior.
 Figure~\ref{fid:fdr} shows the false discovery rate of the RVD3 with different priors. Jeffrey's prior shows a smaller false discovery rate than others.
-It is obvious no matter Jeffrey's or log-normal, the variant detection performance acquires lower FDR to a known 0.1\% minor allele frequency event, compared with improper priors.
+It is obvious no matter Jeffrey's or log-normal prior, the variant detection performance acquires lower FDR to a known 0.1\% minor allele frequency event, compared with improper priors, which seems desirable of our model for extending for a broad application.
 Based on the various advantages for Jeffrey's and log-normal prior, RVD3 can afford a more appropriate choice for the precision parameter.
-Here we chose Jeffrey's prior model because it's a non-information prior, and more attention should be paid to false discovery rate and accuracy for variants calling research, compared with the clinical experiment or diagnosis which cares more on true positive rate and true negative rate.
+Here we chose Jeffrey's prior model because it's a non-informative prior, and more attention should be paid to false discovery rate and accuracy for variants calling research, compared with the clinical experiment or diagnosis which cares more on true positive rate and true negative rate.
 
 
 \begin{figure}[htbp]

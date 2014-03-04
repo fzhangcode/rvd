@@ -138,4 +138,9 @@ Weakliem, D.~L. (1999).
 \newblock A critique of the bayesian information criterion for model selection.
 \newblock {\em Sociological Methods \& Research}, 27(3):359--397.
 
+\bibitem[Zhou et~al., 2013]{zhou2013polygenic}
+Zhou, X., Carbonetto, P., and Stephens, M. (2013).
+\newblock Polygenic modeling with bayesian sparse linear mixed models.
+\newblock {\em PLoS genetics}, 9(2):e1003264.
+
 \end{thebibliography}
