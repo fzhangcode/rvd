@@ -3,13 +3,12 @@ tmp*
 *.hdf5
 *.mat
 *.pyc
-*.pdf
+
 *.txt
 *.pileup
 *.xlsx
 *.jpg
 *.png
-*.pdf
 *.bam
 *.pileup
 *.dc

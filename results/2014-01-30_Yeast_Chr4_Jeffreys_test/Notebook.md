@@ -28,7 +28,7 @@ Materials:
 
 Conclusions
 -----------------
-1. RVD3 with lognormal prior didn't call any mutations.
+1. RVD3 with Jeffreys prior didn't call any mutations.
 
 2. The mutation of MTH1 doesn't show up in the depth chart file, so there must be some step wrong when processing the data from SRA format to the depth chart files.
 

@@ -1,3 +1,159 @@
 \begin{thebibliography}{}
 
+\bibitem[Bayarri et~al., 1998]{bayarri1998robust}
+Bayarri, M., Berger, J., et~al. (1998).
+\newblock Robust bayesian analysis of selection models.
+\newblock {\em The Annals of Statistics}, 26(2):645--659.
+
+\bibitem[Cibulskis et~al., 2013]{Cibulskis:2013ta}
+Cibulskis, K., Lawrence, M.~S., and Carter, S.~L. (2013).
+\newblock {Sensitive detection of somatic point mutations in impure and
+  heterogeneous cancer samples}.
+\newblock {\em Nature}.
+
+\bibitem[DePristo et~al., 2011]{depristo2011framework}
+DePristo, M.~A., Banks, E., Poplin, R., Garimella, K.~V., Maguire, J.~R.,
+  Hartl, C., Philippakis, A.~A., del Angel, G., Rivas, M.~A., Hanna, M., et~al.
+  (2011).
+\newblock A framework for variation discovery and genotyping using
+  next-generation dna sequencing data.
+\newblock {\em Nature genetics}, 43(5):491--498.
+
+\bibitem[Flaherty et~al., 2011]{Flaherty:2011ja}
+Flaherty, P., Natsoulis, G., Muralidharan, O., Winters, M., Buenrostro, J.,
+  Bell, J., Brown, S., Holodniy, M., Zhang, N., and Ji, H.~P. (2011).
+\newblock {Ultrasensitive detection of rare mutations using next-generation
+  targeted resequencing}.
+\newblock {\em Nucleic Acids Research}.
+
+\bibitem[Gelman, 2006]{gelman2006prior}
+Gelman, A. (2006).
+\newblock Prior distributions for variance parameters in hierarchical models
+  (comment on article by browne and draper).
+\newblock {\em Bayesian analysis}, 1(3):515--534.
+
+\bibitem[Harrison et~al., 2013]{harrison2013bayesian}
+Harrison, J.~M., Breeze, M.~L., Berman, K.~H., and Harrigan, G.~G. (2013).
+\newblock Bayesian statistical approaches to compositional analyses of
+  transgenic crops 2. application and validation of informative prior
+  distributions.
+\newblock {\em Regulatory Toxicology and Pharmacology}, 65(2):251--258.
+
+\bibitem[Jeffreys, 1946]{jeffreys1946invariant}
+Jeffreys, H. (1946).
+\newblock An invariant form for the prior probability in estimation problems.
+\newblock {\em Proceedings of the Royal Society of London. Series A.
+  Mathematical and Physical Sciences}, 186(1007):453--461.
+
+\bibitem[Kass and Raftery, 1995]{kass1995bayes}
+Kass, R.~E. and Raftery, A.~E. (1995).
+\newblock Bayes factors.
+\newblock {\em Journal of the american statistical association},
+  90(430):773--795.
+
+\bibitem[Koboldt et~al., 2012]{Koboldt:2012cga}
+Koboldt, D.~C., Zhang, Q., Larson, D.~E., Shen, D., McLellan, M.~D., Lin, L.,
+  Miller, C.~A., Mardis, E.~R., Ding, L., and Wilson, R.~K. (2012).
+\newblock {VarScan 2: somatic mutation and copy number alteration discovery in
+  cancer by exome sequencing.}
+\newblock {\em Genome Research}, 22(3):568--576.
+
+\bibitem[Kvitek and Sherlock, 2011]{kvitek2011reciprocal}
+Kvitek, D.~J. and Sherlock, G. (2011).
+\newblock Reciprocal sign epistasis between frequently experimentally evolved
+  adaptive mutations causes a rugged fitness landscape.
+\newblock {\em PLoS genetics}, 7(4):e1002056.
+
+\bibitem[Kvitek and Sherlock, 2013]{kvitek2013whole}
+Kvitek, D.~J. and Sherlock, G. (2013).
+\newblock Whole genome, whole population sequencing reveals that loss of
+  signaling networks is the major adaptive strategy in a constant environment.
+\newblock {\em PLoS genetics}, 9(11):e1003972.
+
+\bibitem[Lesaffre and Lawson, 2012]{lesaffre2012bayesian}
+Lesaffre, E. and Lawson, A.~B. (2012).
+\newblock {\em Bayesian biostatistics}.
+\newblock Wiley. com.
+
+\bibitem[Li and Durbin, 2009]{li2009fast}
+Li, H. and Durbin, R. (2009).
+\newblock Fast and accurate short read alignment with burrows--wheeler
+  transform.
+\newblock {\em Bioinformatics}, 25(14):1754--1760.
+
+\bibitem[Li et~al., 2009]{li2009sequence}
+Li, H., Handsaker, B., Wysoker, A., Fennell, T., Ruan, J., Homer, N., Marth,
+  G., Abecasis, G., Durbin, R., et~al. (2009).
+\newblock The sequence alignment/map format and samtools.
+\newblock {\em Bioinformatics}, 25(16):2078--2079.
+
+\bibitem[Liao et~al., 2014]{liao2014prior}
+Liao, J., Mcmurry, T., and Berg, A. (2014).
+\newblock Prior robust empirical bayes inference for large-scale data by
+  conditioning on rank with application to microarray data.
+\newblock {\em Biostatistics}, 15(1):60--73.
+
+\bibitem[McKenna et~al., 2010]{McKenna:2010bva}
+McKenna, A., Hanna, M., Banks, E., Sivachenko, A., Cibulskis, K., Kernytsky,
+  A., Garimella, K., Altshuler, D., Gabriel, S., Daly, M., and DePristo, M.~A.
+  (2010).
+\newblock {The Genome Analysis Toolkit: A MapReduce framework for analyzing
+  next-generation DNA sequencing data}.
+\newblock {\em Genome Research}, 20(9):1297--1303.
+
+\bibitem[Roth et~al., 2012]{roth2012jointsnvmix}
+Roth, A., Ding, J., Morin, R., Crisan, A., Ha, G., Giuliany, R., Bashashati,
+  A., Hirst, M., Turashvili, G., Oloumi, A., et~al. (2012).
+\newblock Jointsnvmix: a probabilistic model for accurate detection of somatic
+  mutations in normal/tumour paired next-generation sequencing data.
+\newblock {\em Bioinformatics}, 28(7):907--913.
+
+\bibitem[Saunders et~al., 2012]{Saunders:2012fh}
+Saunders, C.~T., Wong, W. S.~W., Swamy, S., Becq, J., Murray, L.~J., and
+  Cheetham, R.~K. (2012).
+\newblock {Strelka: accurate somatic small-variant calling from sequenced
+  tumor-normal sample pairs.}
+\newblock {\em Bioinformatics}, 28(14):1811--1817.
+
+\bibitem[Shiraishi et~al., 2013]{shiraishi2013empirical}
+Shiraishi, Y., Sato, Y., Chiba, K., Okuno, Y., Nagata, Y., Yoshida, K., Shiba,
+  N., Hayashi, Y., Kume, H., Homma, Y., et~al. (2013).
+\newblock An empirical bayesian framework for somatic mutation detection from
+  cancer genome sequencing data.
+\newblock {\em Nucleic acids research}, 41(7):e89--e89.
+
+\bibitem[Silverman, 1986]{silverman1986density}
+Silverman, B.~W. (1986).
+\newblock {\em Density estimation for statistics and data analysis}, volume~26.
+\newblock CRC press.
+
+\bibitem[Stein, 1965]{stein1965approximation}
+Stein, C. (1965).
+\newblock {\em Approximation of improper prior measures by prior probability
+  measures}.
+\newblock Springer.
+
+\bibitem[Stocker and Simoncelli, 2006]{stocker2006noise}
+Stocker, A.~A. and Simoncelli, E.~P. (2006).
+\newblock Noise characteristics and prior expectations in human visual speed
+  perception.
+\newblock {\em Nature neuroscience}, 9(4):578--585.
+
+\bibitem[Wang et~al., 2013]{wang2013detecting}
+Wang, Q., Jia, P., Li, F., Chen, H., Ji, H., Hucks, D., Dahlman, K.~B., Pao,
+  W., and Zhao, Z. (2013).
+\newblock Detecting somatic point mutations in cancer genome sequencing data: a
+  comparison of mutation callers.
+\newblock {\em Genome}, 5(10):91.
+
+\bibitem[Weakliem, 1999]{weakliem1999critique}
+Weakliem, D.~L. (1999).
+\newblock A critique of the bayesian information criterion for model selection.
+\newblock {\em Sociological Methods \& Research}, 27(3):359--397.
+
+\bibitem[Zhou et~al., 2013]{zhou2013polygenic}
+Zhou, X., Carbonetto, P., and Stephens, M. (2013).
+\newblock Polygenic modeling with bayesian sparse linear mixed models.
+\newblock {\em PLoS genetics}, 9(2):e1003264.
+
 \end{thebibliography}
