@@ -32,6 +32,13 @@ Gelman, A. (2006).
   (comment on article by browne and draper).
 \newblock {\em Bayesian analysis}, 1(3):515--534.
 
+\bibitem[Harrison et~al., 2013]{harrison2013bayesian}
+Harrison, J.~M., Breeze, M.~L., Berman, K.~H., and Harrigan, G.~G. (2013).
+\newblock Bayesian statistical approaches to compositional analyses of
+  transgenic crops 2. application and validation of informative prior
+  distributions.
+\newblock {\em Regulatory Toxicology and Pharmacology}, 65(2):251--258.
+
 \bibitem[Jeffreys, 1946]{jeffreys1946invariant}
 Jeffreys, H. (1946).
 \newblock An invariant form for the prior probability in estimation problems.
@@ -125,6 +132,12 @@ Stein, C. (1965).
 \newblock {\em Approximation of improper prior measures by prior probability
   measures}.
 \newblock Springer.
+
+\bibitem[Stocker and Simoncelli, 2006]{stocker2006noise}
+Stocker, A.~A. and Simoncelli, E.~P. (2006).
+\newblock Noise characteristics and prior expectations in human visual speed
+  perception.
+\newblock {\em Nature neuroscience}, 9(4):578--585.
 
 \bibitem[Wang et~al., 2013]{wang2013detecting}
 Wang, Q., Jia, P., Li, F., Chen, H., Ji, H., Hucks, D., Dahlman, K.~B., Pao,

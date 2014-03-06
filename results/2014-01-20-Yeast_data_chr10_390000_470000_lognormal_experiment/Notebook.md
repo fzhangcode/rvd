@@ -148,6 +148,8 @@ Results
 3. Compare with Kvitek's results:
 	
 	We failed to call mutation on the position ChrX:428286, which is called as a mutation (Ref:A->Alt:C) by Kvitek (see Table_S2). This mutation doesn't show up in our depth chart file either. 
+
+
 Archived Samples
 -------------------------
 All the original data and archived samples are stored in: freeze/kvitek2013/

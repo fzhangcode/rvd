@@ -1,4 +1,4 @@
-2014-1030 Variants Calling on Yeast Data Experiment
+2014-01-30 Variants Calling on Yeast Data Experiment
 =============
 
 Purpose: 
