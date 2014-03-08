@@ -28,15 +28,17 @@ Clinical bam files are available in
 `/flahertylab/freeze/HCC1187`; reference fasta file is in `/flahertylab/freeze/hg19/Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta/genome.fa`
 
 
+
 Experimental Protocol
 ---------------------------
-Please run shell script SNP_muTect.sh for the overall process. 
+Please run shell script SNP_muTect_HCC1187.sh for the overall process. 
 
 
 Results
 -----------
-Please see results 
 
+The variant calling status spread sheet will be generated in `./work/HCC.call_stats.txt`. The depth chart for called positions are shown in the table below.
+![]('HCC_call_stats.png')
 
 Archived Samples
 -------------------------

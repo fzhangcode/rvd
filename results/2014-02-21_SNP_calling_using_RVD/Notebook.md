@@ -1,13 +1,13 @@
-2014-02-24 SNP calling using RVD in clinical data HCC1187 PAXIP1 gene
+2014-02-24 SNP calling using RVD in synthetic dataset
 ==============================
 
 Purpose
 ------------
-Compare variant calling performance of RVD and RVD2 in clinical data HCC1187 PAXIP1 gene.
+Compare variant calling performance of RVD and RVD2 in synthetic dataset.
 
 Conclusions
 -----------------
-RVD is able to call variants with no lower than 0.1 downsampling rate. 
+RVD is able to call variants with synthetic data at 10X downsampling rate. The program failed when the downsampling rate is 100X or higher. 
 
 Background
 ----------------
@@ -28,7 +28,9 @@ Please run matlab script RVD.m for the overall process.
 
 Results
 -----------
-Please see results 
+Variants were called and stored in `output` folder for the 10x downsampling. The results match closely with those reported in the NAR paper.
+
+The RVD command line program errored out for downsampling rates at 100x or higher due to insufficient depth in the error bases.
 
 
 Archived Samples
