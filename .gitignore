@@ -30,6 +30,7 @@ Thumbs.db
 *.gz
 *.blg
 *.fig
+*.pdf
 results/2013-10-01_SNP_calling_using_strelka/work
 results/2013-10-11_new_dataset_searching/datasets
 results/2013-10-11_new_dataset_searching/HCC1187
@@ -57,3 +58,4 @@ results/2013-11-16_bayes_interval_probability
 doc/bioinformatics2014/.texpadtmp
 doc/bioinformatics2013/RVD2.synctex.gz(busy)
 doc/ISMB2014/RVD3_1.tex.backup
+doc/SWE scholarships.docx
