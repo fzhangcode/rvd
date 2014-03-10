@@ -1,23 +1,15 @@
 \begin{thebibliography}{}
 
-\bibitem[Benjamini and Hochberg, 1995]{benjamini1995controlling}
-Benjamini, Y. and Hochberg, Y. (1995).
-\newblock Controlling the false discovery rate: a practical and powerful
-  approach to multiple testing.
-\newblock {\em Journal of the Royal Statistical Society. Series B
-  (Methodological)}, pages 289--300.
+\bibitem[Bayarri et~al., 1998]{bayarri1998robust}
+Bayarri, M., Berger, J., et~al. (1998).
+\newblock Robust bayesian analysis of selection models.
+\newblock {\em The Annals of Statistics}, 26(2):645--659.
 
 \bibitem[Cibulskis et~al., 2013]{Cibulskis:2013ta}
 Cibulskis, K., Lawrence, M.~S., and Carter, S.~L. (2013).
 \newblock {Sensitive detection of somatic point mutations in impure and
   heterogeneous cancer samples}.
 \newblock {\em Nature}.
-
-\bibitem[Cressie and Read, 1984]{cressie1984multinomial}
-Cressie, N. and Read, T.~R. (1984).
-\newblock Multinomial goodness-of-fit tests.
-\newblock {\em Journal of the Royal Statistical Society. Series B
-  (Methodological)}, pages 440--464.
 
 \bibitem[DePristo et~al., 2011]{depristo2011framework}
 DePristo, M.~A., Banks, E., Poplin, R., Garimella, K.~V., Maguire, J.~R.,
@@ -26,18 +18,6 @@ DePristo, M.~A., Banks, E., Poplin, R., Garimella, K.~V., Maguire, J.~R.,
 \newblock A framework for variation discovery and genotyping using
   next-generation dna sequencing data.
 \newblock {\em Nature genetics}, 43(5):491--498.
-
-\bibitem[Efron, 2010]{efron2010large}
-Efron, B. (2010).
-\newblock {\em Large-scale inference: empirical Bayes methods for estimation,
-  testing, and prediction}, volume~1.
-\newblock Cambridge University Press.
-
-\bibitem[Fisher et~al., 1970]{fisher1970statistical}
-Fisher, S. R.~A., Genetiker, S., Fisher, R.~A., Genetician, S., Britain, G.,
-  Fisher, R.~A., and G{\'e}n{\'e}ticien, S. (1970).
-\newblock {\em Statistical methods for research workers}, volume~14.
-\newblock Oliver and Boyd Edinburgh.
 
 \bibitem[Flaherty et~al., 2011]{Flaherty:2011ja}
 Flaherty, P., Natsoulis, G., Muralidharan, O., Winters, M., Buenrostro, J.,
@@ -52,11 +32,24 @@ Gelman, A. (2006).
   (comment on article by browne and draper).
 \newblock {\em Bayesian analysis}, 1(3):515--534.
 
+\bibitem[Harrison et~al., 2013]{harrison2013bayesian}
+Harrison, J.~M., Breeze, M.~L., Berman, K.~H., and Harrigan, G.~G. (2013).
+\newblock Bayesian statistical approaches to compositional analyses of
+  transgenic crops 2. application and validation of informative prior
+  distributions.
+\newblock {\em Regulatory Toxicology and Pharmacology}, 65(2):251--258.
+
 \bibitem[Jeffreys, 1946]{jeffreys1946invariant}
 Jeffreys, H. (1946).
 \newblock An invariant form for the prior probability in estimation problems.
 \newblock {\em Proceedings of the Royal Society of London. Series A.
   Mathematical and Physical Sciences}, 186(1007):453--461.
+
+\bibitem[Kass and Raftery, 1995]{kass1995bayes}
+Kass, R.~E. and Raftery, A.~E. (1995).
+\newblock Bayes factors.
+\newblock {\em Journal of the american statistical association},
+  90(430):773--795.
 
 \bibitem[Koboldt et~al., 2012]{Koboldt:2012cga}
 Koboldt, D.~C., Zhang, Q., Larson, D.~E., Shen, D., McLellan, M.~D., Lin, L.,
@@ -146,5 +139,15 @@ Wang, Q., Jia, P., Li, F., Chen, H., Ji, H., Hucks, D., Dahlman, K.~B., Pao,
 \newblock Detecting somatic point mutations in cancer genome sequencing data: a
   comparison of mutation callers.
 \newblock {\em Genome}, 5(10):91.
+
+\bibitem[Weakliem, 1999]{weakliem1999critique}
+Weakliem, D.~L. (1999).
+\newblock A critique of the bayesian information criterion for model selection.
+\newblock {\em Sociological Methods \& Research}, 27(3):359--397.
+
+\bibitem[Zhou et~al., 2013]{zhou2013polygenic}
+Zhou, X., Carbonetto, P., and Stephens, M. (2013).
+\newblock Polygenic modeling with bayesian sparse linear mixed models.
+\newblock {\em PLoS genetics}, 9(2):e1003264.
 
 \end{thebibliography}
