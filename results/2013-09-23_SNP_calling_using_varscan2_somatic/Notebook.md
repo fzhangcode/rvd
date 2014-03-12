@@ -26,7 +26,7 @@ Series of experiment on different approaches were done as : `SNP_varscan2_somati
 	SORTBAM100_0=$(ls $DOWNDIR/20100916_c3_p?.07*.sorted.bam  $DOWNDIR/20100916_c3_p?.12*.sorted.bam $DOWNDIR/20100916_c3_p?.14*sorted.bam)
 
 
-The overall experiment is implemented in `SNP_varscan2_somatic.sh`, which is not yet working right now.
+The overall experiment is implemented in `SNP_varscan2_somatic.sh`.
 
 
 Experimental Protocol
