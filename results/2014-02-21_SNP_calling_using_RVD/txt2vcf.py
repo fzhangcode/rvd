@@ -22,11 +22,11 @@ def main():
 
     foutput = 'stat.txt'
     statf = open(foutput,'w')
-    print("filename\tTPR\tTNR\tFPR", file=statf)
+    print("filename\tTPR\tTNR\tFPR\tMCC", file=statf)
 
     for f in filelist:
-        [TPR, TNR, FDR ] = txt2vcf_single(f)
-        print("%s\t%0.3f\t%0.3f\t%0.3f" %(f.split('/')[-1],TPR, TNR, FDR), file=statf)
+        [TPR, TNR, FDR, MCC ] = txt2vcf_single(f)
+        print("%s\t%0.3f\t%0.3f\t%0.3f\t%0.3f" %(f.split('/')[-1],TPR, TNR, FDR,MCC), file=statf)
     statf.close()
 
 def txt2vcf_single(filename):
@@ -54,10 +54,12 @@ def txt2vcf_single(filename):
         else:
             FP += 1
 
+    #Sensitivity
     if TP+FN != 0:
         TPR = float(TP)/(TP+FN)
     else:
         TPR=np.nan 
+
     #Specificity (TNR, true negative rate)
     if FP+TN != 0:
         TNR = float(TN)/(FP+TN)
@@ -69,9 +71,13 @@ def txt2vcf_single(filename):
     else:
         FDR = np.nan
 
+    # MCC
+    if (TP+FP)*(TP+FN)*(TN+FP)*(FN+TN)!=0:
+        MCC = (TP*TN - FP*FN)/np.sqrt((TP+FP)*(TP+FN)*(TN+FP)*(FN+TN))
+    else:
+        MCC = np.nan
 
-
-    return TPR, TNR, FDR 
+    return TPR, TNR, FDR ,MCC
 
 if __name__ == '__main__':
     main()
