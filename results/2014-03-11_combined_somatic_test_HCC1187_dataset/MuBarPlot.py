@@ -94,8 +94,6 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
 ##        rects2 = ax.bar(ind+width, np.mean(CallCaseMu,1), width, color='g', yerr=Case_yerr,ecolor='k')
         rects1 = ax.bar(ind, np.mean(CallControlMu,1), width, color='0.8', yerr=Control_yerr,ecolor='k')
         rects2 = ax.bar(ind+width, np.mean(CallCaseMu,1), width, color='0.5', yerr=Case_yerr,ecolor='k')
-        # rects1 = ax.bar(ind, np.mean(CallControlMu,1), width, color='g', yerr=Control_yerr,ecolor='k')
-        # rects2 = ax.bar(ind+width, np.mean(CallCaseMu,1), width, color='b', yerr=Case_yerr,ecolor='k')
 
         ax.set_ylabel('Minor Allele Frequency')
         ax.set_xlabel("HG19 Genomic Location [chr7:154,700,000+X]")
