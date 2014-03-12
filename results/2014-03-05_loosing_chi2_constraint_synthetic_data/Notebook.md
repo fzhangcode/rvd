@@ -26,7 +26,11 @@ Please see the histogram for this positions.
 From the view of Sensitivity and Specificity, 
 ![]('FDR.png')
 
-Combing the Sensitivity and Specificity table and False Discovery table, the "chi2, mu0=1" option, which means  chi2 p-value is 0.05 without Bonferroni correction and subtracting mu0 in the bayesian hypothesis test achieve the most preferable result.
+From the table it can be seen that loosing chi2 p-value will improve sensitivity at sacrifice of specificity. Also, the FDR will be degraded when chi2 p-value is loosed. 
+
+Combing the Sensitivity and Specificity table and False Discovery table, the "chi2/J, mu0=1" option, which means  chi2 p-value is 0.05 with Bonferroni correction and subtracting mu0 in the bayesian hypothesis test achieve the most preferable result.
+
+Regarding to the clinical dataset HCC1187, considering the long sequence length (44K) and low read depth(~50), it will be more preferable if we don't do Bonferroni correction. 
 
 Archived Samples
 -------------------------
