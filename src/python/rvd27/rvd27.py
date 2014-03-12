@@ -53,13 +53,6 @@ def main():
     argpGibbs.add_argument('-p', '--pool', type=int, default=None,
                 help='number of workers in multithread pool')
     argpGibbs.set_defaults(func=gibbs)
-                
-                
-
-                def test_main(args):
-    test(args.alpha, args.controlHDF5Name, args.caseHDF5Name,
-         args.somatic_tau, args.diffroi,
-         args.N, args.outputFile)
 
     # create subparser to compare two model files
     argpTest = subparsers.add_parser('test_main', 
@@ -129,20 +122,18 @@ def test_main(args):
          args.N, args.outputFile)
 
 def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None,
-         somatic_tau=(0.05,0.85),diffroi=(0,np.inf),
+         somatic_tau=(0.05,0.75),diffroi=(0,np.inf),
          N=1000, outputFile=None):
-    
-    logging.debug('Running posterior difference test on sample %s and %s)'%(controlHDF5Name, caseHDF5Name))
 
     if outputfile == None:
         diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N)
-        somatic_test(alpha, controlHDF5Name, caseHDF5Name,somatic_tau)
+        somatic_test(controlHDF5Name, caseHDF5Name,somatic_tau)
     else:
         diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile)
-        somatic_test(alpha, controlHDF5Name, caseHDF5Name,somatic_tau, outputFile)
+        somatic_test(controlHDF5Name, caseHDF5Name,somatic_tau, outputFile)
         
       
-def somatic_test(alpha, controlHDF5Name, caseHDF5Name, somatic_tau, outputFile='somaticcall.vcf'):
+def somatic_test(controlHDF5Name, caseHDF5Name, somatic_tau, outputFile='somaticcall.vcf'):
 
     if (controlHDF5Name!=None) and (caseHDF5Name!=None):
         logging.debug('Running somatic test on posterior distribution of sample %s and %s)'\
@@ -153,43 +144,74 @@ def somatic_test(alpha, controlHDF5Name, caseHDF5Name, somatic_tau, outputFile='
         controlMu_bar = np.mean(controlMu, axis=1)
         caseMu_bar = np.mean(caseMu, axis=1)
 
+        ## chi2 test for case and control sample independently
         J =len(controlMu_bar)
+
+        nRep = controlR.shape[0]
+        chi2Prep = np.zeros((J,nRep))
+        controlchi2P = np.zeros((J,1))
+        for j in xrange(J):
+                chi2Prep[j,:] = np.array([chi2test( controlR[i,j,:] ) for i in xrange(nRep)] )
+                if np.any(np.isnan(chi2Prep[j,:])):
+                    controlchi2P[j] = np.nan
+                else:
+                   controlchi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
+        controlchi2call = controlchi2P < 0.05
+
+        nRep = caseR.shape[0]
+        chi2Prep = np.zeros((J,nRep))
+        casechi2P = np.zeros((J,1))
+        for j in xrange(J):
+                chi2Prep[j,:] = np.array([chi2test( caseR[i,j,:] ) for i in xrange(nRep)] )
+                if np.any(np.isnan(chi2Prep[j,:])):
+                    casechi2P[j] = np.nan
+                else:
+                    casechi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
+        casechi2call = casechi2P < 0.05
+        # pdb.set_trace()
         call = []
         somatictype = []
         for i in xrange(J):
-            mu1 = controlMu_bar[i]
-            s1 = [mu1 < somatic_tau[0], mu1 >= somatic_tau[0] and mu1 < somatic_tau[1], mu1>=somatic_tau[1]]
+
+            mu1 = controlMu_bar[i]         
+            s1 = [mu1 < somatic_tau[0], mu1 >= somatic_tau[0] and mu1 < somatic_tau[1] and controlchi2call[i][0], mu1>=somatic_tau[1] and controlchi2call[i][0]]
+            if sum(s1) == 0:
+                s1[0] = True
 
             mu2 = caseMu_bar[i]
-            s2 = [mu2 < somatic_tau[0], mu2 >= somatic_tau[0] and mu2 < somatic_tau[1], mu2>=somatic_tau[1]]
+            s2 = [mu2 < somatic_tau[0], mu2 >= somatic_tau[0] and mu2 < somatic_tau[1] and casechi2call[i][0], mu2>=somatic_tau[1]  and casechi2call[i][0]]
+            if sum(s2) == 0:
+                s2[0] = True
 
             if s1[0] and s2[0]:
                 call.append(False)
-                somatictype.append('ref-ref')
+                somatictype.append('Ref:ref-ref')
             elif s1[0] and s2[1]:
                 call.append(True)
-                somatictype.append('ref-heter')
+                somatictype.append('Somatic:ref-heter')
             elif s1[0] and s2[2]:
                 call.append(True)
-                somatictype.append('ref-homo')
+                somatictype.append('Somatic:ref-homo')
+
             elif s1[1] and s2[0]:
                 call.append(True)
-                somatictype.append('heter-LOH1')
+                somatictype.append('LOH1:heter-ref')
             elif s1[1] and s2[1]:
                 call.append(True)
-                somatictype.append('heter-heter')
+                somatictype.append('Germline:heter-heter')
             elif s1[1] and s2[2]:
                 call.append(True)
-                somatictype.append('heter-LOH2')
+                somatictype.append('LOH2: heter-homo')
+
             elif s1[2] and s2[0]:
                 call.append(True)
-                somatictype.append('homo-ref')
+                somatictype.append('Germline:homo-ref')
             elif s1[2] and s2[1]:
                 call.append(True)
-                somatictype.append('homo-heter')
+                somatictype.append('Germline:homo-heter')
             else:
                 call.append(True)
-                somatictype.append('homo-homo')
+                somatictype.append('Germline:homo-homo')
 
         call =np.array(call)
         somatictype = np.array(somatictype)
@@ -198,7 +220,7 @@ def somatic_test(alpha, controlHDF5Name, caseHDF5Name, somatic_tau, outputFile='
                       np.median(controlR,0), controlN, \
                       np.mean(caseMu, axis=1), np.median(caseR,0), caseN, [somatic_tau], tag = 'somatic', somatictype = somatictype)
 
-        return loc, call, controlMu, caseMu, controlN, caseN, controlP, caseP
+        return loc, call, controlMu, caseMu, controlN, caseN, 
 
     else:
         logging.debug('Somatic test dataset has to be cancer-normal-paired.')
@@ -206,12 +228,13 @@ def somatic_test(alpha, controlHDF5Name, caseHDF5Name, somatic_tau, outputFile='
 
         
 def diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile='diffcall.vcf'):
+
+    logging.debug('Running posterior difference test on sample %s and %s)'%(controlHDF5Name, caseHDF5Name))
     
     loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
              caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
 
     hdf5name = "%s.hdf5" %os.path.splitext(outputFile)[0]
-##    pdb.set_trace()
 
     try:
         with h5py.File(hdf5name, 'r') as f:
@@ -261,14 +284,59 @@ def diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile='diff
     call = np.logical_and(bayescall, chi2call)
     # call = bayescall
         
-    write_diffvcf(outputFile, loc, call, refb, np.mean(controlMu, axis=1),\
+    write_dualvcf(outputFile, loc, call, refb, np.mean(controlMu, axis=1),\
                   np.median(controlR,0), controlN, np.mean(caseMu, axis=1), \
                   np.median(caseR,0), caseN, diffroi, alpha=alpha, altb=altb )
 
     # write_vcf(outputFile, loc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(controlMu, axis=1))
 
     return loc, call, controlMu, caseMu, controlN, caseN, postP, chi2P
-    
+
+def load_dualmodel(controlHDF5Name, caseHDF5Name):
+    '''
+        Load and synchonize the Case and Control Model files 
+    '''
+    # Load the Case and Control Model files
+    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(controlHDF5Name)
+    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(caseHDF5Name)
+
+    # Extract the common locations in case and control
+    caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
+    controlLocIdx = [i for i in xrange(len(controlLoc)) if controlLoc[i] in caseLoc]
+
+    caseMu = caseMu[caseLocIdx,:]
+    controlMu = controlMu[controlLocIdx,:]
+    caseR = caseR[:,caseLocIdx,:]
+    controlR = controlR[:,controlLocIdx,:]
+
+    loc = caseLoc[caseLocIdx]
+
+    J = len(caseLoc)
+
+    with h5py.File(controlHDF5Name, 'r') as f:
+        refb = f['/refb'][...]
+        f.close()
+    refb = refb[controlLocIdx]
+
+    altb = []
+    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+    for i in xrange(J):
+        r = np.squeeze(caseR[:,i,:]) # replicates x bases
+        
+        # Make a list of the alternate bases for each replicate
+        acgt_r = ['A','C','G','T']
+        del acgt_r[ acgt[refb[i]] ]
+
+        if not np.iterable(np.argmax(r, axis=-1)):
+            altb_r = acgt_r[np.argmax(r, axis=-1)]
+        else:
+            altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
+        altb.append(altb_r[0])
+
+    return loc, refb, altb, controlMu, controlPhi['mu0'], controlR, controlN,\
+           caseMu, casePhi['mu0'], caseR, caseN
+
+
 def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
                   caseMu, caseR, caseN, roi,  tag='diff', alpha=None, altb=None, somatictype = None ):
     '''
@@ -289,12 +357,12 @@ def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
     print("##source=rvd2", file=vcfF)
 
     if tag == 'diff': 
-        print('## Somatic test in cancer-normal-paired sample.')
+        print('##Posterior difference test in cancer-normal-paired sample.', file=vcfF)
         print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
         print("##Chi square test with Bonferroni Correction is included", file=vcfF)
     else:
-        print('## Bayesian posterior difference test in cancer-normal-paired sample.')
-        print("##somatic status determining threshold in cancer-normal-paired sample = (%(lower)0.2f,%(upper)0.2f)" \
+        print('##Somatic test in cancer-normal-paired sample.', file=vcfF)
+        print("##Somatic status determining threshold in cancer-normal-paired sample = (%(lower)0.2f,%(upper)0.2f)" \
           %{'lower':roi[0][0],'upper':roi[0][1]}, file=vcfF)
         
     uniquechrom = set(chrom)
@@ -345,51 +413,6 @@ def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
                           caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
                 
     vcfF.close()
-
-            
-def load_dualmodel(controlHDF5Name, caseHDF5Name):
-    '''
-        Load and synchonize the Case and Control Model files 
-    '''
-    # Load the Case and Control Model files
-    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(controlHDF5Name)
-    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(caseHDF5Name)
-
-    # Extract the common locations in case and control
-    caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
-    controlLocIdx = [i for i in xrange(len(controlLoc)) if controlLoc[i] in caseLoc]
-
-    caseMu = caseMu[caseLocIdx,:]
-    controlMu = controlMu[controlLocIdx,:]
-    caseR = caseR[:,caseLocIdx,:]
-    controlR = controlR[:,controlLocIdx,:]
-
-    loc = caseLoc[caseLocIdx]
-
-    J = len(caseLoc)
-
-    with h5py.File(controlHDF5Name, 'r') as f:
-        refb = f['/refb'][...]
-        f.close()
-    refb = refb[controlLocIdx]
-
-    altb = []
-    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
-    for i in xrange(J):
-        r = np.squeeze(caseR[:,i,:]) # replicates x bases
-        
-        # Make a list of the alternate bases for each replicate
-        acgt_r = ['A','C','G','T']
-        del acgt_r[ acgt[refb[i]] ]
-
-        if not np.iterable(np.argmax(r, axis=-1)):
-            altb_r = acgt_r[np.argmax(r, axis=-1)]
-        else:
-            altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
-        altb.append(altb_r[0])
-
-    return loc, refb, altb, controlMu, controlPhi['mu0'], controlR, controlN,\
-           caseMu, casePhi['mu0'], caseR, caseN
 
 def write_vcf(outputFile, loc, call, refb, altb, caseMu, controlMu):
     """ Write high confidence variant calls to VCF 4.2 file.   //for compatible to previous programms before test functions adapted for somatic test.
