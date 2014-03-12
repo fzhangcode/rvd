@@ -88,36 +88,53 @@ def main():
 
 
         ## plot histogram
-    
+        drotation = 15
+        legendsize = 11
+        
+        J =  len(position) 
+
+        ## plot each position in indivisual figures
+        # for i in xrange(len(position)):
+        #         fig = plt.figure(figsize=(12,3))
+        #         ax1 = fig.add_subplot(1,2,1)
+        #         ax1.hist(muCase1[i,:].T,20)
+        #         ax1.hist(muControl1[i,:].T,20)
+        #         ax1.legend( ['Case','Control'],prop={'size':legendsize})
+        #         plt.xticks(rotation=drotation)
+        #         ax1.set_xlabel('mu') 
+        #         ax1.set_ylabel('frequency') 
+
+
+        #         ax2 = fig.add_subplot(1,2,2)
+        #         ax2.hist(muZ[i,:].T, 20)
+        #         ax2.legend(['Case-Control',],prop={'size':legendsize})
+        #         plt.xticks(rotation=drotation) 
+        #         ax2.set_xlabel('mu') 
+        #         ax2.set_ylabel('frequency') 
+        #         fig.suptitle('Position chr7:%s' %position[i].split(':')[1])
+        #         plt.tight_layout()
+        #         plt.savefig('position%s.png' %position[i].split(':')[1])
+
+        ## plot each position as subplots in a figure.
+        fig = plt.figure(figsize=(12,3*J))
         for i in xrange(len(position)):
-                fig = plt.figure(figsize=(12,3))
-                ax1 = fig.add_subplot(1,2,1)
+                ax1 = fig.add_subplot(J,2,2*i+1)
                 ax1.hist(muCase1[i,:].T,20)
                 ax1.hist(muControl1[i,:].T,20)
-                ax1.legend( ['Case','Control'])
-                ax1.set_xlabel('mu')
-                plt.xticks(rotation=25) 
+                ax1.legend( ['Case','Control'],prop={'size':legendsize})
+                plt.xticks(rotation=drotation)
+                ax1.set_xlabel('mu in Position chr7:%s' %position[i].split(':')[1]) 
+                ax1.set_ylabel('frequency') 
 
 
-                ax2 = fig.add_subplot(1,2,2)
-                ax2 = ax2.hist(muZ[i,:].T, 20)
-                # ax2.legend(['Z',])
-                fig.suptitle('position%s' %position[i].split(':')[1])
-                plt.xticks(rotation=25) 
-                plt.savefig('position%s.png' %position[i].split(':')[1])
-                plt.tight_layout()
-
-        ## Test if these positions will be called
-        # pdb.set_trace()
-
-        # roi = [(0.0,np.inf)]
-        # p1 = rvd27.bayes_test(muZ, roi, type = 'open')
-
-        # pdb.set_trace()
-
-        # roi = [(-np.inf,0.0)]
-        # p2 = rvd27.bayes_test(muZ, roi, type = 'open')
-
-        # pdb.set_trace()
+                ax2 = fig.add_subplot(J,2,2*i+2)
+                ax2.hist(muZ[i,:].T, 20)
+                ax2.legend(['Case-Control',],prop={'size':legendsize})
+                plt.xticks(rotation=drotation) 
+                ax2.set_xlabel('mu in Position chr7:%s' %position[i].split(':')[1]) 
+                ax2.set_ylabel('frequency') 
+        plt.tight_layout()
+        plt.savefig('histogram')
+        
 if __name__ == "__main__":
 	main()
