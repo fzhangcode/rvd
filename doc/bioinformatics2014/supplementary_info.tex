@@ -127,6 +127,66 @@ Since configuration and Analysis for Strelka and muTect is standardized and no p
 
 Samtools mpileup and GATK can accept multiple "tumor'' replicates for variant calling, so we fed six bam files from each case replicate group to mpileup. VarScan2-mpileup takes multiple ``tumor-normal'' pair replicates so we passed six pair replicates to each algorithm. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
 
+
+\section{Histogram of $ \mu_j $ for mutations detected by RVD2 in HCC1187 dataset}
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=120mm]{pdf_figs/HCC1187_histogram_neg.pdf}
+\caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
+\label{fig:hist_neg}
+\end{center}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=120mm]{pdf_figs/HCC1187_histogram_pos.pdf}
+\caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
+\label{fig:hist_pos}
+\end{center}
+\end{figure}
+
+\section{Comparison between RVD2, VarScan2 somatic and muTect in Clincal HCC1187 dataset}
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=1\textwidth]{pdf_figs/HCC1187_RVD2.pdf}
+\caption{RVD2.}
+\label{fig:rd_RVD2}
+\end{center}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.7\textwidth]{pdf_figs/HCC1187_mutect.pdf}
+\caption{muTect.}
+\label{fig:rd_mutect}
+\end{center}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{pdf_figs/HCC1187_varscan2_true_positives.pdf}
+\caption{HCC1187 varscan2 true positives.}
+\label{fig:rd_varscan2_TP}
+\end{center}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{pdf_figs/HCC1187_varscan2_false_negatives.pdf}
+\caption{ HCC1187 varscan2 false negatives.}
+\label{fig:rd_varscan2_FN}
+\end{center}
+\end{figure}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.8\textwidth]{pdf_figs/HCC1187_varscan2_false_positives.pdf}
+\caption{HCC1187 varscan2 false positives}
+\label{fig:rd_varscan2_FP}
+\end{center}
+\end{figure}
+
+
 \bibliographystyle{natbib}
 \bibliography{bioinfo}
 \end{document}
