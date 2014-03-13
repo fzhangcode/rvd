@@ -6,16 +6,13 @@
 import sys
 import os
 import numpy as np
-import scipy as sp
+
 import matplotlib.pyplot as plt
 import matplotlib
-# import pandas as pd
-# import pickle
-# import multiprocessing as mp
+
 import h5py
-# import logging
 import pdb
-# import scipy.stats as ss
+
 
 # Insert the src/python/directory at front of the path
 rvddir = os.path.join('../../src/python/rvd27')
@@ -23,10 +20,20 @@ sys.path.insert(0, rvddir)
 import rvd27
 
 def main():
-        position = ['chr7:154743899', 'chr7:154749704', 
-        'chr7:154753635', 'chr7:154754371', 'chr7:154758813',
-         'chr7:154760439', 'chr7:154766700', 'chr7:154766732', 
-         'chr7:154777014', 'chr7:154777118', 'chr7:154780960']
+
+        ## all positions called by muTect (for the notebook). 
+        # codes in below doesn't fit these positions and 
+        # needs to be taylored for the Notebook.
+
+        #     position = ['chr7:154743899', 'chr7:154749704', 
+        # 'chr7:154753635', 'chr7:154754371', 'chr7:154758813',
+        #  'chr7:154760439', 'chr7:154766700', 'chr7:154766732', 
+        #  'chr7:154777014', 'chr7:154777118', 'chr7:154780960']
+
+        ## all positions called by RVD2 differnce test.
+        position = ['chr7:154749704', 'chr7:154753635', 'chr7:154754371',
+         'chr7:154758813','chr7:154760439','chr7:154766732',
+         'chr7:154766832','chr7:154777118']
 
 	controlFile = '../2013-12-20_experiment_set_gibbs_Qsd_mu_1_mu_over_10_minus_mu0/HCC1187_PAXIP1_genome/Control.hdf5'
 	caseFile = '../2013-12-20_experiment_set_gibbs_Qsd_mu_1_mu_over_10_minus_mu0/HCC1187_PAXIP1_genome/Case.hdf5'
@@ -90,51 +97,58 @@ def main():
         ## plot histogram
         drotation = 15
         legendsize = 11
-        
-        J =  len(position) 
-
-        ## plot each position in indivisual figures
-        # for i in xrange(len(position)):
-        #         fig = plt.figure(figsize=(12,3))
-        #         ax1 = fig.add_subplot(1,2,1)
-        #         ax1.hist(muCase1[i,:].T,20)
-        #         ax1.hist(muControl1[i,:].T,20)
-        #         ax1.legend( ['Case','Control'],prop={'size':legendsize})
-        #         plt.xticks(rotation=drotation)
-        #         ax1.set_xlabel('mu') 
-        #         ax1.set_ylabel('frequency') 
-
-
-        #         ax2 = fig.add_subplot(1,2,2)
-        #         ax2.hist(muZ[i,:].T, 20)
-        #         ax2.legend(['Case-Control',],prop={'size':legendsize})
-        #         plt.xticks(rotation=drotation) 
-        #         ax2.set_xlabel('mu') 
-        #         ax2.set_ylabel('frequency') 
-        #         fig.suptitle('Position chr7:%s' %position[i].split(':')[1])
-        #         plt.tight_layout()
-        #         plt.savefig('position%s.png' %position[i].split(':')[1])
-
-        ## plot each position as subplots in a figure.
+              
+        ## plot the histogram of the first three positions as subplots in a figure.
+        J = 3
         fig = plt.figure(figsize=(12,3*J))
-        for i in xrange(len(position)):
+        for i in xrange(J):                
                 ax1 = fig.add_subplot(J,2,2*i+1)
                 ax1.hist(muCase1[i,:].T,20)
                 ax1.hist(muControl1[i,:].T,20)
                 ax1.legend( ['Case','Control'],prop={'size':legendsize})
                 plt.xticks(rotation=drotation)
-                ax1.set_xlabel('mu in Position chr7:%s' %position[i].split(':')[1]) 
+                ax1.set_xlabel(r'$\mu$') 
                 ax1.set_ylabel('frequency') 
+                ax1.text(1.1, 1.1,'Position chr7:%s' %position[i].split(':')[1], 
+                    horizontalalignment='center', 
+                    verticalalignment='center',
+                    transform=ax1.transAxes)
 
 
                 ax2 = fig.add_subplot(J,2,2*i+2)
                 ax2.hist(muZ[i,:].T, 20)
                 ax2.legend(['Case-Control',],prop={'size':legendsize})
                 plt.xticks(rotation=drotation) 
-                ax2.set_xlabel('mu in Position chr7:%s' %position[i].split(':')[1]) 
-                ax2.set_ylabel('frequency') 
-        plt.tight_layout()
-        plt.savefig('histogram')
-        
+                ax2.set_xlabel(r'$\Delta \mu$') 
+
+        plt.tight_layout(rect=[0, 0, 0.99, 0.99])
+        plt.savefig('histogram_neg.pdf')
+
+        J =  len(position) - 3
+        fig = plt.figure(figsize=(12,3*J))
+
+        for i in xrange(J):            
+                ax1 = fig.add_subplot(J,2,2*i+1)
+                ax1.hist(muCase1[i+3,:].T,20)
+                ax1.hist(muControl1[i+3,:].T,20)
+                ax1.legend( ['Case','Control'],
+                    prop={'size':legendsize})
+                plt.xticks(rotation=drotation)
+                ax1.set_xlabel(r'$\mu$') 
+                ax1.set_ylabel('frequency') 
+                ax1.text(1.1, 1.1,'Position chr7:%s' %position[i+3].split(':')[1], 
+                    horizontalalignment='center', 
+                    verticalalignment='center',
+                    transform=ax1.transAxes)
+
+                ax2 = fig.add_subplot(J,2,2*i+2)
+                ax2.hist(muZ[i+3,:].T, 20)
+                ax2.legend(['Case-Control',],prop={'size':legendsize})
+                plt.xticks(rotation=drotation) 
+                ax2.set_xlabel(r'$\Delta \mu$') 
+
+        plt.tight_layout(rect=[0, 0, 0.99, 0.99])
+        plt.savefig('histogram_pos.pdf')
+
 if __name__ == "__main__":
 	main()
