@@ -7,6 +7,7 @@
 \usepackage{natbib}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage{pdfpages}
 %\usepackage{epstopdf}
 %\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
 
@@ -131,61 +132,22 @@ Samtools mpileup and GATK can accept multiple "tumor'' replicates for variant ca
 \section{Histogram of $ \mu_j $ for mutations detected by RVD2 in HCC1187 dataset}
 \begin{figure}[H]
 \begin{center}
-\includegraphics[width=120mm]{pdf_figs/HCC1187_histogram_neg.pdf}
-\caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
-\label{fig:hist_neg}
-\end{center}
-\end{figure}
-
-\begin{figure}[H]
-\begin{center}
 \includegraphics[width=120mm]{pdf_figs/HCC1187_histogram_pos.pdf}
 \caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
 \label{fig:hist_pos}
 \end{center}
 \end{figure}
 
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=120mm]{pdf_figs/HCC1187_histogram_neg.pdf}
+\caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
+\label{fig:hist_neg}
+\end{center}
+\end{figure}
+
 \section{Comparison between RVD2, VarScan2 somatic and muTect in Clincal HCC1187 dataset}
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=1\textwidth]{pdf_figs/HCC1187_RVD2.pdf}
-\caption{RVD2.}
-\label{fig:rd_RVD2}
-\end{center}
-\end{figure}
-
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=0.7\textwidth]{pdf_figs/HCC1187_mutect.pdf}
-\caption{muTect.}
-\label{fig:rd_mutect}
-\end{center}
-\end{figure}
-
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=0.8\textwidth]{pdf_figs/HCC1187_varscan2_true_positives.pdf}
-\caption{HCC1187 varscan2 true positives.}
-\label{fig:rd_varscan2_TP}
-\end{center}
-\end{figure}
-
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=0.8\textwidth]{pdf_figs/HCC1187_varscan2_false_negatives.pdf}
-\caption{ HCC1187 varscan2 false negatives.}
-\label{fig:rd_varscan2_FN}
-\end{center}
-\end{figure}
-
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=0.8\textwidth]{pdf_figs/HCC1187_varscan2_false_positives.pdf}
-\caption{HCC1187 varscan2 false positives}
-\label{fig:rd_varscan2_FP}
-\end{center}
-\end{figure}
-
+\includepdf[pages={1-},scale=0.9]{pdf_figs/position_lookup_chart_all.pdf}
 
 \bibliographystyle{natbib}
 \bibliography{bioinfo}

@@ -5,6 +5,7 @@
 \usepackage{afterpage}
 \usepackage{algorithm}
 \usepackage{bbm}
+\usepackage{subfig}
 
 %\usepackage{placeins}
 \usepackage{algpseudocode}% http://ctan.org/pkg/algorithmicx
@@ -33,6 +34,8 @@
 Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Unlike research cell lines, clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples.
 
 \section{Results:}
+
+%TODO Update the chinical dataset result
 We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over a wide range of median read depth and minor allele frequency. We identify six mutations in the PAXP1 gene in a matched clinical breast ductal carcinoma tumor sample; two of which are loss-of-heterozygosity events.
 
 \section{Availability:}
@@ -306,7 +309,8 @@ The HCC1187 dataset is a well-recognized baseline dataset from Illumina for eval
 
 We tested RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $\mu^{\Delta}$ to estimate the posterior probability of a variant.
 
-We used RVD2 to identify germline and somatic mutations in the diploid HCC1187 sample. To identify germline mutations, we used the control data in the following hypothesis test $\Pr( \tilde{\mu}_j^{\text{control}} \in [\tau_\text{l},\tau_\text{u}] ) > 1-\alpha$, where the intervals are: homozygous reference $[0, 0.2]$, heterozygous mutant $[0.1, 0.9]$, and homozygous mutant $[0.8, 1.0]$ and the size of the test is $\alpha=0.05$.
+%TODO: change the result
+We used RVD2 to identify germline and somatic mutations in the diploid HCC1187 sample. To identify germline mutations, we used the control data in the following hypothesis test $\Pr( \tilde{\mu}_j^{\text{control}} \in [\tau_\text{l},\tau_\text{u}] ) > 1-\alpha$, where the intervals are: homozygous reference $[0, 0.05)$, heterozygous mutant $[0.5, 0.0.75)$, and homozygous mutant $[0.75, 1.0]$.
 
 To identify somatic mutations, we considered scenarios when the case(tumor) error rate is lower than the control(germline) error rate (e.g. loss-of-heterozygosity) as well as scenarios when the case(tumor) error rate is higher than the control(germline) error rate (e.g. homozygous somatic mutation). The two hypothesis tests are then $\Pr( \mu_j^{\Delta} \geq \tau ) > 1-\alpha$ and $\Pr( \mu_j^{\Delta} \leq \tau ) > 1-\alpha$. The size of the test is $\alpha=0.05$.
 
@@ -316,7 +320,7 @@ To identify somatic mutations, we considered scenarios when the case(tumor) erro
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=0.5\textwidth]{pdf_figs/ROC_without_chi2.pdf}
+\includegraphics[width=0.45\textwidth]{pdf_figs/ROC_without_chi2.pdf}
 \caption{ROC curve varying read depth showing detection performance.}
 \label{fig:ROC}
 \end{center}
@@ -376,7 +380,7 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 
 \begin{figure*}[!tpb]
 \begin{center}
-\includegraphics[width=0.9\textwidth]{pdf_figs/HCC1187_MuBarPlot.pdf}
+\includegraphics[width=0.7\textwidth]{pdf_figs/HCC1187_MuBarPlot.pdf}
 \caption{Estimated minor allele fraction for called variants in PAXIP1 gene. Star (*) indicates $\mu^{\text{case}}$  is significantly different from $ \mu^{\text{control}}$.}
 \label{fig:brca_MAF}
 \end{center}
@@ -384,6 +388,15 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 %('rvd2\results\2013-11-21_HCC1187_PAXIP1_mu_barplot_T0')
 %TODO: add star to test that have mudelta > .16 Done.
 %TODO: set tau=0.16 for mudelta test.  Done
+
+\begin{figure*}[!tpb]
+    \centering
+    \subfloat[Estimated minor allele fraction for called variants in PAXIP1 gene.  $ \mu^{\text{control}}$.]{{\includegraphics[width=0.8\textwidth]{pdf_figs/HCC1187_dotplot.pdf} }}%
+    %
+    \subfloat[Depth Chart for Positions called by RVD2 and muTect]{{\includegraphics[width=0.2\textwidth]{pdf_figs/position_lookup_chart.pdf} }}%
+    \caption{2 Figures side by side}%
+    \label{fig:example}%
+\end{figure*}
 
 RVD2 identified six variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Of the six called variants, three were homozygous germline variants and two were heterozygous germline variants. The two heterozygous variants had a loss-of-heterozygosity in the tumor sample. The remaining one is a homozygous somatic variant. Because the median read depth for the case sample is 60, we set the threshold of the test for $\mu^\Delta$ to $\tau = 16\%$ to minimize the false discovery rate (Figure~\ref{tbl:comparison_fdr}). 
 
