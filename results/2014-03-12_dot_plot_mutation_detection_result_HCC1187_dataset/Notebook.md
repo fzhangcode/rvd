@@ -25,9 +25,9 @@ Run `mutation_dotplot.py`
 
 Results
 -----------
-![](HCC1187_dotplot_minor.png)
-![](position_lookup_chart.png)
-
+![](HCC1187_dotplot.png)
+![](position_lookup_chart_all_Page_1.png)
+![](position_lookup_chart_all_Page_2.png)
 
 Archived Samples
 -------------------------

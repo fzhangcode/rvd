@@ -28,18 +28,19 @@ def main():
 
 	muTect_position = [154743899, 154749704,154753635,154754371,154758813,
 	154760439,154766700,154766732, 154777014,154777118, 154780960]
-
-	RVD2_somatic_position = [154743899,154749704, 154753635, 
-	154754371,154757241,154758813,154760439,154766700,
-	154766732,154766832,154777118,154780960,154781769]
-
-	RVD2_diff_position = [154749704, 154753635, 154754371,
-	154758813,154760439,154766732,154766832,154777118]
+        
+	RVD2_somatic_position = [154749704, 154753635,154754371,154758813,
+                                 154760439,154766732,154766832,154777118]
+	
+	RVD2_germline_position = [154743899,154749704, 154753635,154754371,
+                                  154758813,154766700,154780960,154781769]
 
 	Strelka_position = [154760439]
 
 	position = list(set(varscan_position+muTect_position+
-		RVD2_somatic_position+RVD2_diff_position+Strelka_position))
+		RVD2_somatic_position+RVD2_germline_position+Strelka_position))
+
+	position = sorted(position)
 
 	# plot varscan
 	varscan_idx = [position.index(pos)+1 for pos in varscan_position]
@@ -48,7 +49,7 @@ def main():
 
 	RVD2_somatic_idx = [position.index(pos)+1 for pos in RVD2_somatic_position]
 
-	RVD2_diff_idx = [position.index(pos)+1 for pos in RVD2_diff_position]
+	RVD2_germline_idx = [position.index(pos)+1 for pos in RVD2_germline_position]
 
 	Strelka_idx = [position.index(pos)+1 for pos in Strelka_position]
 
@@ -59,11 +60,19 @@ def main():
 	ax0. plot(varscan_idx, np.ones_like(varscan_idx),'r*')
 	ax0. plot(muTect_idx, 2*np.ones_like(muTect_idx),'md')
 	ax0. plot(RVD2_somatic_idx, 3*np.ones_like(RVD2_somatic_idx),'yo')
-	ax0. plot(RVD2_diff_idx, 4*np.ones_like(RVD2_diff_idx),'bx')
+	ax0. plot(RVD2_germline_idx, 4*np.ones_like(RVD2_germline_idx),'bx')
 	ax0. plot(Strelka_idx, 5*np.ones_like(Strelka_idx),'gv')
+
+	Idx = [4,8,11,13,20,22,35,37,50,56,58]
+
+	ax0.text(Idx[0]-2.7, 5.3,'Idx:%d'%Idx[0],fontsize=10)
+	for i in xrange(len(Idx)-1):
+		ax0.text(Idx[i+1]-0.7, 5.3,'%d'%Idx[i+1],fontsize=10)
+
 	ax0.set_ylim([0,6])
 	ax0.set_xticks(np.arange(5, len(position)+5, 5.0))
-	label = ['','VarScan2 ','muTect ', 'RVD2 somatic ', 'RVD2 diff ', 'Strelka ','']
+	label = ['','VarScan2\nSomatic ','muTect ', 'RVD2\nSomatic ',
+                 'RVD2\nGermline ', 'Strelka ','']
 	ax0.set_yticklabels(label)
 	ax0.set_xlabel('Position Index')
 
@@ -74,7 +83,7 @@ def main():
 
 	ax1 = plt.subplot(gs[1],sharey=ax0)
 	xval = [len(varscan_idx), len(muTect_idx),
-	 len(RVD2_somatic_idx), len(RVD2_diff_idx), len(Strelka_idx)]
+	 len(RVD2_somatic_idx), len(RVD2_germline_idx), len(Strelka_idx)]
 	ypos = [1,2,3,4,5]
 
 	ax1.barh(ypos[0],xval[0], color='r', align='center',height=0.1) 
@@ -94,7 +103,7 @@ def main():
 
 	plt.tight_layout()
 	# plt.show()
-	plt.savefig('HCC1187_dotplot_minor.png')
+	plt.savefig('HCC1187_dotplot.pdf')
 
 	## write positions to a file
 	File = 'position_lookup_chart.txt'
