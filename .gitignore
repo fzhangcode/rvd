@@ -8,7 +8,7 @@ tmp*
 *.pileup
 *.xlsx
 *.jpg
-*.png
+
 *.bam
 *.pileup
 *.dc
