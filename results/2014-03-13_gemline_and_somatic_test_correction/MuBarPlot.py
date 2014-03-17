@@ -37,7 +37,7 @@ def main():
         diff_tau = 0.0
         N = 1000
 
-        roi = [0.05, 0.75]
+        roi = [0.05, 0.95]
 
         hdf5name = 'germlineccall.hdf5'
         try:
@@ -72,7 +72,7 @@ def main():
     
     call = [somatic_call,germline_call]
     call = np.sum(call,0) > 0
-    MuBarPlot(controlMu[call], caseMu[call], loc[call],'HCC1187_mu.pdf')
+    MuBarPlot(controlMu[call], caseMu[call], loc[call],'HCC1187_MuBarPlot.pdf')
     
 
 def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
@@ -104,19 +104,26 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
         for i in diffcall:
             ax.text(i+width-width/9.0, 1.0021,'*',color='r',fontsize=15)
 
+        rsSNP = [0, 2, 3, 4, 10]
+
+        # for i in rsSNP:
+        #     ax.text(i+width-width/5.0, 1.05,r'$\diamond$',color = 'b', fontsize=13)
+
+
         Loclabel = [x.split(':')[1][4:] for x in Loc]
-        rslabel = ['rs1239326', ' ' ,'rs1239324', '\nrs71534174' ,'rs35505514', ' ' , ' ' , ' ' , ' ' , ' ' ,'rs4398858', ' ']
+
+        # rslabel = ['rs1239326', ' ' ,'rs1239324', '\nrs71534174' ,'rs35505514', ' ' , ' ' , ' ' , ' ' , ' ' ,'rs4398858', ' ']
  
 
-        label = ['%s\n%s' %(Loclabel[i], rslabel[i]) for i in xrange(len(Loclabel))]
+        # label = ['%s\n%s' %(Loclabel[i], rslabel[i]) for i in xrange(len(Loclabel))]
 
-        ax.set_xticklabels(label)
+        ax.set_xticklabels(Loclabel)
         
 
         lgd = ax.legend( (rects1[0], rects2[0]), ('Control', 'Case'), bbox_to_anchor=(0.85, 1.02, 0.15, .102),
-                   loc=4,ncol=1, mode="expand", borderaxespad=0., prop={'size':9})
+                   loc=4,ncol=1, mode="expand", borderaxespad=0., prop={'size':11})
 
-        plt.rcParams.update({'font.size': 9, 'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 11, 'font.family': 'serif'})
         fig.tight_layout(rect=[0, 0, 0.95, 0.9])
 
         plt.savefig(title, bbox = 'tight', bbox_extra_artists=(lgd,))

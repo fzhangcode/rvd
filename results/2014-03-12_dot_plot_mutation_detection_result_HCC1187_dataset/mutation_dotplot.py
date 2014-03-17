@@ -96,10 +96,10 @@ def main():
 	ax1.text(xval[3]+2,ypos[3]-0.05,'%d' %xval[3])
 	ax1.barh(ypos[4],xval[4], color='g', align='center',height=0.1)
 	ax1.text(xval[4]+2,ypos[4]-0.05,'%d' %xval[4])
-	ax1.set_xlim([0,75])
+	ax1.set_xlim([0,65])
 	# make these tick labels invisible
 	plt.setp( ax1.get_yticklabels(), visible=False)
-	ax1.set_xlabel('Frequency')
+	ax1.set_xlabel('Total')
 
 	plt.tight_layout()
 	# plt.show()

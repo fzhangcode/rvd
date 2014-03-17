@@ -65,7 +65,7 @@ def main():
     argpTest.add_argument('caseHDF5Name', default=None,
                 help='case model file (HDF5)')
     
-    argpTest.add_argument('somatic_tau', default=(0.05,0.75),
+    argpTest.add_argument('somatic_tau', default=(0.05,0.95),
                 help='Two thresholds for somatic test. \
                 Mu lower than the lower threshold will be classified as reference (non-mutation), \
                 Mu between the two thresholds will be classified as heterozygote, \
@@ -122,7 +122,7 @@ def test_main(args):
          args.N, args.outputFile)
 
 def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None,
-         somatic_tau=(0.05,0.75),diffroi=(0,np.inf),
+         somatic_tau=(0.05,0.95),diffroi=(0,np.inf),
          N=1000, outputFile=None):
 
     if outputfile == None:
@@ -132,7 +132,7 @@ def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None,
         diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile)
         somatic_test(controlHDF5Name, caseHDF5Name,somatic_tau, outputFile)
 
-def germline_test(controlHDF5Name, caseHDF5Name, germline_roi = [0.05, 0.75], outputFile='germlinecalltable.vcf'):
+def germline_test(controlHDF5Name, caseHDF5Name, germline_roi = [0.05, 0.95], outputFile='germlinecalltable.vcf'):
     # only test if control sample is mutated
     
     loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
@@ -193,7 +193,7 @@ def germline_test(controlHDF5Name, caseHDF5Name, germline_roi = [0.05, 0.75], ou
 
     return loc, call, controlMu, caseMu, controlN, caseN
 
-def somatic_test(alpha, controlHDF5Name, caseHDF5Name, diff_tau= 0, somatic_roi = [0.05, 0.75], N=1000,  outputFile='somaticcalltable.vcf'):
+def somatic_test(alpha, controlHDF5Name, caseHDF5Name, diff_tau= 0, somatic_roi = [0.05, 0.95], N=1000,  outputFile='somaticcalltable.vcf'):
     # Two sided difference test. Somatic status will be more specific classified. Threshold hold and alpha should be assign
     logging.debug('Running two sided posterior somatic test on sample %s and %s)'%(controlHDF5Name, caseHDF5Name))
 
@@ -380,7 +380,7 @@ def load_dualmodel(controlHDF5Name, caseHDF5Name):
 
 
 def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
-                  caseMu, caseR, caseN, diff_tau = 0, roi = [[0.05, 0.75]],  tag='somatic', alpha=None, altb=None, mtype = None ):
+                  caseMu, caseR, caseN, diff_tau = 0, roi = [[0.05, 0.95]],  tag='somatic', alpha=None, altb=None, mtype = None ):
     '''
         Write high confidence variant calls from somatic test when there are both control and case sample to VCF 4.2 file.
     '''
