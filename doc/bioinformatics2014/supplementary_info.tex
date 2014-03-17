@@ -8,6 +8,7 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{pdfpages}
+\usepackage[skip=2pt,font=scriptsize]{caption}
 %\usepackage{epstopdf}
 %\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
 
@@ -15,8 +16,8 @@
 \DeclareMathOperator{\diag}{diag}
 
 \title[RVD2: Supplementary Information]{Supplementary Information for
-  RVD2: An ultra-sensitive variant detection model for low-depth targeted next-generation sequencing data}
-%\date{}                                           % Activate to display a given date or no date
+  RVD2: An ultra-sensitive variant detection model for low-depth heterogeneous next-generation sequencing data}
+%\date{}      % Activate to display a given date or no date
 
 \begin{document}
 \maketitle
@@ -58,7 +59,7 @@ The RVD2 algorithm provides estimates of model parameters and latent variables g
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=120mm]{pdf_figs/depthM.pdf}
+\includegraphics[width=0.85\textwidth]{pdf_figs/depthM.pdf}
 \caption{Key parameters for RVD2 model for synthetic DNA data sets.}
 \label{fig:depthM}
 \end{center}
@@ -129,11 +130,11 @@ Since configuration and Analysis for Strelka and muTect is standardized and no p
 Samtools mpileup and GATK can accept multiple "tumor'' replicates for variant calling, so we fed six bam files from each case replicate group to mpileup. VarScan2-mpileup takes multiple ``tumor-normal'' pair replicates so we passed six pair replicates to each algorithm. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
 
 
-\section{Histogram of $ \mu_j $ for mutations detected by RVD2 in HCC1187 dataset}
+\section{histogram of $ \hat{\mu}_j $ for somatic mutations called by rvd2 in the 44kbp paxip1 gene from chr7:154738059 to chr7:154782774 in hcc1187 dataset}
 \begin{figure}[H]
 \begin{center}
 \includegraphics[width=120mm]{pdf_figs/HCC1187_histogram_pos.pdf}
-\caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
+\caption{Histogram of $ \hat{\mu}_j $ for positions where $\mu^{\text{case}}$ is significantly higher than $ \mu^{\text{control}}$, namely Pr$ (\Delta \hat{\mu}_j> \tau) > 1- \alpha $, where $ \tau=0, \alpha=0.05 $.} 
 \label{fig:hist_pos}
 \end{center}
 \end{figure}
@@ -141,13 +142,16 @@ Samtools mpileup and GATK can accept multiple "tumor'' replicates for variant ca
 \begin{figure}[H]
 \begin{center}
 \includegraphics[width=120mm]{pdf_figs/HCC1187_histogram_neg.pdf}
-\caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
+\caption{Histogram of $ \hat{\mu}_j $ for positions where $\mu^{\text{case}}$ is significantly lower than $ \mu^{\text{control}}$, namely Pr$ (\Delta \hat{\mu}_j< \tau) > 1- \alpha $, where $ \tau=0, \alpha=0.05 $.}
 \label{fig:hist_neg}
 \end{center}
 \end{figure}
 
-\section{Comparison between RVD2, VarScan2 somatic and muTect in Clincal HCC1187 dataset}
-\includepdf[pages={1-},scale=0.9]{pdf_figs/position_lookup_chart_all.pdf}
+\bigskip
+\bigskip
+
+
+\includepdf[pages={1-},scale=1]{pdf_figs/position_lookup_chart_all.pdf}
 
 \bibliographystyle{natbib}
 \bibliography{bioinfo}
