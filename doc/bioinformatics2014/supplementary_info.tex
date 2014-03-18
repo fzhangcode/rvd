@@ -8,11 +8,14 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{pdfpages}
+\usepackage{subfig}
+\usepackage{enumitem}
 \usepackage[skip=2pt,font=scriptsize]{caption}
+\newcommand{\RR}{I\!\!R} %real numbers
 %\usepackage{epstopdf}
 %\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
 
-\newcommand{\RR}{I\!\!R} %real numbers
+
 \DeclareMathOperator{\diag}{diag}
 
 \title[RVD2: Supplementary Information]{Supplementary Information for
@@ -22,6 +25,20 @@
 \begin{document}
 \maketitle
 
+%%%%%%%%%%%%%%%%%%%
+% Appendix A: An simulation example to illustate the idea of proposal graphical model and v.
+%%%%%%%%%%%%%%%%%%%
+\section{An simulation example to illustrate the proposal graphical model and generative process.}\label{sec:appendix_example}
+
+\begin{figure}[!bpth]
+    \centering
+    \subfloat[\label{fig:brca_MAF:a}]{{\includegraphics[width=0.2\textwidth]{pdf_figs/RVD2_model.pdf} }}%
+    \quad
+    \quad
+    \subfloat[ \label{fig:brca_MAF:b}]{{\includegraphics[width=0.7\textwidth]{pdf_figs/GMexample.pdf} }}%
+    \caption{(A) RVD2 Graphical Model.(B) An simulation example to illustrate the proposal graphical model and generative process. A generative process is to generate randomly observable data following your generative model, which is the reverse process of doing inference from the actual data. Here we want to generate a simulation sample with 3 replicates, and each replicate is a 5bp long sequence. Therefore, we have $ J = 5, N=3. $ The numbers in orange are known, including $\mu_0 \in \RR^{1 \times 1}$, $M_0 \in \RR^{1 \times 1}$, $M \in \RR^{5 \times 1}$, $n \in \RR^{5 \times 3}$. (1) We sample local error rate $\mu \in \RR^{5 \times 1}$ by drawing random numbers $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$; (2) and then use $\mu $ and $ M $ to sample $\theta \in \RR^{5 \times 3}$ by drawing random samples $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$; (3) finally we use $\theta \in \RR^{5 \times 3}$ and $n \in \RR^{5 \times 3}$ to sample $r \in \RR^{5 \times 3}$ by drawing random numbers $r_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$. In actual practice, non-reference read counts $ r $ and coverage $ n $ are the data we use to do inference.} 
+    \label{fig:brca_MAF}%
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%
 % Appendix A: Parameter Initialization
@@ -112,6 +129,7 @@ Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\
 %%%%%%%%%%%%%%%%%
 % Appendix E: Parameter Settings for Variant Calling Algorithms
 %%%%%%%%%%%%%%%%%
+\newpage
 \section{Parameter settings for other variant calling algorithms}
 \paragraph{\textbf{Samtools}}We used samtools (v0.1.19) function mpileup to call variants and bcftools to save the result in standard VCF files. In mpileup, we set the -d option sufficiently high at $10^6$ to avoid truncating read deapth. Option -u was enabled to make sure the output bcf files were uncompressed.
 

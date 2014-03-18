@@ -48,7 +48,7 @@ Next-generation sequencing (NGS) technology has enabled the systematic interroga
 
 Increasingly, NGS is being used to interrogate mutations in heterogeneous clinical samples. For example, NGS-based non-invasive fetal DNA testing uses maternal blood sample to sequence the minority fraction of cell-free fetal DNA~\citep{Fan:2008di}. Infectious diseases such as HIV and influenza may contain many genetically heterogeneous sub-populations~\citep{Flaherty:2011ja, Ghedin:2010ie}. DNA sequencing of individual regions of a solid tumor has revealed genetic heterogeneous within an individual sample~\citep{Navin:2010gu}.
 
-However, the primary statistical tools for calling variants from NGS data are optimized for homogeneous samples.  Samtools/bcftools and GATK uses naive Bayesian decision rule to call variants~\citep{li2011statistical, depristo2011framework}. GATK involves more sophisticate pre- and post-processing steps wherein the genotype prior is fixed and constant across all loci and the likelihood of an allele at a locus is a function of the phred score~\citep{McKenna:2010bv}.
+However, the primary statistical tools for calling variants from NGS data are optimized for homogeneous samples. Samtools/bcftools and GATK uses naive Bayesian decision rule to call variants~\citep{li2011statistical, depristo2011framework}. GATK involves more sophisticate pre- and post-processing steps wherein the genotype prior is fixed and constant across all loci and the likelihood of an allele at a locus is a function of the phred score~\citep{McKenna:2010bv}.
 
 Recently, researchers have developed algorithms to call low-frequency or rare variants in heterogeneous samples. Some approaches attempt to estimate the tumor sample purity then adjust the calling algorithm with that estimation.~\citet{yau2010statistical} developed a Bayesian framework which can model the normal DNA contamination and intra-tumor heterogeneity by parameterizing the normal genotype cell proportion at each SNP. However, RVD2 and some other algorithms are able to call variations in heterogeneous samples without estimating the tumor purity. VarScan2 combines algorithmic heuristics to call genotypes in the tumor and normal sample pileup data and then applies a Fisher's exact test on the read count data to detect a significant difference in the genotype calls~\citep{Koboldt:2012cg}. Strelka uses a hierarchical Bayesian approach to model the joint distribution of the allele frequency in the tumor and normal samples at each locus~\citep{Saunders:2012fh}. With the joint distribution available, one is able to identify locations with dissimilar allele frequencies. muTect uses a Bayesian posterior probability in its decision rule to evaluate the likelihood of a mutation~\citep{Cibulskis:2013ta}. RVD uses a hierarchical Bayesian model to capture the error structure of the data and call variants~\citep{Flaherty:2011ja, cushing2013rvd}. However, that algorithm requires a very high read depth to estimate the sequencing error rate and call variants.
 
@@ -65,7 +65,7 @@ RVD2 uses a two-stage approach for detecting rare variants. First, it estimates 
 
 For a given sample, the observed data consists of two matrices $r \in \RR^{J \times N}$ and $n \in \RR^{J \times N}$, where $r_{ji}$ is the number of reads with a non-reference base at location $j$ in experimental replicate $i$ and $n_{ji}$ is the total number of reads at location $j$ in replicate $i$. $ J $ is the length of gene sequence and $ N $ is the number of technical replicate gene sequence in the sample.  \label{replicate definition} Technical replicates are used to establish experimental variability in Next Generation Sequencing procedure~\citep{quackenbush2002microarray,robasky2013role}, even though multiple replicates are not indispensable for RVD2.
 
-The model generative process is as follows:
+The model generative process given $ \mu_0, M_0, M $, and $ N $ is as follows:
 
 \begin{enumerate}[noitemsep]
 	\item For each location $j$:
@@ -74,7 +74,7 @@ The model generative process is as follows:
 		\item For each replicate $i$:
 		\begin{enumerate}
 			\item Draw $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$
-			\item Draw $r_{ji} | n_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$
+			\item Draw $r_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$
 		\end{enumerate}
 	\end{enumerate}
 \end{enumerate}
