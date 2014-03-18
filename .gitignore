@@ -3,7 +3,7 @@ tmp*
 *.hdf5
 *.mat
 *.pyc
-
+*.png
 *.txt
 *.pileup
 *.xlsx
@@ -30,6 +30,7 @@ Thumbs.db
 *.gz
 *.blg
 *.fig
+*.bbl
 *.pdf
 results/2013-10-01_SNP_calling_using_strelka/work
 results/2013-10-11_new_dataset_searching/datasets
