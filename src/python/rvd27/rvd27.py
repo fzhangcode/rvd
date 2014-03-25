@@ -121,57 +121,43 @@ def test_main(args):
          args.somatic_tau, args.diffroi,
          args.N, args.outputFile)
 
-def test(alpha=0.95, controlHDF5Name=None, caseHDF5Name=None,
-         somatic_tau=(0.05,0.95),diffroi=(0,np.inf),
-         N=1000, outputFile=None):
+def test(somatic_alpha=0.95, germline_alpha=0.85, controlHDF5Name=None, caseHDF5Name=None, 
+    somatic_tau=0, germline_tau=0.05, N=1000, outputFile=None):
 
     if outputfile == None:
-        diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N)
-        somatic_test(controlHDF5Name, caseHDF5Name,somatic_tau)
+        germline_test(controlHDF5Name, caseHDF5Name, germline_alpha, germline_tau)
+        somatic_test(controlHDF5Name, caseHDF5Name, somatic_alpha, somatic_tau, N)
     else:
-        diff_test(alpha, controlHDF5Name, caseHDF5Name, diffroi, N, outputFile)
-        somatic_test(controlHDF5Name, caseHDF5Name,somatic_tau, outputFile)
+        germline_test(controlHDF5Name, caseHDF5Name, germline_alpha, germline_tau, outputFile)
+        somatic_test(controlHDF5Name, caseHDF5Name, somatic_alpha, somatic_tau, N, outputFile)        
 
-def germline_test(controlHDF5Name, caseHDF5Name, germline_roi = [0.05, 0.95], outputFile='germlinecalltable.vcf'):
+
+def germline_test(controlHDF5Name, caseHDF5Name, alpha = 0.15, tau = 0.05, outputFile='germlinecalltable.vcf'):
     # only test if control sample is mutated
-    
+    germline_roi = [tau, np.inf]
     loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
              caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
 
     logging.debug('Running germline test on posterior distribution of sample %s and %s)'\
                       %(controlHDF5Name, caseHDF5Name))
 
-    controlMu_bar = np.mean(controlMu, axis=1)
-
     ## chi2 test for case and control sample independently
-    J =len(controlMu_bar)
-    controlchi2call , chi2P = chi2combinetest(controlR)
+    J =len(controlR)
+ 
+    postP = bayes_test(controlMu, [germline_roi], type = 'close')
+    bayescall = postP > 1-alpha
 
-    call = []
-    germlinetype = []
+    # chi2 test on  sample
+    controlchi2call , chi2P = chi2combinetest(controlR, controlN, bayescall)
 
-    for i in xrange(J):
-            mu = controlMu_bar[i]         
-            s1 = [mu < germline_roi[0], mu >= germline_roi[0] and mu < germline_roi[1] and controlchi2call[i][0], mu>=germline_roi[1] and controlchi2call[i][0]]
-            if sum(s1) == 0:
-                s1[0] = True
+    call = np.logical_and(bayescall, controlchi2call)
 
-            if s1[0]:
-                call.append(False)
-                germlinetype.append('Germline:Reference')
-            elif s1[1]:
-                call.append(True)
-                germlinetype.append('Germline:Heterozygote')
-            else:
-                call.append(True)
-                germlinetype.append('Germline:Homozygote')
+    altb = ['.' for b in altb]
 
-    call =np.array(call)
-    germlinetype = np.array(germlinetype)
-    
-    write_dualvcf(outputFile,loc, call, refb, np.mean(controlMu, axis=1), \
+    write_dualvcf(outputFile,loc, call, refb, altb, np.mean(controlMu, axis=1), \
                   np.median(controlR,0), controlN, \
-                  np.mean(caseMu, axis=1), np.median(caseR,0), caseN, roi = [germline_roi], tag = 'germline', mtype = germlinetype)
+                  np.mean(caseMu, axis=1), np.median(caseR,0), caseN, tau, alpha)
+
 
     h5Filename = 'germlinecall.hdf5'
 
@@ -190,71 +176,34 @@ def germline_test(controlHDF5Name, caseHDF5Name, germline_roi = [0.05, 0.95], ou
     h5file.create_dataset('caseN', data=caseN, 
                           chunks=True, fletcher32=True, compression='gzip')
     h5file.close()
-
     return loc, call, controlMu, caseMu, controlN, caseN
 
-def somatic_test(alpha, controlHDF5Name, caseHDF5Name, diff_tau= 0, somatic_roi = [0.05, 0.95], N=1000,  outputFile='somaticcalltable.vcf'):
+
+def somatic_test(controlHDF5Name, caseHDF5Name, alpha=0.05, tau= 0, N=1000,  outputFile='somaticcalltable.vcf'):
     # Two sided difference test. Somatic status will be more specific classified. Threshold hold and alpha should be assign
     logging.debug('Running two sided posterior somatic test on sample %s and %s)'%(controlHDF5Name, caseHDF5Name))
 
     loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
              caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
 
-    diffroi = [diff_tau, np.inf]
+    somatic_roi = [tau, np.inf]
 
     # test if caseMu is significantly higher than controlMu
     [call1, _ , _, _, _] = one_side_diff_test(alpha, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
-             caseMu, caseMu0, caseR, caseN, N, diffroi)
+             caseMu, caseMu0, caseR, caseN, N, somatic_roi)
 
     # test if controlMu is significantly higher than caseMu
-    [call2, _ , _, _, _] = one_side_diff_test(alpha, loc, refb, altb, caseMu, caseMu0, caseR, caseN, \
-             controlMu, controlMu0, controlR, controlN, N, diffroi)
+    # [call2, _ , _, _, _] = one_side_diff_test(alpha, loc, refb, altb, caseMu, caseMu0, caseR, caseN, \
+    #          controlMu, controlMu0, controlR, controlN, N, somatic_roi)
 
-    call = [call1,call2]
-    call = np.sum(call,0) > 0
-    controlMu_bar = np.mean(controlMu, axis=1)
-    caseMu_bar = np.mean(caseMu, axis=1)
-    somatictype = []
-    J =len(controlMu)
-    for i in xrange(J):
-        if call[i]:
-            mu1 = controlMu_bar[i]         
-            s1 = [mu1 < somatic_roi[0], mu1 >= somatic_roi[0] and mu1 < somatic_roi[1], mu1>=somatic_roi[1]]
+    # call = [call1,call2]
+    # call = np.sum(call,0) > 0
+    call = call1
+    # write_dualvcf(outputFile,loc, call, refb, altb, np.mean(controlMu, axis=1), np.median(controlR,0), controlN, \
+    #               np.mean(caseMu, axis=1), np.median(caseR,0), caseN, tau, alpha)
 
-            mu2 = caseMu_bar[i]
-            s2 = [mu2 < somatic_roi[0], mu2 >= somatic_roi[0] and mu2 < somatic_roi[1], mu2>=somatic_roi[1]]
-
-            if s1[0] and s2[0]:
-                somatictype.append('Somatic:ref-ref')
-            elif s1[0] and s2[1]:
-                somatictype.append('Somatic:ref-heter')
-            elif s1[0] and s2[2]:
-                somatictype.append('Somatic:ref-homo')
-
-            elif s1[1] and s2[0]:
-                somatictype.append('LOH1')
-            elif s1[1] and s2[1]:
-                somatictype.append('Germline:heter-heter')
-            elif s1[1] and s2[2]:
-                somatictype.append('LOH2')
-
-            elif s1[2] and s2[0]:
-                somatictype.append('Germline:homo-ref')
-            elif s1[2] and s2[1]:
-                somatictype.append('Germline:homo-heter')
-            else:
-                somatictype.append('Germline:homo-homo')
-        else:
-            somatictype.append('NA')
-
-    somatictype = np.array(somatictype)
-        
-    write_dualvcf(outputFile,loc, call, refb, np.mean(controlMu, axis=1), \
-                  np.median(controlR,0), controlN, \
-                  np.mean(caseMu, axis=1), np.median(caseR,0), caseN, \
-                  diff_tau = diff_tau, roi = [somatic_roi], tag = 'somatic', alpha = alpha, altb = altb, mtype = somatictype)
+    write_vcf(outputFile, loc, call, refb, altb, np.mean(caseMu, axis=1),  np.mean(controlMu, axis=1))
     
-
     h5Filename = 'somaticcall.hdf5'
 
     h5file = h5py.File(h5Filename, 'w')
@@ -276,29 +225,29 @@ def somatic_test(alpha, controlHDF5Name, caseHDF5Name, diff_tau= 0, somatic_roi 
     return loc, call, controlMu, caseMu, controlN, caseN
 
 
-def diff_test(alpha = 0.05, controlHDF5Name = None, caseHDF5Name =None, diff_tau = 0, N = 1000,  outputFile='diffcalltable.vcf'):
-    # Oneside posterior difference test in case when somatic test is not appropriate. Also compatible to synthetic data
-    # The function will test if the caseMu is significantly higher than controlMu. 
-    # If we want to test if controlMu is significantly higher than caseMu, we need to switch the place for controlHDF5Name and caseHDF5Name
-    # since chi2 test will only apply to the second HDF5 file. 
+# def diff_test(alpha = 0.05, controlHDF5Name = None, caseHDF5Name =None, diff_tau = 0, N = 1000,  outputFile='diffcalltable.vcf'):
+#     # Oneside posterior difference test in case when somatic test is not appropriate. Also compatible to synthetic data
+#     # The function will test if the caseMu is significantly higher than controlMu. 
+#     # If we want to test if controlMu is significantly higher than caseMu, we need to switch the place for controlHDF5Name and caseHDF5Name
+#     # since chi2 test will only apply to the second HDF5 file. 
 
-    logging.debug('Running posterior difference test on whether local mutation rate in sample %s is significantly higher than sample %s)'%(caseHDF5Name, controlHDF5Name))
+#     logging.debug('Running posterior difference test on whether local mutation rate in sample %s is significantly higher than sample %s)'%(caseHDF5Name, controlHDF5Name))
     
-    loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
-             caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
+#     loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+#              caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
 
-    diffroi = [diff_tau, np.inf]
+#     diffroi = [diff_tau, np.inf]
 
-    call, chi2call , chi2P, bayescall, postP = one_side_diff_test(alpha, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
-             caseMu, caseMu0, caseR, caseN, N, diffroi)
+#     call, chi2call , chi2P, bayescall, postP = one_side_diff_test(alpha, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+#              caseMu, caseMu0, caseR, caseN, N, diffroi)
 
-    write_dualvcf(outputFile, loc, call, refb, np.mean(controlMu, axis=1),\
-                  np.median(controlR,0), controlN, np.mean(caseMu, axis=1), \
-                  np.median(caseR,0), caseN, diff_tau = diff_tau, tag = 'diff', alpha=alpha, altb=altb )
+#     write_dualvcf(outputFile, loc, call, refb, np.mean(controlMu, axis=1),\
+#                   np.median(controlR,0), controlN, np.mean(caseMu, axis=1), \
+#                   np.median(caseR,0), caseN, diff_tau = diff_tau, tag = 'diff', alpha=alpha, altb=altb )
 
-    # write_vcf(outputFile, loc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(controlMu, axis=1))
+#     # write_vcf(outputFile, loc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(controlMu, axis=1))
 
-    return loc, call, controlMu, caseMu, controlN, caseN,  chi2call , chi2P, bayescall, postP 
+#     return loc, call, controlMu, caseMu, controlN, caseN,  chi2call , chi2P, bayescall, postP 
 
 def one_side_diff_test(alpha, loc, refb, altb, Mu1, Mu01, R1, N1, Mu2, Mu02, R2, N2, N, diffroi):
 
@@ -312,14 +261,41 @@ def one_side_diff_test(alpha, loc, refb, altb, Mu1, Mu01, R1, N1, Mu2, Mu02, R2,
     bayescall = postP > 1-alpha
 
     # chi2 test on  sample
-    chi2call , chi2P = chi2combinetest(R2)
+    chi2call , chi2P = chi2combinetest(R2,N2,bayescall)
 
-    bayescall = bayescall.reshape(np.shape(chi2P))    
     call = np.logical_and(bayescall, chi2call)
 
     return call, chi2call , chi2P, bayescall, postP
 
-def chi2combinetest(R, pvalue = 0.05):
+# def chi2combinetest(R, N, bayescall = 1, pvalue = 0.05):
+
+#     nRep = R.shape[0]
+#     J = R.shape[1]
+#     chi2Prep = np.zeros((J,nRep))
+#     chi2P = np.zeros((J,1))
+#     for j in xrange(J):
+#             chi2Prep[j,:] = np.array([chi2test(R[i,j,:] ) for i in xrange(nRep)] )
+#             if np.any(np.isnan(chi2Prep[j,:])):
+#                 chi2P[j] = np.nan
+#             else:
+#                 chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
+
+#     nbayescall = sum(bayescall)
+#     if nbayescall < 1:
+#         nbayescall = 1
+
+#     if np.median(N) > 500: #Benjamini-Hochberg method FWER control
+#         chi2call = chi2P < pvalue/nbayescall
+#     else:
+#         chi2call = chi2P < pvalue
+
+#     chi2call = chi2call.flatten()
+#     chi2P = chi2P.flatten()
+
+#     return  chi2call, chi2P
+
+def chi2combinetest(R, N, bayescall = 1, pvalue = 0.05):
+
     nRep = R.shape[0]
     J = R.shape[1]
     chi2Prep = np.zeros((J,nRep))
@@ -330,7 +306,18 @@ def chi2combinetest(R, pvalue = 0.05):
                 chi2P[j] = np.nan
             else:
                 chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
-    chi2call = chi2P < pvalue
+
+    nbayescall = sum(bayescall)
+    if nbayescall < 1:
+        nbayescall = 1
+
+    # if np.median(N) > 500: #Benjamini-Hochberg method FWER control
+    #     chi2call = chi2P < pvalue/J
+    # else:
+    #     chi2call = chi2P < pvalue
+    chi2call = chi2P < pvalue/J
+    chi2call = chi2call.flatten()
+    chi2P = chi2P.flatten()
 
     return  chi2call, chi2P
 
@@ -379,8 +366,8 @@ def load_dualmodel(controlHDF5Name, caseHDF5Name):
            caseMu, casePhi['mu0'], caseR, caseN
 
 
-def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
-                  caseMu, caseR, caseN, diff_tau = 0, roi = [[0.05, 0.95]],  tag='somatic', alpha=None, altb=None, mtype = None ):
+def write_dualvcf(outputFile, loc, call, refb, altb, controlMu, controlR, controlN,\
+                  caseMu, caseR, caseN, tau, alpha=0.95):
     '''
         Write high confidence variant calls from somatic test when there are both control and case sample to VCF 4.2 file.
     '''
@@ -398,24 +385,12 @@ def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
 
     print("##source=rvd2", file=vcfF)
 
-    if tag == 'somatic': 
-        print('##Posterior somatic test in cancer-normal-paired sample.', file=vcfF)
-        print("##Posterior difference threshold = %0.2f" %diff_tau, file=vcfF)
-        print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
-        print("##Somatic status determining threshold in cancer-normal-paired sample = (%(lower)0.2f,%(upper)0.2f)" \
-            %{'lower':roi[0][0],'upper':roi[0][1]}, file=vcfF)
+    print('##Posterior test in cancer-normal-paired sample.', file=vcfF)
 
-    elif tag == 'germline':
-        print('##Germline test in cancer-normal-paired sample.', file=vcfF)
-        print("##Germline status determining threshold in cancer-normal-paired sample = (%(lower)0.2f,%(upper)0.2f)" \
-          %{'lower':roi[0][0],'upper':roi[0][1]}, file=vcfF)
-
-    else:
-        print('##Posterior difference test in cancer-normal-paired sample.', file=vcfF)
-        print("##Posterior difference threshold = %0.2f" %diff_tau, file=vcfF)
-        print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
+    print("##Posterior difference threshold = %0.2f" %tau, file=vcfF)
+    print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
     
-    print("##Chi square test with Bonferroni Correction is included", file=vcfF)
+    print("##Chi square test is included", file=vcfF)
 
     uniquechrom = set(chrom)
     uniquechrom = list(uniquechrom)
@@ -434,13 +409,13 @@ def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
     print("##FORMAT=<ID=GU,Number=1,Type=Integer,Description=\"Number of 'G' alleles used in fitting the model\">", file=vcfF)
     print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles used in fitting the model\">", file=vcfF)
     
-    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tMUTATIONTYPE\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
-##    pdb.set_trace()
+    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
+
     for i in xrange(J):
         if call[i]:           
             # restore R
             actg = ['A','C','G','T']
-##            pdb.set_trace()
+
             idx = actg.index(refb[i])
             caseR4 = np.zeros(4)
             controlR4 = np.zeros(4)
@@ -452,23 +427,12 @@ def write_dualvcf(outputFile, loc, call, refb, controlMu, controlR, controlN,\
             for d in xrange(3-idx):
                 caseR4[d+idx+1] = caseR[i,d+idx]
                 controlR4[d+idx+1] = controlR[i,d+idx]
-            if tag == 'somatic':
-                print ("chr%s\t%d\t.\t%c\t%s\t.\tPASS\t%s\tCOAF=%0.3f;CAAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
-                       % (chrom[i], pos[i], refb[i], altb[i], mtype[i],controlMu[i]*100.0, caseMu[i]*100.0,\
-                          controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
-                          caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
-                
-            elif tag == 'germline':
-                print ("chr%s\t%d\t.\t%c\t.\t.\tPASS\t%s\tCOAF=%0.3f;CAAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
-                       % (chrom[i], pos[i], refb[i], mtype[i], controlMu[i]*100.0, caseMu[i]*100.0,\
-                          controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
-                          caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
-            else:
 
-                print ("chr%s\t%d\t.\t%c\t%s\t.\tPASS\tDIFF\tCOAF=%0.3f;CAAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
-                       % (chrom[i], pos[i], refb[i], altb[i],controlMu[i]*100.0, caseMu[i]*100.0,\
-                          controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
-                          caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
+            print ("chr%s\t%d\t.\t%s\t%s\t.\tPASS\tCOAF=%0.3f;CAAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
+                   % (chrom[i], pos[i], refb[i], altb[i],controlMu[i]*100.0, caseMu[i]*100.0,\
+                      controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
+                      caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
+                
     vcfF.close()
 
 def write_vcf(outputFile, loc, call, refb, altb, caseMu, controlMu):
