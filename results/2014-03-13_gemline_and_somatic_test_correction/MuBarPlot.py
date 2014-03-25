@@ -79,7 +79,7 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
     # 95% credible interval
     alpha = 0.05
     pos = int(CallControlMu.shape[1]*alpha/2)
-    # pdb.set_trace()
+
     # sort along Gibbs samples
     ControlMu = np.sort(CallControlMu,axis=1)
     Control_yerr = np.array([np.mean(CallControlMu,1)-ControlMu[:,pos], ControlMu[:,CallControlMu.shape[1]-pos]-np.mean(CallControlMu,1)])
@@ -94,7 +94,7 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
 
         rects1 = ax.bar(ind, np.mean(CallControlMu,1), width, color='0.8', yerr=Control_yerr,ecolor='k')
         rects2 = ax.bar(ind+width, np.mean(CallCaseMu,1), width, color='0.5', yerr=Case_yerr,ecolor='k')
-        ax.set_xlim([0, 13])
+        ax.set_xlim([0, 12])
     
         ax.set_ylabel('Minor Allele Frequency')
         ax.set_xlabel("HG19 Genomic Location [chr7:154,700,000+X]")
@@ -112,18 +112,18 @@ def MuBarPlot(CallControlMu,CallCaseMu,Loc,title):
 
         Loclabel = [x.split(':')[1][4:] for x in Loc]
 
-        # rslabel = ['rs1239326', ' ' ,'rs1239324', '\nrs71534174' ,'rs35505514', ' ' , ' ' , ' ' , ' ' , ' ' ,'rs4398858', ' ']
+        rslabel = ['rs1239326', ' ' ,'rs1239324', '\nrs71534174' ,'rs35505514', ' ' , ' ' , ' ' , ' ' , ' ' ,'rs4398858', ' ']
  
 
-        # label = ['%s\n%s' %(Loclabel[i], rslabel[i]) for i in xrange(len(Loclabel))]
+        label = ['%s\n%s' %(Loclabel[i], rslabel[i]) for i in xrange(len(Loclabel))]
 
-        ax.set_xticklabels(Loclabel)
+        ax.set_xticklabels(label)
         
 
         lgd = ax.legend( (rects1[0], rects2[0]), ('Control', 'Case'), bbox_to_anchor=(0.85, 1.02, 0.15, .102),
-                   loc=4,ncol=1, mode="expand", borderaxespad=0., prop={'size':11})
+                   loc=4,ncol=1, mode="expand", borderaxespad=0., prop={'size':9})
 
-        plt.rcParams.update({'font.size': 11, 'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 9, 'font.family': 'serif'})
         fig.tight_layout(rect=[0, 0, 0.95, 0.9])
 
         plt.savefig(title, bbox = 'tight', bbox_extra_artists=(lgd,))
