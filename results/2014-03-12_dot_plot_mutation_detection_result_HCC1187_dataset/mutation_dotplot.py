@@ -65,9 +65,9 @@ def main():
 
 	Idx = [4,8,11,13,20,22,35,37,50,56,58]
 
-	ax0.text(Idx[0]-2.7, 5.3,'Idx:%d'%Idx[0],fontsize=10)
+	ax0.text(Idx[0]-2.7, 5.3,'Idx:%d'%Idx[0],fontsize=10, backgroundcolor = 'w')
 	for i in xrange(len(Idx)-1):
-		ax0.text(Idx[i+1]-0.7, 5.3,'%d'%Idx[i+1],fontsize=10)
+		ax0.text(Idx[i+1]-0.7, 5.3,'%d'%Idx[i+1],fontsize=10, backgroundcolor = 'w')
 
 	ax0.set_ylim([0,6])
 	ax0.set_xticks(np.arange(5, len(position)+5, 5.0))

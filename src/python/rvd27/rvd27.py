@@ -193,12 +193,12 @@ def somatic_test(controlHDF5Name, caseHDF5Name, alpha=0.05, tau= 0, N=1000,  out
              caseMu, caseMu0, caseR, caseN, N, somatic_roi)
 
     # test if controlMu is significantly higher than caseMu
-    # [call2, _ , _, _, _] = one_side_diff_test(alpha, loc, refb, altb, caseMu, caseMu0, caseR, caseN, \
-    #          controlMu, controlMu0, controlR, controlN, N, somatic_roi)
+    [call2, _ , _, _, _] = one_side_diff_test(alpha, loc, refb, altb, caseMu, caseMu0, caseR, caseN, \
+             controlMu, controlMu0, controlR, controlN, N, somatic_roi)
 
-    # call = [call1,call2]
-    # call = np.sum(call,0) > 0
-    call = call1
+    call = [call1,call2]
+    call = np.sum(call,0) > 0
+
     # write_dualvcf(outputFile,loc, call, refb, altb, np.mean(controlMu, axis=1), np.median(controlR,0), controlN, \
     #               np.mean(caseMu, axis=1), np.median(caseR,0), caseN, tau, alpha)
 
@@ -225,29 +225,28 @@ def somatic_test(controlHDF5Name, caseHDF5Name, alpha=0.05, tau= 0, N=1000,  out
     return loc, call, controlMu, caseMu, controlN, caseN
 
 
-# def diff_test(alpha = 0.05, controlHDF5Name = None, caseHDF5Name =None, diff_tau = 0, N = 1000,  outputFile='diffcalltable.vcf'):
-#     # Oneside posterior difference test in case when somatic test is not appropriate. Also compatible to synthetic data
-#     # The function will test if the caseMu is significantly higher than controlMu. 
-#     # If we want to test if controlMu is significantly higher than caseMu, we need to switch the place for controlHDF5Name and caseHDF5Name
-#     # since chi2 test will only apply to the second HDF5 file. 
+def disparity_test(controlHDF5Name, caseHDF5Name, alpha=0.05, tau= 0, N=1000,  outputFile='somaticcalltable.vcf'):
+    # Oneside posterior difference test in case when somatic test is not appropriate. Also compatible to synthetic data
+    # The function will test if the caseMu is significantly higher than controlMu. 
+    # If we want to test if controlMu is significantly higher than caseMu, we need to switch the place for controlHDF5Name and caseHDF5Name
+    # since chi2 test will only apply to the second HDF5 file. 
 
-#     logging.debug('Running posterior difference test on whether local mutation rate in sample %s is significantly higher than sample %s)'%(caseHDF5Name, controlHDF5Name))
+    logging.debug('Running posterior disparity test on whether local mutation rate in sample %s is significantly higher than sample %s)'%(caseHDF5Name, controlHDF5Name))
     
-#     loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
-#              caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
+    loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+             caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
 
-#     diffroi = [diff_tau, np.inf]
+    disroi = [tau, np.inf]
 
-#     call, chi2call , chi2P, bayescall, postP = one_side_diff_test(alpha, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
-#              caseMu, caseMu0, caseR, caseN, N, diffroi)
+    call, chi2call , chi2P, bayescall, postP = one_side_diff_test(alpha, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+             caseMu, caseMu0, caseR, caseN, N, disroi)
 
-#     write_dualvcf(outputFile, loc, call, refb, np.mean(controlMu, axis=1),\
-#                   np.median(controlR,0), controlN, np.mean(caseMu, axis=1), \
-#                   np.median(caseR,0), caseN, diff_tau = diff_tau, tag = 'diff', alpha=alpha, altb=altb )
+    write_dualvcf(outputFile,loc, call, refb, altb, np.mean(controlMu, axis=1), np.median(controlR,0), controlN, \
+                  np.mean(caseMu, axis=1), np.median(caseR,0), caseN, tau, alpha)
 
-#     # write_vcf(outputFile, loc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(controlMu, axis=1))
+    # write_vcf(outputFile, loc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(controlMu, axis=1))
 
-#     return loc, call, controlMu, caseMu, controlN, caseN,  chi2call , chi2P, bayescall, postP 
+    return loc, call, controlMu, caseMu, controlN, caseN,  chi2call , chi2P, bayescall, postP 
 
 def one_side_diff_test(alpha, loc, refb, altb, Mu1, Mu01, R1, N1, Mu2, Mu02, R2, N2, N, diffroi):
 
@@ -267,33 +266,6 @@ def one_side_diff_test(alpha, loc, refb, altb, Mu1, Mu01, R1, N1, Mu2, Mu02, R2,
 
     return call, chi2call , chi2P, bayescall, postP
 
-# def chi2combinetest(R, N, bayescall = 1, pvalue = 0.05):
-
-#     nRep = R.shape[0]
-#     J = R.shape[1]
-#     chi2Prep = np.zeros((J,nRep))
-#     chi2P = np.zeros((J,1))
-#     for j in xrange(J):
-#             chi2Prep[j,:] = np.array([chi2test(R[i,j,:] ) for i in xrange(nRep)] )
-#             if np.any(np.isnan(chi2Prep[j,:])):
-#                 chi2P[j] = np.nan
-#             else:
-#                 chi2P[j] = 1-ss.chi2.cdf(-2*np.sum(np.log(chi2Prep[j,:] + np.finfo(float).eps)), 2*nRep) # combine p-values using Fisher's Method
-
-#     nbayescall = sum(bayescall)
-#     if nbayescall < 1:
-#         nbayescall = 1
-
-#     if np.median(N) > 500: #Benjamini-Hochberg method FWER control
-#         chi2call = chi2P < pvalue/nbayescall
-#     else:
-#         chi2call = chi2P < pvalue
-
-#     chi2call = chi2call.flatten()
-#     chi2P = chi2P.flatten()
-
-#     return  chi2call, chi2P
-
 def chi2combinetest(R, N, bayescall = 1, pvalue = 0.05):
 
     nRep = R.shape[0]
@@ -311,11 +283,11 @@ def chi2combinetest(R, N, bayescall = 1, pvalue = 0.05):
     if nbayescall < 1:
         nbayescall = 1
 
-    # if np.median(N) > 500: #Benjamini-Hochberg method FWER control
-    #     chi2call = chi2P < pvalue/J
-    # else:
-    #     chi2call = chi2P < pvalue
-    chi2call = chi2P < pvalue/J
+    if np.median(N) > 500: #Benjamini-Hochberg method FWER control
+        chi2call = chi2P < pvalue/nbayescall
+    else:
+        chi2call = chi2P < pvalue
+
     chi2call = chi2call.flatten()
     chi2P = chi2P.flatten()
 
