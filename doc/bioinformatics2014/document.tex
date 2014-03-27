@@ -4,6 +4,7 @@
 \usepackage{amsmath}
 \usepackage{afterpage}
 \usepackage{algorithm}
+\usepackage{float}
 \usepackage{bbm}
 \usepackage{subfig}
 %\usepackage[font={small}]{caption}
@@ -33,8 +34,8 @@
 
 \section{Motivation:}Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Unlike research cell lines, clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. However, many variant calling algorithms are optimized to call single nucleotide polymorphisms in homogeneous rather than heterogeneous samples.
 
-%TODO Update the chinical dataset result
-\section{Results:}We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over a wide range of median read depth and minor allele frequency. We identify twelve mutations in the PAXP1 gene in a matched clinical breast ductal carcinoma tumor sample; two of which are loss-of-heterozygosity events.
+\section{Results:}We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over a wide range of median read depth and minor allele frequency. We apply our model and identify twelve mutations in the PAXP1 gene in a matched clinical breast ductal carcinoma tumor sample; two of which are loss-of-heterozygosity events.
+
 
 \section{Availability:}
 \href{http://genomics.wpi.edu/rvd2/rvd2.html}{http://genomics.wpi.edu/rvd2/rvd2.html}
@@ -54,7 +55,7 @@ Recently, researchers have developed algorithms to call low-frequency or rare va
 
 Several studies have compared the relative performance of these algorithms. \citet{spencer2013performance} demonstrated  that VarScan-somatic performed the best comparing with SAMtools, GATK and SPLINTER in detecting minor allele frequencies (MAFs) of 1\% to 8\%, with $ > $500× coverage required for optimal performance. However, \citet{spencer2013performance} also highlighted the fact that VarScan2 yielded more false positives at high read depth. \citet{Stead:2013fu} showed that VarScan-somatic outperformed Strelka and had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. %We test their performance on much lower MAF variants and across a wider range of coverage depths.
 
-The remainder of this article is organized as follows. In the next section we describe the statistical model structure of our new algorithm, RVD2. Then, we derive a sampling algorithm for computing the posterior distribution over latent variables in the model and use those samples in a Bayesian posterior distribution hypothesis test to call variants. We compare the performance of RVD2 to several other variant calling algorithms for a range of read depths and minor allele fractions. Finally, we show that RVD2 is able to call variants on a heterogeneous clinical sample and identify two novel loss-of-heterozygosity events. 
+The remainder of this article is organized as follows. In the next section we describe the statistical model structure of our new algorithm, RVD2. Then, we derive a sampling algorithm for computing the posterior distribution over latent variables in the model and use those samples in a Bayesian posterior distribution hypothesis test to call variants. We compare the performance of RVD2 to several other variant calling algorithms for a range of read depths and minor allele fractions. Finally, we show that RVD2 is able to call variants on a heterogeneous clinical sample and identify two novel loss-of-heterozygosity events.
 %TODO: Fixed this part
 %%%%%%%%%%%%%%%%%%
 % Model Structure
@@ -205,7 +206,7 @@ $\hat{M}_0 = \frac{ \hat{\mu}_0 (1 - \hat{\mu}_0 ) } {\frac{1}{J} \sum_{j=1}^J \
 % Sampling theta
 %%%%%%%%%%%%%%%%%%
 \subsection{Sampling from $p \left( \theta_{ij} |r_{ij},n_{ij},\mu_j,M \right)$}
-%TODO: double check if the posterior is correct
+
 Samples from the posterior distribution
 $p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j)$
 are drawn analytically because of the Bayesian conjugacy between the prior
@@ -213,9 +214,10 @@ $p(\theta_{ji} | \mu_j, M_j) \thicksim \text{Beta}(\mu_j, M_j)$
 and the likelihood
 $p(r_{ji} | n_{ji}, \theta_{ji}) \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$.
 The posterior distribution is
-\begin{equation}
-	p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j) \thicksim \text{Beta}\left( \frac{r_{ji} + M_j \mu_j}{n_{ji} + M_j} , n_{ji} + M_j\right).
-\end{equation}
+\begin{flalign}
+& p(\theta_{ji} | r_{ji}, n_{ji}, \mu_j, M_j)& \nonumber \\
+& \thicksim\text {Beta}\left( r_{ji} + M_j \mu_j , n_{ji}- r_{ji} + M_j (1-\mu_j)\right).&
+\end{flalign}
 
 %%%%%%%%%%%%%%%%%%
 % Sampling mu
@@ -242,12 +244,12 @@ We resample from the proposal if the sample is outside of the support of the pos
 % Posterior Distribution Test
 %%%%%%%%%%%%%%%%%%
 \subsection{Posterior Distribution Test}\label{sec:hypothesis_test}
-\subsubsection*{Posterior Somatic Test.}
+\subsubsection*{Posterior Difference Test.}
 Metropolis-within-Gibbs provides samples from the posterior distribution of $\mu_j$ given the case or control data. For notational simplicity, we define the random variables associated with these two distributions $\mu_j^{\text{case}}$ and $\mu_j^{\text{control}}$ and the associated samples as $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$.
 
 A variant is called if $\mu_j^{\text{case}} > \mu_j^{\text{control}}$ with high confidence,
 \begin{equation}\label{eqn:bayes_test}
-	\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}}  \geq \tau ) \approx \frac{1}{N_{\text{MH}}} \sum_{k=1}^{N_{\text{MH}}} \mathbbm{1}_{\tilde{\mu}_{jk}^{\text{case}} - \tilde{\mu}_{jk}^{\text{control}} \geq \tau } > 1-\alpha,
+	\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}}  > \tau ) \approx \frac{1}{N_{\text{MH}}} \sum_{k=1}^{N_{\text{MH}}} \mathbbm{1}_{\tilde{\mu}_{jk}^{\text{case}} - \tilde{\mu}_{jk}^{\text{control}} > \tau } > 1-\alpha,
 \end{equation}
 where $\tau$ is a detection threshold and $1-\alpha$ is a confidence level. We draw a sample from the posterior distribution $\tilde{\mu}_j^{\Delta} \triangleq \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}}$ by simple random sampling with replacement from $\tilde{\mu}_j^{\text{case}}$ and $\tilde{\mu}_j^{\text{control}}$.
 
@@ -258,7 +260,17 @@ The threshold, $\tau$, may be set to zero or optimized for a given median depth 
 
 While we are able to compute the optimal $\tau$ threshold for a test data set, in general we would not have access to $\tau^*$. With sufficient training data, one would be able to develop a lookup table or calibration curve to set $\tau$ based on read depth and MAF level of interest. Absent this information we set $\tau = 0$.
 
+\subsubsection*{Posterior Somatic Test.}
+
+Posterior Somatic Test is a two-sided posterior difference test using paired control-case sample. To identify somatic mutations, we consider scenarios when the case(tumor) error rate is lower than the control(germline) error rate (e.g. loss-of-heterozygosity) as well as scenarios when the case(tumor) error rate is higher than the control(germline) error rate (e.g. homozygous somatic mutation). The two hypothesis tests are then $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} > \tau ) > 1-\alpha$ and $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} < \tau ) > 1-\alpha$. Threshold $ \tau $ is set at zero.
+
 \subsubsection*{Posterior Germline Test.}
+
+Posterior Germline Test is a one-sided posterior distribution test using a single control sample. We call a germline mutation if $ \mu_j^{control} \geq \tau$ with high confidence,
+
+\begin{equation}\label{eqn:germ_test}
+	\Pr(\mu_j^{\text{control}}  \geq \tau ) \approx \frac{1}{N_{\text{MH}}} \sum_{k=1}^{N_{\text{MH}}} \mathbbm{1}_{\tilde{\mu}_{jk}^{\text{control}} \geq \tau } > 1-\alpha,
+\end{equation}
 
 %%%%%%%%%%%%%%%%%%
 % Chi^2 Test
@@ -281,8 +293,8 @@ We control for multiple hypothesis testing in two ways. We use Fisher's combined
 	X_j^2 = -2 \sum_{i=1}^N \ln(p_{ji}).
 \end{equation}
 
-Equation~\eqref{eqn:fisher_combined} gives a test statistic that follows a $\chi^2$ distribution with $2N$ degrees of freedom when the null hypothesis is true. If the sample average is higher than 200, we use the Benjamini-Hochberg method to control the family-wise error rate (FWER) over positions that have been called by the posterior distribution test \citep{benjamini1995controlling, efron2010large}.
-%TODO: Bonferroni correction, set an approapriate threshold for read depth.
+Equation~\eqref{eqn:fisher_combined} gives a test statistic that follows a $\chi^2$ distribution with $2N$ degrees of freedom when the null hypothesis is true. If the sample average depth is higher than 500, we use the Benjamini-Hochberg method to control the family-wise error rate (FWER) over positions that have been called by the posterior distribution test \citep{benjamini1995controlling, efron2010large}. The average depth threshold is set because Benjamini-Hochberg method is a highly conservative method and will remove many true calls when the read depth is not high enough.
+
 %%%%%%%%%%%%%%%%%%
 % Data Sets
 %%%%%%%%%%%%%%%%%%
@@ -307,26 +319,16 @@ Sequencing libraries were prepared according to the protocol described in the or
 
 \section{Results}
 
+We tested RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $ \tilde{\mu}^{\Delta} =  \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}}$ to estimate the posterior probability of a variant.
 
-We tested RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $\mu^{\Delta}$ to estimate the posterior probability of a variant.
-
-%TODO: change the result
-We used RVD2 to identify germline and somatic mutations in the diploid HCC1187 sample. To identify germline mutations, we computed the empirical posterior mean $ \bar{\mu}_j^{control} $ in the control data and test which interval it falls in, where the intervals are: homozygous reference $[0, 0.05)$, heterozygous mutant $[0.05, 0.95)$, and homozygous mutant $[0.95, 1.0]$. We set the threshold between homozygous reference and heterozygous mutant at a relatively high 0.05 considering the low average read depth (40x for the normal sample and 90x for the tumor sample), likewise for the border between heterozygous and homozygous mutant at 0.95. We reported the 95\% credible interval to shown the dominant region for $ \hat{\mu}_j^{control} $ in called positions afterwards.
-
-To identify somatic mutations, we considered scenarios when the case(tumor) error rate is lower than the control(germline) error rate (e.g. loss-of-heterozygosity) as well as scenarios when the case(tumor) error rate is higher than the control(germline) error rate (e.g. homozygous somatic mutation). The two hypothesis tests are then $\Pr( \mu_j^{\Delta} \geq \tau ) > 1-\alpha$ and $\Pr( \mu_j^{\Delta} \leq \tau ) > 1-\alpha$. The size of the test is $\alpha=0.05$. 
-
-$ \chi^2 $ test was performed with p-value set at 0.05 after posterior distribution test. In the synthetic data we used Bejamini-Hochberg method to control the family-wise error rate over positions called by posterior distribution test. However, we didn't apply Benjamini-Hochberg method to clinical HCC1187 sequence data as Benjamini-Hochberg method is well-recognized very conservative, and it restraints RVD2 from detecting low rate mutated positions when read depth is as low as 90x.
-
-
-%TODO: No bonferoni correction for the chi2 test
-
+We performed posterior disparity test on synthetic data to identify mutations given it is a haploid DNA sequence. We set the threshold $ \tau =0 $ and the size of the test $ \alpha = 0.05$. We used RVD2 to identify somatic and germline mutations in the diploid HCC1187 sample. In the posterior somatic test, we set the threshold $ \tau =0 $ and the size of the test $ \alpha = 0.05$. In the posterior germline test, We set  the threshold $ \tau =0.05 $ considering the low average coverage (40x). The size of the test is set at $ \alpha = 0.15$, higher than the size of somatic test. We are less confident on the germline test because we only use control sample in the germline test compared to normal-tumor paired sample in somatic test. We performed $ \chi^2 $ non-uniformity test along all the posterior density test.
 
 \subsection{Performance with read depth}\label{sec:read_depth}
 
 \begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=0.5\textwidth]{pdf_figs/ROC_without_chi2.pdf}
-\caption{ROC curve varying read depth showing detection performance. Each subfigure shows ROC curves across four different read depths for one MAF level. Within one subfigure it can be seen that the performance improves monotonically with read depth. Across different subfigures, it can be seen that the performance improves with MAF level.}
+\caption{ROC curve varying read depth showing detection performance. Each subfigure shows ROC curves across four different read depths for one MAF level. Within one subfigure，the performance improves monotonically with read depth. Across different subfigures, the performance improves with MAF level.}
 \label{fig:ROC}
 \end{center}
 \end{figure}
@@ -363,19 +365,20 @@ We compare the empirical performance of RVD2 to other variant calling algorithms
 \label{tbl:comparison_fdr}
 \end{center}
 \end{figure*}
-Figure~\ref{tbl:comparison_ss} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples with much success. GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, those algorithms are expected to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
+Figure~\ref{tbl:comparison_ss} shows that samtools, GATK and VarScan2-mpileup all have similar performance. They call the 100\% MAF experiment well even at low depth, but are unable to identify true variants in mixed samples. GATK, samtools and VarScan2-mpileup are optimized to call genotypes on pure samples. Therefore, those algorithms are expected to perform well on the 100\% dilution (pure mutant) sample and poorly on heterogeneous samples. VarScan2-somatic is able to call more mixed samples. However, as the read depth increases the specificity degrades. Strelka is able to call 10\% MAF variants with good performance, but is limited at 1\% MAF and below. muTect has good performance across a wide range of MAF levels. But even at the highest depth only has around 0.5 sensitivity for low MAF levels.
 
-The statistics for RVD is an average statistics as RVD uses six control replicates to estimate the model but returns statistics separately for three set of pair-end case replicates. RVD performed the best among all algorithms when the read depth is as high as 40000x. RVD correctly called all the mutated positions across all MAF levels with no false positives when MAF level is 0.3\% or lower. RVD tends to be a little bit over sensitive when the MAF level is 1.0\% or higher, which causes specificity slightly lower than 1.00. However, RVD program fails when the depth is unable to measure the baseline error rate and is not able to call any mutations.
+The statistics for RVD is an average statistics as RVD uses six control replicates to estimate the model but returns statistics separately for three sets of pair-end case replicates. RVD performed the best among all algorithms when the read depth is as high as 40000x. RVD called all the mutated positions across all MAF levels with no false positives when MAF level is 0.3\% or lower. RVD calls some false positives when the MAF level is 1.0\% or higher, which causes specificity slightly lower than 1.00. RVD program fails and can not call any mutations when the depth is unable to measure the baseline error rate.
 
 The sensitivity for RVD2 with $\tau=0$ is low for low read depths and MAF levels and $N=1$ case and control sample. The sensitivity increases considerably with read depth at a slight expense to specificity. With $\tau^*$ the performance is much better with high sensitivity and specificity across a wide range of read depths and MAFs. However, in practice one may not know the optimal $\tau^*$ a-priori. With $N=6$ replicates, the sensitivity increases considerably for low MAF variants with a slight degradation in specificity due to false positives. When the median read depth is at least $10\times$ the MAF, RVD2 has higher specificity than all of the other algorithms tested and has a lower sensitivity in only three cases.
-\begin{figure*}[!bpth]
-    \centering
-    \subfloat[\label{fig:brca_MAF:a}]{{\includegraphics[width=0.65\textwidth]{pdf_figs/HCC1187_MuBarPlot.pdf} }}%
-    %
-    \subfloat[ \label{fig:brca_MAF:b}]{{\includegraphics[width=0.3\textwidth]{pdf_figs/RVD2calltable.pdf} }}%
-    \caption{Germline and Somatic mutations called by RVD2 in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. HG19 Genomic locations are chr7:154,700,000+X. (a) Estimated minor allele fraction for called variants in PAXIP1 gene. Star (*) indicates $\mu^{\text{case}}$ is significantly different from $ \mu^{\text{control}}$. The vertical lines represent 95\% credible interval around mean MAF. (b) Mutation type classified by RVD2. RVD2 identified twelve variants in the 44kbp PAXIP1 gene. There were eight germline variants and eight somatic variants. Especially, three heterozygous germline variants had a loss-of-heterozygosity (LOH) in the tumor sample. The dbSNPv138 column shows the identities for positions found to be common populations SNPs according to dbSNPv138.}%
-    \label{fig:brca_MAF}%
+\begin{figure*}[!hbpt]
+\begin{center}
+\includegraphics[width=0.85\textwidth]{pdf_figs/HCC1187_MuBarPlot.pdf}
+\caption{Estimated minor allele fraction for Germline and Somatic mutations called by RVD2 in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Blue diamonds ($\diamond$) indicates germline mutations, where $\mu^{\text{control}}$ is significantly different from the reference sequence. Red stars (*) indicates somatic mutations, where $\mu^{\text{case}}$ is significantly different from $ \mu^{\text{control}}$. The  vertical lines represent 95\% credible interval around posterior mean MAF. Five positions are common populations SNPs according to dbSNPv138, and the identities are shown below the positions.}
+\label{fig:brca_MAF}
+\end{center}
 \end{figure*}
+
+
 \subsubsection*{False Discovery Rate Comparison}
 
 Figure~\ref{tbl:comparison_fdr} shows the false discovery rate for RVD2 compared to samtools, GATK, varscan, Strelka and muTect. Blank cells indicate no positive calls were made.
@@ -384,7 +387,7 @@ Samtools performs well on 100\% MAF sample and performance improves for read dep
 
 VarScan2-somatic is able to make calls for all but the lowest MAF and coverage level. However, the FDR is high due to many false positives. Interestingly, at a MAF of 100\% the FDR is zero for lowest read depth and over 0.9 for the highest read depth. Strelka has a better FDR than the samtools, GATK or Varscan2-somatic algorithms for almost all read depths at the 10\% and 100\% MAF. However, it does not call any variants at or below 1\% MAF.  muTect has the best FDR performance of the other algorithms we tested over a wide range of MAF and depths. But the FDR level is relatively high at around 0.7 for 0.1\% -- 1\% MAF and 0.3 for 10\% -- 100\% MAF. RVD has best FDR performance in the high read depth for 0.1\% -- 1\% MAF levels. The FDR increases to around 0.3 for 10\% -- 100\% MAF in the high read depth.
 
-RVD2 has a lower FDR than other algorithms when the read depth is greater than $10\times$ the MAF with $N=1$ and $\tau$ set to the default value of zero or to the optimal value. The FDR is higher when $N=6$ because the variance of the control error rate distribution $P(\mu_j^{\text{control}} | r^{\text{control}})$ is smaller. The smaller variance yields improvements in sensitivity at the expense of more false positives. Since the FDR only considers positive calls, the performance degrades.
+RVD2 has a lower FDR than other algorithms when the read depth is greater than $10\times$ the MAF with $N=1$ and $\tau$ set to the default value of zero or to the optimal value. The FDR is higher when $N=6$ because the variance of the control error rate distribution $P(\mu_j^{\text{control}} | r^{\text{control}})$ is smaller. The smaller variance yields improvements in sensitivity at the expense of more false positives. Since the FDR only considers positive calls, the performance by that measure degrades.
 
 \subsection{HCC1187 primary ductal carcinoma sample}\label{sec:brca}
 \subsubsection{Performance of RVD2.}
@@ -398,9 +401,9 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
     \label{fig:brca_dot}%
 \end{figure*}
 
-RVD2 identified twelve variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. There were eight germline variants and eight somatic mutations in the twelve variants. Especially, three heterozygous germline variants had a loss-of-heterozygosity (LOH) in the tumor sample.
-
-Figure~\ref{fig:brca_MAF:a} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899 C$>$T, chr7:154753635 T$>$C and chr7:154780960 C$>$T were called germline homozygous mutations. Positions chr7:154749704, chr7:154754371 and chr7:154758813, chr7:154766700, chr7:154781769 were called heterozygous in the normal sample. Positions chr7:154749704, chr7:154753635 T$>$C, chr7:154754371 T$>$C, chr7:154758813 G$>$A, chr7:154760439 A$>$C, chr7:154766732,  chr7:154766832, chr7:154777118 were called significantly different in tumor and normal sample MAF. Positions chr7:154749704, chr7:154754371 T$>$C and chr7:154758813 G$>$A were called loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the Figure~\ref{fig:brca_MAF:b}. The read depth distribution for positions called by RVD2 are provided in Supplementary Table 1 for specificity validation. 
+RVD2 identified twelve variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. There were eight germline variants and eight somatic mutations in the twelve variants. %Especially, two heterozygous germline variants had a loss-of-heterozygosity (LOH) in the tumor sample.
+%TODO :check with pos 154749704G>G in somatic
+Figure~\ref{fig:brca_MAF:a} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions\footnote{The notation format is Chromosome:PositionReference\textgreater ControlMutation.} chr7:154743899C\textgreater T, chr7:154749704G\textgreater A, chr7:154753635T\textgreater C, chr7:154754371T\textgreater C, chr7:154758813G\textgreater A, chr7:154766700C\textgreater A, chr7:154780960C\textgreater T, and chr7:154781769G \textgreater T were called germline mutations. Positions\footnote{The notation format is Chromosome:PositionReference\textgreater TumorMutation.} chr7:154749704G\textgreater G, chr7:154753635T\textgreater C, chr7:154754371T\textgreater C, chr7:154758813G\textgreater A, chr7:154760439A\textgreater C, chr7:154766732T\textgreater G,  chr7:154766832A\textgreater C, chr7:154777118A\textgreater C were identified as significantly different in tumor and normal sample MAF and called somatic mutation. Positions chr7:154754371 and chr7:154758813 were considered loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the Figure~\ref{fig:brca_MAF:b}. The read depth distribution for positions called by RVD2 are provided in Supplementary Table 1 for validation. 
 %According to dbSNPv138 chr7:154743899 is rs1239326, chr7:154753635 is rs1239324, chr7:154754371 is rs71534174, chr7:154758813 is rs35505514, and chr7:154780960 is rs4398858.
 
 \subsubsection{Performance comparison with other algorithms.}
@@ -409,13 +412,13 @@ We ran muTect and VarScan2-somatic to call mutations in the PAXIP1 gene in HCC11
 
 The mutations called by RVD2 and muTect are the most consistent among all the techniques. RVD2 detected twelve germline and somatic mutations, while muTect reported eleven, ten in common. In the disagreements, RVD2 did not call position 50 while muTect did not call position 37 and 58. Referring to the depth distribution shown in Figure~\ref{fig:brca_dot:b}, it can be seen that position 37 and 58 are more likely mutated while position 50 is less likely mutated. 
 
-Strelka was the least sensitive algorithms among all the algorithms. According to the technical report, Strelka identified position 22 (chr7:154760439) as variant, but did not call any other variants. In particular Strelka missed the three LOH events called by RVD2. On the contrary, VarScan2-somatic called most positions among all algorithms, sixty positions as shown in Figure~\ref{fig:brca_dot:a}. VarScan2-somatic  detected all the positions called by RVD2 except position 35, which turns out to be a very likely mutation given the depth distribution in Figure~\ref{fig:brca_dot:b}. On the other side, VarScan2-somatic reported fifty positions which were not called by any other three algorithms. The read depth in Supplementary Table 1 suggestions that these positions are very likely to be false positives. The fact that VarScan2-somatic can be over-sensitive has appeared in synthetic dataset analysis. As shown in Figure~\ref{tbl:comparison_fdr}, the False Discovery Rate for VarScan2-somatic at read depth 53 MAF level 1.0\% is as high as 1.00.  \citet{spencer2013performance} also mentioned that VarScan2 has tendency to be over-sensitive at high read depth. 
+Strelka was the least sensitive algorithms among all the algorithms. According to the technical report, Strelka identified position 22 (chr7:154760439) as variant, but did not call any other variants. In particular Strelka missed the two LOH events called by RVD2. On the contrary, VarScan2-somatic called most positions among all algorithms, sixty positions as shown in Figure~\ref{fig:brca_dot:a}. VarScan2-somatic  detected all the positions called by RVD2 except position 35, which turns out to be a very likely mutation given the depth distribution in Figure~\ref{fig:brca_dot:b}. On the other side, VarScan2-somatic reported fifty positions which were not called by any other three algorithms. The read depth in Supplementary Table 1 suggestions that these positions are very likely to be false positives. The fact that VarScan2-somatic can be over-sensitive has appeared in synthetic dataset analysis. As shown in Figure~\ref{tbl:comparison_fdr}, the False Discovery Rate for VarScan2-somatic at read depth 53 MAF level 1.0\% is as high as 1.00.  \citet{spencer2013performance} also mentioned that VarScan2 has tendency to call many false positives at high read depth. 
 % To compare the performance of RVD2 with other algorithms, we used Strelka to identify mutationin the same sample. Strelka found three positions: chr7:154754371, chr7:154758813 and chr7:154760439.
 
 \section{Discussion}
 We describe here a novel algorithm for model estimation and hypothesis testing for identifying single-nucleotide variants in heterogeneous samples using next-generation sequencing data. Our algorithm has a higher sensitivity and specificity than many other approaches for a range of read depths and minor allele frequencies.
 
-Our inference algorithm uses Gibbs sampling to estimate the RVD2 hierarchical empirical Bayes model. This sampling procedure provides a guarantee to identify the global optimal parameter settings asymptotically. However, it may require many samples to achieve that guarantee causing the algorithm to be slower than other deterministic approaches. We opted for this balance of speed and accuracy because computational time is often not limiting and the cost of a false positive or false negative greatly outweighs the cost of more computation. Another factor that can affect the speed of RVD2 is the number of Metropolis-Hasting sample within one Gibbs sampling run. However, RVD2 is able to use multiple cores in parallel ( no more than the number of Metropolis-Hasting samples), which can significantly improve time efficiency. on a computational mode with 64 2.34GHz processor and 256Gb of RAM, RVd2 takes around 10 minutes to analyze the 400bp long synthetic data for one dilution rate and one downsampling rate. The memory requirement is no higher than the size of the gene sequence times the number of Gibbs samples. We are currently developing a variational method to estimate RVD2, aiming at decreasing time complexity. 
+Our inference algorithm uses Gibbs sampling to estimate the RVD2 hierarchical empirical Bayes model. This sampling procedure provides a guarantee to identify the global optimal parameter settings asymptotically. However, it may require many samples to achieve that guarantee causing the algorithm to be slower than other deterministic approaches. We opted for this balance of speed and accuracy because computational time is often not limiting and the cost of a false positive or false negative greatly outweighs the cost of more computation. Another factor that can affect the speed of RVD2 is the number of Metropolis-Hasting sample within one Gibbs sampling run. However, RVD2 is able to use multiple cores in parallel ( no more than the number of Metropolis-Hasting samples), which can significantly improve time efficiency. on a computational mode with 64 2.34GHz processor and 256Gb of RAM, RVD2 takes around 10 minutes to analyze the 400bp long synthetic data for one dilution rate and one downsampling rate. The memory requirement is no higher than the size of the gene sequence times the number of Gibbs samples. We are currently developing a variational method to estimate RVD2, aiming at decreasing time complexity. 
 
 We have focused on the statistical model and hypothesis test in this study and our results do not include any pre-filtration of erroneous reads or post-filtration of mutation calls beyond a simple quality score threshold. Incorporation of such data-cleaning steps will likely improve the accuracy of the algorithm.
 
