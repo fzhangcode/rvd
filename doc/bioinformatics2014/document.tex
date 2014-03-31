@@ -262,11 +262,11 @@ While we are able to compute the optimal $\tau$ threshold for a test data set, i
 
 \subsubsection*{Posterior Somatic Test.}
 
-We use a two-sided posterior difference test using control and case samples to test for somatic mutations. We consider scenarios when the case(tumor) error rate is lower than the control(germline) error rate (e.g. loss-of-heterozygosity) as well as scenarios when the case(tumor) error rate is higher than the control(germline) error rate (e.g. homozygous somatic mutation). The two hypothesis tests are then $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} > \tau ) > 1-\alpha$ and $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} < \tau ) > 1-\alpha$. We typically set the hreshold $ \tau $ to zero.
+We use a two-sided posterior difference test with control and case paired samples to identify somatic mutations. We consider scenarios when the case(tumor) error rate is lower than the control(germline) error rate (e.g. loss-of-heterozygosity) as well as scenarios when the case(tumor) error rate is higher than the control(germline) error rate (e.g. homozygous somatic mutation). The two hypothesis tests are then $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} > \tau ) > 1-\alpha$ and $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} < \tau ) > 1-\alpha$. We typically set the hreshold $ \tau $ to zero.
 
 \subsubsection*{Posterior Germline Test.}
 
-We use a one-sided posterior distribution test using a single control sample to identify germline mutations. We call a germline mutation if $ \mu_j^{control} \geq \tau$ with high confidence,
+We use a one-sided posterior distribution test with a single control sample to identify germline mutations. We call a germline mutation if $ \mu_j^{control} \geq \tau$ with high confidence,
 
 \begin{equation}\label{eqn:germ_test}
 	\Pr(\mu_j^{\text{control}}  \geq \tau ) \approx \frac{1}{N_{\text{MH}}} \sum_{k=1}^{N_{\text{MH}}} \mathbbm{1}_{\tilde{\mu}_{jk}^{\text{control}} \geq \tau } > 1-\alpha.
@@ -312,9 +312,9 @@ Two 400bp DNA sequences that are identical except at 14 loci with variant bases 
 
 \subsection{HCC1187 Sequence Data}
 \subsubsection*{Experimental process.}
-The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}. The HCC1187 cell line was derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. The estimated tumor purity was reported to be 0.8. Matched normal cells were derived from lymphoblastoid cells from peripheral blood. 
+The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}. The HCC1187 cell line was derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. The estimated tumor purity was reported to be 0.8. Matched normal cells were derived from lymphoblastoid cells from peripheral blood. Sequencing libraries were prepared according to the protocol described in the original technical report~\citep{hcc1187techreport}.
 \subsubsection*{Computational process.}
-Sequencing libraries were prepared according to the protocol described in the original technical report~\citep{hcc1187techreport}. The raw FASTQ read files were aligned to hg19 using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. The aligned data had an average read depth of 40x for the normal sample and 90x for the tumor sample with about 96\% coverage with 10 or more reads. We used samtools mpileup to generate pileup files using hg19 as reference sequence~\citep{Navin:2010gu}.
+ The raw FASTQ read files were aligned to hg19 using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. The aligned data had an average read depth of 40x for the normal sample and 90x for the tumor sample with about 96\% coverage with 10 or more reads. We used samtools mpileup to generate pileup files using hg19 as reference sequence~\citep{Navin:2010gu}.
 %Not sure the author is correct
 % HCC1187BL origin: http://www.atcc.org/products/all/CRL-2323.aspx
 
@@ -323,7 +323,7 @@ Sequencing libraries were prepared according to the protocol described in the or
 
 We tested RVD2 using synthetic DNA and data from a primary ductal carcinoma sample. The inference algorithm parameters were set to yield $4,000$ Gibbs samples with a 20\% burn-in and $2\times$ tinning rate for a final total of $1,600$ samples. We drew $1,000$ samples from $ \tilde{\mu}^{\Delta} =  \tilde{\mu}_j^{\text{case}} - \tilde{\mu}_j^{\text{control}}$ to estimate the posterior probability of a variant.
 
-We performed the posterior distribution test for somatic mutations on the synthetic data set to identify mutations in the haploid DNA sequence. We set the threshold $ \tau =0 $ and the size of the test $ \alpha = 0.05$. 
+We performed the posterior difference test to identify mutations in the haploid synthetic data. We set the threshold $ \tau =0 $ and the size of the test $ \alpha = 0.05$.
 
 For the HCC1187 data set, we identified both somatic and germline mutations. In the posterior somatic test, we set the threshold $ \tau =0 $ and the size of the test $ \alpha = 0.05$. In the posterior germline test, We set  the threshold $ \tau =0.05 $ considering the low average coverage (40x). The size of the test is set at $ \alpha = 0.15$. We performed $ \chi^2 $ non-uniformity test after the posterior density tests.
 
@@ -340,8 +340,6 @@ For the HCC1187 data set, we identified both somatic and germline mutations. In 
 % from folder '2013-11-24_six_replicates_Compute_ROC_Synthetic_Qsd_0_1'
 We generated receiver-operating characteristic curves (ROCs) for a range of median read depth and a range of minor allele frequencies (MAFs). For these ROC curves, we used the posterior density test without the $\chi^2$ test to evaluate the performance of posterior density test individually. Figure~\ref{fig:ROC} shows ROC curves generated by varying the threshold $\tau$ with a fixed $\alpha=0.05$. Figure~\ref{fig:ROC}A shows ROC curves for a true 0.1\% MAF for a range of median coverage depths. At the lowest depth the sensitivity and specificity is no better than random. However, we would not expect to be able to call a 1 in 1000 variant base with a coverage of only 43. The performance improves monotonically with read depth. Figures~\ref{fig:ROC}B-C show a similar relationship between coverage depth and accuracy for higher MAFs.
 
-
-
 \subsection{Empirical performance compared with other algorithms}\label{sec:comparison}
 
 We compare the empirical performance of RVD2 to other variant calling algorithms using the synthetic DNA data set by the false discovery rate and sensitivity/specificity. Among these algorithms, Samtools and GATK are optimized for homogeneous samples, while RVD, VarScan2 Somatic, Strelka and muTect are have good performance to call variants in heterogeneous samples. In a research applications, the false discovery rate is a more relevant performance metric because the aim is generally to identify interesting variants. The sensitivity/specificity metric is more relevant in clinical applications where one is more interested in correctly calling all of the positive variants and none of the negatives. GATK, Varscan2, Strelka and muTect are only able to make use of one case and cone control sample, so we provide results of RVD2 with the same data ($N=1$) for comparison.
@@ -350,9 +348,8 @@ We compare the empirical performance of RVD2 to other variant calling algorithms
 
 % from folder 'rvd2\results\2013-09-19_operating_characteristics'
 % rvd2 data are from folder '2013-11-12_one_replicate_optT_with_chi','2013-11-12_one_replicate_T_zero_with_chi2','2013-11-15_six_replicates_optT_with_chi2','2013-11-15_six_replicates_T_zero_with_chi2'
-
 % from folder 'rvd2\results\2013-09-19_operating_characteristics'
-%\afterpage{\clearpage}
+
 \subsubsection*{Sensitivity/Specificity Comparison}
 
 \begin{figure*}[!htpb]
@@ -379,7 +376,7 @@ RVD2 has a high sensitivity and specificity for a broad range of read depths and
 
 \begin{figure*}[!hbpt]
 \begin{center}
-\includegraphics[width=0.85\textwidth]{pdf_figs/HCC1187_MuBarPlot.pdf}
+\includegraphics[width=1\textwidth]{pdf_figs/HCC1187_MuBarPlot.pdf}
 \caption{Estimated minor allele fraction for germline and somatic mutations called by RVD2 in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. Blue diamonds ($\diamond$) indicates germline mutations, where $\mu^{\text{control}}$ is significantly different from the reference sequence. Red stars (*) indicates somatic mutations, where $\mu^{\text{case}}$ is significantly different from $ \mu^{\text{control}}$. The  vertical lines represent 95\% credible interval around posterior mean MAF. Five positions are common population SNPs according to dbSNPv138, and the identities are shown below the positions.}
 \label{fig:brca_MAF}
 \end{center}
@@ -408,7 +405,7 @@ RVD2 has a lower FDR than other algorithms when the read depth is greater than $
 \end{figure*}
 
 RVD2 identified twelve variants in the 44kbp PAXIP1 gene from chr7:154738059 to chr7:154782774. There were eight germline variants and eight somatic mutations. %Especially, two heterozygous germline variants had a loss-of-heterozygosity (LOH) in the tumor sample.
-Figure~\ref{fig:brca_MAF:a} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899C\textgreater T, chr7:154749704G\textgreater A, chr7:154753635T\textgreater C, chr7:154754371T\textgreater C, chr7:154758813G\textgreater A, chr7:154766700C\textgreater A, chr7:154780960C\textgreater T, and chr7:154781769G \textgreater T were called germline mutations. Positions chr7:154749704G\textgreater G, chr7:154753635T\textgreater C, chr7:154754371T\textgreater C, chr7:154758813G\textgreater A, chr7:154760439A\textgreater C, chr7:154766732T\textgreater G,  chr7:154766832A\textgreater C, chr7:154777118A\textgreater C were identified as significantly different in tumor and normal sample MAF and called somatic mutation. Positions chr7:154754371 and chr7:154758813 were considered loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the Figure~\ref{fig:brca_MAF:b}. The read depth distribution for positions called by RVD2 are provided in Supplementary Table 1. 
+Figure~\ref{fig:brca_MAF:a} shows the estimated minor allele frequencies for the normal and tumor samples at the called locations. Positions chr7:154743899C\textgreater T, chr7:154749704G\textgreater A, chr7:154753635T\textgreater C, chr7:154754371T\textgreater C, chr7:154758813G\textgreater A, chr7:154766700C\textgreater A, chr7:154780960C\textgreater T, and chr7:154781769G \textgreater T were called germline mutations. Positions chr7:154749704G\textgreater G, chr7:154753635T\textgreater C, chr7:154754371T\textgreater C, chr7:154758813G\textgreater A, chr7:154760439A\textgreater C, chr7:154766732T\textgreater G,  chr7:154766832A\textgreater C, chr7:154777118A\textgreater C were identified as significantly different in tumor and normal sample MAF and called somatic mutation. Positions chr7:154754371 and chr7:154758813 appears to be loss-of-heterozygosity events. Some of these mutations are also found to be common population SNPs according to dbSNPv138. The corresponding identities are shown in the Figure~\ref{fig:brca_MAF:b}. The read depth distribution for positions called by RVD2 are provided in Supplementary Table 1. 
 %According to dbSNPv138 chr7:154743899 is rs1239326, chr7:154753635 is rs1239324, chr7:154754371 is rs71534174, chr7:154758813 is rs35505514, and chr7:154780960 is rs4398858.
 
 \subsubsection{Performance comparison with other algorithms.}

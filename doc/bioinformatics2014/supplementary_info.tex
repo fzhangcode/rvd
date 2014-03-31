@@ -36,7 +36,7 @@
     \quad
     \quad
     \subfloat[ \label{fig:brca_MAF:b}]{{\includegraphics[width=0.7\textwidth]{pdf_figs/GMexample.pdf} }}%
-    \caption{(A) RVD2 Graphical Model. (B) Example to illustrate the proposal graphical model and generative process. Here we want to generate a simulation sample with 3 replicates, and each replicate is a 5bp long sequence. Therefore, we have $ J = 5 $, $N = 3$. The hyperparameters in orange, $\mu_0 \in \RR^{1 \times 1}$, $M_0 \in \RR^{1 \times 1}$, $M \in \RR^{5 \times 1}$, $n \in \RR^{5 \times 3}$ are set. (1) Sample the local error rate $\mu \in \RR^{5 \times 1}$ by drawing random numbers $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$. (2) Use $\mu $ and $ M $ to sample $\theta \in \RR^{5 \times 3}$ by drawing random samples $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$. (3) Use $\theta \in \RR^{5 \times 3}$ and $n \in \RR^{5 \times 3}$ to sample $r \in \RR^{5 \times 3}$ by drawing random numbers $r_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$.} 
+    \caption{(A) RVD2 Graphical Model. (B) Example to illustrate the proposal graphical model and generative process. Here we want to generate a simulation sample with 3 replicates, and each replicate is a 5bp long sequence. Therefore, we have $ J = 5 $, $N = 3$. The hyperparameters in orange, $\mu_0 \in \RR^{1 \times 1}$, $M_0 \in \RR^{1 \times 1}$, $M \in \RR^{5 \times 1}$ are set. $n \in \RR^{5 \times 3}$ in the generative process is given as well. The generative process is: (1) Sample the local error rate $\mu \in \RR^{5 \times 1}$ by drawing random numbers $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$. (2) Use $\mu $ and $ M $ to sample $\theta \in \RR^{5 \times 3}$ by drawing random samples $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$. (3) Use $\theta \in \RR^{5 \times 3}$ and $n \in \RR^{5 \times 3}$ to sample $r \in \RR^{5 \times 3}$ by drawing random numbers $r_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$.} 
     \label{fig:brca_MAF}%
 \end{figure}
 
@@ -118,7 +118,7 @@ Figure~\ref{fig:MAF} shows the posterior mean and 95\% credible intervals for $\
 %
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=120mm]{pdf_figs/Synthetic_Mubarplot_MAF1_0_Depth5584.pdf}
+\includegraphics[width=1\textwidth]{pdf_figs/Synthetic_Mubarplot_MAF1_0_Depth5584.pdf}
 \caption{Estimated minor allele fraction for called variants in 1.0\% dilution.}
 \label{fig:MAF}
 \end{center}
@@ -145,13 +145,13 @@ We tested VarScan2 somatic on our synthetic dataset. The parameter --normal-puri
 \paragraph{\textbf{Strelka and muTect}}
 Since configuration and Analysis for Strelka and muTect is standardized and no parameter needs to be specified, we installed these two programs and ran them on our data set separately.
 
-Samtools mpileup and GATK can accept multiple "tumor'' replicates for variant calling, so we fed six bam files from each case replicate group to mpileup. VarScan2-mpileup takes multiple ``tumor-normal'' pair replicates so we passed six pair replicates to each algorithm. Varscan2-somatic, strelka and muTect do not accept replicate data for the ``normal" or ``tumor" bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
+Samtools mpileup and GATK can accept multiple tumor replicates for variant calling, so we fed six bam files from each case replicate group to mpileup. VarScan2-mpileup takes multiple tumor-normal pair replicates so we passed six pair replicates to each algorithm. Varscan2-somatic, strelka and muTect do not accept replicate data for the normal or tumor bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
 
 
 \section{histogram of $ \hat{\mu}_j $ for somatic mutations called by rvd2 in the 44kbp paxip1 gene from chr7:154738059 to chr7:154782774 in hcc1187 dataset}
 \begin{figure}[H]
 \begin{center}
-\includegraphics[width=120mm]{pdf_figs/HCC1187_histogram_pos.pdf}
+\includegraphics[width=1\textwidth]{pdf_figs/HCC1187_histogram_pos.pdf}
 \caption{Histogram of $ \hat{\mu}_j $ for positions where $\mu^{\text{case}}$ is significantly higher than $ \mu^{\text{control}}$, namely Pr$ (\Delta \hat{\mu}_j> \tau) > 1- \alpha $, where $ \tau=0, \alpha=0.05 $.} 
 \label{fig:hist_pos}
 \end{center}
@@ -159,7 +159,7 @@ Samtools mpileup and GATK can accept multiple "tumor'' replicates for variant ca
 
 \begin{figure}[H]
 \begin{center}
-\includegraphics[width=120mm]{pdf_figs/HCC1187_histogram_neg.pdf}
+\includegraphics[width=1\textwidth]{pdf_figs/HCC1187_histogram_neg.pdf}
 \caption{Histogram of $ \hat{\mu}_j $ for positions where $\mu^{\text{case}}$ is significantly lower than $ \mu^{\text{control}}$, namely Pr$ (\Delta \hat{\mu}_j< \tau) > 1- \alpha $, where $ \tau=0, \alpha=0.05 $.}
 \label{fig:hist_neg}
 \end{center}
