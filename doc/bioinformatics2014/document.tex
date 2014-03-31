@@ -56,13 +56,23 @@ Recently, some have developed algorithms to call low-frequency or rare variants 
 Several studies have compared the relative performance of these algorithms. \citet{spencer2013performance} demonstrated  that VarScan-somatic performed the best comparing with SAMtools, GATK and SPLINTER in detecting minor allele frequencies (MAFs) of 1\% to 8\%, with $ > $500× coverage required for optimal performance. However, \citet{spencer2013performance} also highlighted the fact that VarScan2 yielded more false positives at high read depth. \citet{Stead:2013fu} showed that VarScan-somatic outperformed Strelka and had performance on-par with muTect in detecting a 5\% MAF for read depths between 100 and 1000. %We test their performance on much lower MAF variants and across a wider range of coverage depths.
 
 The remainder of this article is organized as follows. In the next section we describe the statistical model structure of our new algorithm, RVD2. Then, we derive a sampling algorithm for computing the posterior distribution over latent variables in the model and use those samples in a Bayesian posterior distribution hypothesis test to call variants. We compare the performance of RVD2 to several other variant calling algorithms for a range of read depths and minor allele fractions. Finally, we show that RVD2 is able to call variants on a heterogeneous clinical sample and identify two novel loss-of-heterozygosity events.
-%TODO: Fixed this part
+
 %%%%%%%%%%%%%%%%%%
 % Model Structure
 %%%%%%%%%%%%%%%%%%
 \section{Model Structure}\label{sec:model_structure}
 
 RVD2 uses a two-stage approach for detecting rare variants. First, it estimates the parameters of a hierarchical Bayesian model under two sequencing data sets: one from the sample of interest (case) and one from a known reference sample (control). Then, it tests for a significant difference between key model parameters in the case and control samples and returns called variant positions.
+
+Figure~\ref{fig:graphical_model} shows a graphical representation of the RVD2 statistical model. In this graphical model framework a shaded node represents an observed random variable, an unshaded node represents an unobserved or latent random variable and a directed edge represents a functional dependency between the two connected nodes~\citep{jordan2004graphical}. A rounded box or ``plate" represents replication of the nodes within the plate. The graphical model framework connects graph theory and probability theory in a way that facilitates algorithmic methods for statistical inference.
+
+\begin{figure}[!bpth]
+\begin{center}
+\includegraphics[width=40mm]{pdf_figs/RVD2_model.pdf}
+\caption{RVD2 Graphical Model.}
+\label{fig:graphical_model}
+\end{center}
+\end{figure}
 
 For a given sample, the observed data consists of two matrices $r \in \RR^{J \times N}$ and $n \in \RR^{J \times N}$, where $r_{ji}$ is the number of reads with a non-reference base at location $j$ in experimental replicate $i$ and $n_{ji}$ is the total number of reads at location $j$ in replicate $i$. $ J $ is the region of interest length and $ N $ is the number of technical replicates in the sample.\label{replicate definition} Technical replicates are used to establish experimental variability in next-generation sequencing procedure~\citep{quackenbush2002microarray,robasky2013role}, though multiple replicates are not necessary for RVD2.
 
@@ -87,15 +97,6 @@ RVD2 has three levels of sampling. First, a global error rate and global precisi
 
 RVD2 hierarchically partitions sources of variation in the data. The distribution $r_{ji} | n_{ji} \thicksim \text{Binomial}(\theta_{ji}, n_{ji})$ models the variation due to sampling the pool of DNA molecules on the sequencer. The distribution $\theta_{ji} \thicksim \text{Beta}(\mu_j, M_j)$ models the variation due to experimental reproducibility. The variation in error rate due to sequence context is modeled by $\mu_j \thicksim \text{Beta}(\mu_0, M_0)$. Importantly, increasing the read depth $n_{ji}$ only reduces the sampling error, but does nothing to reduce experimental variation or variation due to sequence context.
 
-\begin{figure}[!bpth]
-\begin{center}
-\includegraphics[width=40mm]{pdf_figs/RVD2_model.pdf}
-\caption{RVD2 Graphical Model.}
-\label{fig:graphical_model}
-\end{center}
-\end{figure}
-
-Figure~\ref{fig:graphical_model} shows a graphical representation of the RVD2 statistical model. In this graphical model framework a shaded node represents an observed random variable, an unshaded node represents an unobserved or latent random variable and a directed edge represents a functional dependency between the two connected nodes~\citep{jordan2004graphical}. A rounded box or ``plate" represents replication of the nodes within the plate. The graphical model framework connects graph theory and probability theory in a way that facilitates algorithmic methods for statistical inference.
 
 The joint distribution over the latent and observed variables for data at location $j$ in replicate $i$ given the parameters can be factorized as
 
@@ -304,16 +305,16 @@ We used two independent data sets to evaluate the performance of RVD2 and compar
 
 \subsection{Synthetic DNA Sequence Data}
 
-\subsubsection*{Experimental process.}
+\subsubsection*{Experimental Methods.}
 Two 400bp DNA sequences that are identical except at 14 loci with variant bases were synthesized and clonally isolated and labeled case and control. Sample of the case and control DNA were mixed at defined fractions to yield defined minor allele fractons (MAFs) of 0.1\%, 0.3\%, 1\%, 10\%, and 100\%. More details of the experimental protocol are available from the original publication~\citep{Flaherty:2011ja}.
 
-\subsubsection*{Computational process.}
+\subsubsection*{Pre-processing Methods.}
  We aligned the reads to the reference sequence using BWA v0.7.4 with the -C50 option to filter for high mapping quality reads. To simulate lower coverage data while retaining the error structure of real NGS data, BAM files for the synthetic DNA data were downsampled $10\times$, $100\times$, $1,000\times$, and $10,000\times$ using Picard v1.96. The final data set contains read pairs for three replicates of each case and pairs of reads three replicates for the control sample giving $N=6$ replicates for the control and each MAF level.
 
 \subsection{HCC1187 Sequence Data}
-\subsubsection*{Experimental process.}
+\subsubsection*{Experimental Methods.}
 The HCC1187 dataset is a well-recognized baseline dataset from Illumina for evaluating sequence analysis algorithms~\citep{newman2013relative,howarth2011large,howarth2007array}. The HCC1187 cell line was derived from  epithelial cells from primary breast tissue from a 41 y/o adult with TNM stage IIA primary ductal carcinoma. The estimated tumor purity was reported to be 0.8. Matched normal cells were derived from lymphoblastoid cells from peripheral blood. Sequencing libraries were prepared according to the protocol described in the original technical report~\citep{hcc1187techreport}.
-\subsubsection*{Computational process.}
+\subsubsection*{Pre-processing Methods.}
  The raw FASTQ read files were aligned to hg19 using the Isaac aligner to generate BAM files~\citep{raczy2013isaac}. The aligned data had an average read depth of 40x for the normal sample and 90x for the tumor sample with about 96\% coverage with 10 or more reads. We used samtools mpileup to generate pileup files using hg19 as reference sequence~\citep{Navin:2010gu}.
 %Not sure the author is correct
 % HCC1187BL origin: http://www.atcc.org/products/all/CRL-2323.aspx
