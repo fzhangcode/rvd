@@ -55,11 +55,11 @@ def main():
     argpGibbs.set_defaults(func=gibbs)
 
     # create subparser to compare two model files
-    argpTest = subparsers.add_parser('test_main', 
-                        help='RVD2 algorithm to find mutations in tumor-normal-paired sample. A posteriror difference test and a somatic test will be done in this program.')
+    argpTest = subparsers.add_parser('test', 
+                        help='Posterior density testto find mutations in paired samples.')
 
     argpTest.add_argument('alpha', type=float, default=0.95,
-                help='poseterior difference test probability threshold')
+                help='posterior difference test probability threshold')
     argpTest.add_argument('controlHDF5Name', default=None,
                 help='control model file (HDF5)')
     argpTest.add_argument('caseHDF5Name', default=None,
