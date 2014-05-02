@@ -21,7 +21,7 @@ import rvd27
 
 dilution_opt=(0.1,0.3,1.0,10.0,100.0)
 gibbs_nsample_opt=[400]
-mh_nsample_opt=[100]
+mh_nsample_opt=[1,10]
 
 
 var=False # whether the variance of muCase_s and muControl_s is assumed equal or not
@@ -57,10 +57,12 @@ for n in xrange(len(gibbs_nsample_opt)):
             ax1=fig.add_subplot(2,1,1)
             ax1.hist(muCase_s[position1,:],20)
             ax1.hist(muControl_s[position1,:],20)
-            title='Histogram of mu_s when ngibbs='+str(gibbs_nsample_opt[n])+'_nmh='+str(mh_nsample_opt[m])+' position='+str(position1+1)
+            title='position='+str(position1+1)
             ax1.set_title(title)
-            ax1.set_ylabel('t')
+            ax1.set_xlabel('$\mu_j$')
+            ax1.set_ylabel('Frequency')
             ax1.legend( ['Case','Control'])
+            ax1.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
 
             position2=244
             ax2=fig.add_subplot(2,1,2)
@@ -68,9 +70,11 @@ for n in xrange(len(gibbs_nsample_opt)):
             ax2.hist(muControl_s[position2,:],20)
             title='position='+str(position2+1)
             ax2.set_title(title)
-            ax2.set_ylabel('t')
-            ax2.set_xlabel('mu')
-            ax2.legend(['Case','Control'])
+            ax2.set_ylabel('Frequency')
+            ax2.set_xlabel('$\mu_j$')
+            ax2.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
+            # ax2.legend(['Case','Control'])
+            plt.tight_layout()
             plt.savefig('Histogram of mu_s when ngibbs='+str(gibbs_nsample_opt[n])+'_nmh='+str(mh_nsample_opt[m])+' Dilution='+str(dilution)+'.jpg')
 
             ##    scipy.stats.ttest_ind(a, b, axis=0, equal_var=True)[source] returns

@@ -50,15 +50,17 @@ for n in xrange(len(nsample_opt)):
             muCase_s = f['mu'][...]
 
         ## plot histogram
-        position1=49
+        position1=72
         fig=plt.figure()
         ax1=fig.add_subplot(2,1,1)
         ax1.hist(muCase_s[position1,:],20)
         ax1.hist(muControl_s[position1,:],20)
-        title='Histogram of mu when nsample='+str(nsample_opt[n])+' dilution='+str(dilution)+' position='+str(position1+1)
+        title='position='+str(position1+1)
         ax1.set_title(title)
-        ax1.set_ylabel('t')
+        ax1.set_xlabel('$\mu_j$')
+        ax1.set_ylabel('Frequency')
         ax1.legend( ['Case','Control'])
+        ax1.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
 
         position2=244
         ax2=fig.add_subplot(2,1,2)
@@ -66,9 +68,11 @@ for n in xrange(len(nsample_opt)):
         ax2.hist(muControl_s[position2,:],20)
         title='position='+str(position2+1)
         ax2.set_title(title)
-        ax2.set_ylabel('t')
-        ax2.set_xlabel('mu')
-        ax2.legend(['Case','Control'])
+        ax2.set_ylabel('Frequency')
+        ax2.set_xlabel('$\mu_j$')
+        ax2.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
+        # ax2.legend(['Case','Control']
+        plt.tight_layout()
         plt.savefig('Histogram of mu_s when nsample='+str(nsample_opt[n])+' Dilution='+str(dilution)+'.jpg')
 
         ##    scipy.stats.ttest_ind(a, b, axis=0, equal_var=True)[source] returns
@@ -95,5 +99,5 @@ for n in xrange(len(nsample_opt)):
         title='tstat '+'with assumed equal variace when nsample='+str(nsample_opt[n])+'.jpg'
     else:
         title='tstat '+'with assumed unequal variace when nsample='+str(nsample_opt[n])+'.jpg'
-        
+    plt.tight_layout()    
     plt.savefig(title)
