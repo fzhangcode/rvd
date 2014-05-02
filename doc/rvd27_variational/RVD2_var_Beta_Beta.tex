@@ -137,7 +137,7 @@ where,
 &= \sum_{j=1}^{J} \sum_{i=1}^{N} E_\theta \left[ \log p\left(\theta_{ji} | \mu_j; M_j \right)\right] + \sum_{j=1}^{J} E_\theta  \left[ \log p\left( \mu_j; \mu_0, M_0 \right) \right] + con.\\
 &= \sum_{j=1}^{J} \sum_{i=1}^{N}  E_\theta  \left[ \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) } \theta_{ji}^{M_j\mu_j -1} (1 - \theta_{ji})^{M_j ( 1 - \mu_j) - 1} \right) \right] \\
 &\quad + \sum_{j=1}^{J} E_\theta  \left[ \log \left( \frac{ \Gamma(M_0) } { \Gamma(\mu_0 M_0) \Gamma(M_0 (1-\mu_0)) } \mu_j^{M_0\mu_0 -1} (1 - \mu_j)^{M_0 ( 1 - \mu_0) - 1} \right) \right] + con. \\
-&= \sum_{j=1}^{J} \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right) \\
+&= N\sum_{j=1}^{J} \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right) \\
 &\quad + \sum_{j=1}^{J} \sum_{i=1}^{N} \left\lbrace  \left( M_j\mu_j -1\right) E_\theta  \left[ \log \theta_{ji}\right] + \left( M_j ( 1 - \mu_j) - 1 \right)  E_\theta  \left[ \log \left( 1- \theta_{ji}\right) \right] \right\rbrace \\
 &\quad + \sum_{j=1}^{J} \left\lbrace (M_0 \mu_0 - 1) \log \mu_j + (M_0 ( 1 - \mu_0) - 1) \log ( 1 - \mu_j)\right\rbrace  + con. \\
 \end{split}
@@ -244,7 +244,7 @@ E_q \left[ \log p\left(\mu ; \mu_0, M_0 \right)\right] &= \sum_{j=1}^{J} E_q  \l
 \end{split}
 \end{equation}
 
-Therefore, in order to compute ELBO, we need to compute the following expectations with respect to variational distribution: $ E_q \left[ \log \theta_{ji} \right] $, $ E_q\left[ \log \left( 1 - \theta_{ji}\right) \right] $ , $ E_q  \left[ \log \mu_j \right] $ , $ E_q  \left[ \log (1 - \mu_j)\right] $, $ E_q \left[ \mu_j \right] $ and $ E_q\left[ \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right)\right]  $. %$  E_q  \left[ \log \Gamma(\mu_j M_j) \right] $ and $ E_q  \left[ \log \Gamma(M_j (1-\mu_j)) \right] $
+Therefore, in order to compute ELBO, we need to obtain the following expectations with respect to variational distribution: $ E_q \left[ \log \theta_{ji} \right] $, $ E_q\left[ \log \left( 1 - \theta_{ji}\right) \right] $ , $ E_q  \left[ \log \mu_j \right] $ , $ E_q  \left[ \log (1 - \mu_j)\right] $, $ E_q \left[ \mu_j \right] $ and $ E_q\left[ \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right)\right]  $. %$  E_q  \left[ \log \Gamma(\mu_j M_j) \right] $ and $ E_q  \left[ \log \Gamma(M_j (1-\mu_j)) \right] $
 
 %$ E_q  \left[ \log \left( \frac{ \Gamma(M_j) } { \Gamma(\mu_j M_j) \Gamma(M_j (1-\mu_j)) }\right) \right] $.
 
