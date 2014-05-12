@@ -24,6 +24,9 @@ from datetime import date
 import re
 import pdb
 import time
+
+import random
+
 def main():
     import argparse
 
@@ -41,55 +44,110 @@ def main():
     # argp.add_argument('cmd', action='store', nargs='*',
     #             choices=['gen', 'gibbs'])
     subparsers = argp.add_subparsers(help='sub-command help')
+
+    ## create subparser to sample the model
+    argpGen = subparsers.add_parser('gen', 
+        help='Demo: generate simulation sample data from the RVD model')
+    argpGen.add_argument('-N', type = int, default=3,
+        help='Number of replicates in computer simulation data')
+    argpGen.add_argument('-J', type = int, default=10,
+        help='Number of positions in computer simulation data')
+    argpGen.add_argument('-s', dest='seedint', type = int, default=None,
+        help='random process seed.')
+    argpGen.set_defaults(func=gen)
     
-    # create subparser for gibbs fitting
+    ## create subparser for gibbs fitting
     argpGibbs = subparsers.add_parser('gibbs', 
                         help='fit the RVD model using Gibbs sampling')
     argpGibbs.add_argument('dcfile', nargs='+',
                         help='depth chart file name')
     argpGibbs.add_argument('-o', dest='outputFile', 
-                default='output.hdf5',
-                help='output HDF5 file name')
+                default='output',
+                help='output HDF5 file name, default (output)')
     argpGibbs.add_argument('-p', '--pool', type=int, default=None,
-                help='number of workers in multithread pool')
+                help='number of workers in multithread pool, default None')
+    argpGibbs.add_argument('-g', '--ngibbs', type=int, default=4000,
+                help='gibbs sampling size, default 4000')
+    argpGibbs.add_argument('-m', '--nmh', type=int, default=10,
+                help='Metropolis-Hastings sampling size, default 10')
+    argpGibbs.add_argument('-b', '--burnin', type=float, default=0.2,
+                help='burnin, default 0.2')
+    argpGibbs.add_argument('-t', '--thin', type=int, default=2,
+                help='thin, default 2')
     argpGibbs.set_defaults(func=gibbs)
 
-    # create subparser to compare two model files
-    argpTest = subparsers.add_parser('test', 
-                        help='Posterior density testto find mutations in paired samples.')
+    ## create subparse for one sample one sided test
+    argpOneTest = subparsers.add_parser('one_sample_test', 
+        help='One side Bayesian posterior density test of one single sample')
+    argpOneTest.add_argument('HDF5Name', default=None, help ='HDF5 sample file')
+    argpOneTest.add_argument('-i', '--intvl', nargs =2, type=float, default=(0.05, np.inf), 
+        help='interval of interest in in posterior distribution.')
+    argpOneTest.add_argument('-a','--alpha', type=float, default = 0.05, 
+        help='one sample test credible level')
+    argpOneTest.add_argument('-o', dest='outputFile', 
+                default='variants_one_sample',
+                help='output HDF5 file name, default (output)')
+    argpOneTest.set_defaults(func=one_sample_test_main)
 
-    argpTest.add_argument('alpha', type=float, default=0.95,
-                help='posterior difference test probability threshold')
-    argpTest.add_argument('controlHDF5Name', default=None,
-                help='control model file (HDF5)')
-    argpTest.add_argument('caseHDF5Name', default=None,
-                help='case model file (HDF5)')
-    
-    argpTest.add_argument('somatic_tau', default=(0.05,0.95),
-                help='Two thresholds for somatic test. \
-                Mu lower than the lower threshold will be classified as reference (non-mutation), \
-                Mu between the two thresholds will be classified as heterozygote, \
-                Mu higher than the higher threshold will be classified as homozygote')
-  
-    argpTest.add_argument('diffroi', default=(0,np.inf),
-                help='region of interest in posterior differece distribution (tuple as interval)')
-    
-    argpTest.add_argument('-N', type=int, default=1000,
-                help='Monte-Carlo sample size (default=1000)')
-    
-    argpTest.add_argument('-o', '--output', dest='outputFile', nargs='?', 
-                default=None)
-                          
-    argpTest.set_defaults(func=test_main)
-                
-    # create subparser to sample the model
-    argpGen = subparsers.add_parser('gen', 
-                        help='sample data from the RVD model')
-    argpGen.add_argument('input', nargs='+')
-    argpGen.add_argument('-o', '--output', dest='outputFile', nargs='?', 
-                default='output.hdf5')
-                
-    # Parse the arguments (defaults to parsing sys.argv)
+    ## create subparse for germline test
+    argpGermTest = subparsers.add_parser('germline_test',
+        help='Germline test on a single sample, which includes a one side Bayesian density test and an optional chi square test.')
+    argpGermTest.add_argument('HDF5Name', default=None, help ='HDF5 sample file')
+    argpGermTest.add_argument('-i', '--intvl', nargs =2, type=float, default=(0.05, np.inf), 
+        help='interval of interest in in posterior distribution.')
+    argpGermTest.add_argument('-a','--alpha', type=float, default = 0.05, 
+        help='one sample test credible level')
+    argpGermTest.add_argument('-o', dest='outputFile', 
+                default='variants_germline',
+                help='output HDF5 file name, default (variants_germline)')
+    argpGermTest.add_argument('-c','--chi2',
+        action='store_false',default=True,
+        help='Whether to include chi square test in the germline test, default True (Include)')
+    argpGermTest.set_defaults(func=germline_test_main)
+
+    ## creat subparse for two sided paired difference test
+    argpDiffTest = subparsers.add_parser('paired_difference_test',
+        help='One sided posterior density difference test on control-case paired sample, with an optional chi square test.')
+    argpDiffTest.add_argument('controlHDF5Name', default=None, help ='HDF5 control sample file')
+    argpDiffTest.add_argument('caseHDF5Name', default=None, help ='HDF5 case sample file')
+    argpDiffTest.add_argument('-i', '--intvl', nargs =2, type=float, default=(0.0, np.inf), 
+        help='interval of interest in in posterior distribution.')
+    argpDiffTest.add_argument('-a','--alpha', type=float, default = 0.05, 
+        help='one sample test credible level')
+    argpDiffTest.add_argument('-o', dest='outputFile', 
+                default='variants_paired_difference',
+                help='output HDF5 file name, default (variants_paired_difference)')
+    argpDiffTest.add_argument('-c','--chi2',
+        action='store_false',default=True,
+        help='Whether to include chi square test in the paired difference test, default True (Include)')
+    argpDiffTest.add_argument('-s',dest='seedint', type = int, default=None,
+        help='random process seed.')
+    argpDiffTest.add_argument('-n',dest='N', type = int, default=1000,
+        help='Posterior difference distribution sampling size.')
+    argpDiffTest.set_defaults(func=paired_difference_test_main)
+
+    ## creat subparse for somatic test
+    argpSomTest = subparsers.add_parser('somatic_test',
+        help='Somatic test, which includes a two sided posterior density difference test and chi square test on the control-case paired sample.')
+    argpSomTest.add_argument('controlHDF5Name', default=None, help ='HDF5 control sample file')
+    argpSomTest.add_argument('caseHDF5Name', default=None, help ='HDF5 case sample file')
+    argpSomTest.add_argument('-i', '--intvl', nargs =2, type=float, default=(0.0, np.inf), 
+        help='interval of interest in in posterior distribution.')
+    argpSomTest.add_argument('-a','--alpha', type=float, default = 0.05, 
+        help='one sample test credible level')
+    argpSomTest.add_argument('-o', dest='outputFile', 
+                default='variants_somatic',
+                help='output HDF5 file name, default (variants_somatic)')
+    argpSomTest.add_argument('-c','--chi2',
+        action='store_false',default=True,
+        help='Whether to include chi square test in the germline test, default True (Include)')
+    argpSomTest.add_argument('-n',dest='N', type = int, default=1000,
+        help='Posterior difference distribution sampling size.')
+    argpSomTest.add_argument('-s',dest='seedint', type = int, default=None,
+        help='random process seed.')
+    argpSomTest.set_defaults(func=somatic_test_main)
+           
+    ## Parse the arguments (defaults to parsing sys.argv)
     args = argp.parse_args()
 
     # TODO check what came in on the command line and call optp.error("Useful message") to exit if all is not well
@@ -107,164 +165,264 @@ def main():
     # Do actual work here
     args.func(args)
     
+
+def gen(args):
+    # function to generate simulation control-case paired data using computer
+    sample_run(N=args.N, J=args.J, seedint = args.seedint)
+
+def sample_run( N=3, J=10, seedint = None):
+
+    n = np.empty([N,J], dtype=np.int64) # read depth (rep, location)
+    n.fill(2000)
+
+    if seedint is not None: 
+        np.random.seed(seedint)
+    loc = range(J)
+    loc = ['chr0:'+str(j+1) for j in loc]
+    refb = ['.']*J
+
+    # simulate the control sample
+    phi = {'M0':100, 'mu0':0.01, 'M':[1000]*J}
+
+    r, theta, mu= generate_sample(phi, n=n)
+
+    # recontruct the sum of non reference reads r to reads across three non reference reads
+    # replicate r in the control sample for uniformity across three non reference reads
+    r = np.tile(r, (3,1,1)) # replicate
+    r = np.transpose(r, (1,2,0)) # reorder the dimension
+
+
+    (phi, theta_s, mu_s) = mh_sample(r, n, ngibbs=1000,nmh=5, burnin=0.2, thin=2, pool=None)
+    save_model('control_simulation.hdf5', phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,refb=refb)
+
+    # simulate the case sample
+    phi = {'M0':100, 'mu0':0.1, 'M':[1000]*J}
+
+    r, theta, mu= generate_sample(phi, n=n)
+
+    # recontruct the sum of non reference reads r to reads across three non reference reads
+    # fill the non reference reads for the other two non reference as zero for non-uniformity
+    r = [r, np.zeros_like(r), np.zeros_like(r)]
+    r = np.transpose(r, (1,2,0)) # reorder the dimension
+
+
+    (phi, theta_s, mu_s) = mh_sample(r, n, ngibbs=1000,nmh=5, burnin=0.2, thin=2, pool=None)
+    save_model('case_simulation.hdf5', phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,refb=refb)
+
+
+def generate_sample(phi, n):
+    """Returns a sample with n reads, N replicates, and
+    J locations. The parameters of the model are in the structure phi.
+    """
+    [N,J] = np.shape(n)
+    # Draw J location-specific error rates from a Beta
+    alpha0 = phi['M0']*phi['mu0']
+    beta0 = phi['M0']*(1-phi['mu0'])
+    mu = ss.beta.rvs(alpha0, beta0, size=J)
     
-def gibbs(args):
+    # Draw sample error rate and error count
+    theta=np.zeros((N,J))
+    r = np.zeros((N,J))
+    for j in xrange(0, J):
+        alpha = mu[j]*phi['M'][j]
+        beta = (1-mu[j])*phi['M'][j]
+        theta[:,j] = ss.beta.rvs(alpha, beta, size=N)
+        r[:,j] = ss.binom.rvs(n[:,j], theta[:,j])
+    return r, theta, mu
+
+def gibbs_main(args):
     """ Top-level function to use gibbs sampling on a set of depth chart files
     """
-    (r, n, loc, refb) = load_depth(args.dcfile)
-    (phi, theta_s, mu_s) = mh_sample(r, n)
-    save_model(args.outputfile, phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
+    gibbs(args.dcfile,ngibbs=args.ngibbs,nmh=args.nmh,burnin=args.burnin, thin=args.thin, pool=args.pool, outputFile=args.outputFile, seedint = args.seedint )
+
+def gibbs(dcfile,ngibbs=4000,nmh=10,burnin=0.2, thin=2, pool=None, outputFile='output', seedint = None ):
+
+    if seedint is not None: 
+        np.random.seed(seedint)
+
+    pool = pool
+    if pool is not None:
+        pool = mp.Pool(processes=pool)
+
+    (r, n, loc, refb) = load_depth(dcfile)
+    (phi, theta_s, mu_s) = mh_sample(r, n, ngibbs=ngibbs,nmh=nmh, burnin=burnin, thin=thin, pool=pool)
+    save_model(outputFile+'.hdf5', phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
                refb=refb)
 
-def test_main(args):
-    test(args.alpha, args.controlHDF5Name, args.caseHDF5Name,
-         args.somatic_tau, args.diffroi,
-         args.N, args.outputFile)
+def one_sample_test_main(args):
+    intvl=(min(args.intvl),max(args.intvl))
+    one_sample_test(HDF5Name=args.HDF5Name, intvl=intvl, alpha=args.alpha, outputFile = args.outputFile)
 
-def test(somatic_alpha=0.95, germline_alpha=0.85, controlHDF5Name=None, caseHDF5Name=None, 
-    somatic_tau=0, germline_tau=0.05, N=1000, outputFile=None):
+def one_sample_test(HDF5Name, intvl=[0.05, np.inf], alpha=0.05, chi2 = False, outputFile = 'variants_one_sample'):
+    # Bayesian posterior density test of one single sample, one sided; 
+    # If 1-alpha percent of samples are within a close intvl in the posterior distribution of a position, 
+    # the position will be reported in a vcf file and hdf5 file
 
-    if outputfile == None:
-        germline_test(controlHDF5Name, caseHDF5Name, germline_alpha, germline_tau)
-        somatic_test(controlHDF5Name, caseHDF5Name, somatic_alpha, somatic_tau, N)
-    else:
-        germline_test(controlHDF5Name, caseHDF5Name, germline_alpha, germline_tau, outputFile)
-        somatic_test(controlHDF5Name, caseHDF5Name, somatic_alpha, somatic_tau, N, outputFile)        
+    logging.debug('Running one-sample-test on posterior distribution of sample %s' %os.path.basename(HDF5Name))
+    (Phi, Theta, Mu, loc, R, N, refb) = load_model(HDF5Name)
 
-
-def germline_test(controlHDF5Name, caseHDF5Name, alpha = 0.15, tau = 0.05, outputFile='germlinecalltable.vcf'):
-    # only test if control sample is mutated
-    germline_roi = [tau, np.inf]
-    loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
-             caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
-
-    logging.debug('Running germline test on posterior distribution of sample %s and %s)'\
-                      %(controlHDF5Name, caseHDF5Name))
-
-    ## chi2 test for case and control sample independently
-    J =len(controlR)
- 
-    postP = bayes_test(controlMu, [germline_roi], type = 'close')
+    if len(np.shape(intvl))==1:
+        intvl = [intvl]
+    postP = bayes_test(Mu, intvl,'close')
     bayescall = postP > 1-alpha
 
-    # chi2 test on  sample
-    controlchi2call , chi2P = chi2combinetest(controlR, controlN, bayescall)
+    if chi2:
+        chi2call , chi2P = chi2combinetest(R, N, bayescall)
+        # combine the calls from bayesian posterior test and chi2 test
+        call = np.logical_and(bayescall, chi2call)
+    else:
+        call = bayescall
 
-    call = np.logical_and(bayescall, controlchi2call)
+    if outputFile is not None:
+        # output vcf file
+        vcfFilename = outputFile+'.vcf'
 
-    altb = ['.' for b in altb]
+        altb = np.copy(refb)
+        altb = ['.' for b in altb]
 
-    write_dualvcf(outputFile,loc, call, refb, altb, np.mean(controlMu, axis=1), \
-                  np.median(controlR,0), controlN, \
-                  np.mean(caseMu, axis=1), np.median(caseR,0), caseN, tau, alpha)
+        write_vcf(vcfFilename, loc, bayescall, refb, altb, Mu, R, N)
 
+        # output hdf5 file
+        h5Filename = outputFile +'.hdf5'
+        h5file = h5py.File(h5Filename, 'w')
 
-    h5Filename = 'germlinecall.hdf5'
+        h5file.create_dataset('call', data=bayescall)
+        h5file.create_dataset('refb', data=refb)
+        h5file.create_dataset('loc', data=loc, 
+                              chunks=True, fletcher32=True, compression='gzip')        
+        h5file.create_dataset('Mu', data=Mu, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('N', data=N, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('R', data=R, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.close()
+    return call, loc, Mu
 
-    h5file = h5py.File(h5Filename, 'w')
+def germline_test_main(args):
+    intvl=(min(args.intvl),max(args.intvl))
+    germline_test(HDF5Name=args.HDF5Name, intvl=intvl, alpha=args.alpha, chi2=args.chi2, outputFile=args.outputFile )
 
-    h5file.create_dataset('call', data=call)
-    h5file.create_dataset('refb', data=refb)
-    h5file.create_dataset('loc', data=loc, 
-                          chunks=True, fletcher32=True, compression='gzip')        
-    h5file.create_dataset('controlMu', data=controlMu, 
-                          chunks=True, fletcher32=True, compression='gzip')
-    h5file.create_dataset('caseMu', data=caseMu, 
-                          chunks=True, fletcher32=True, compression='gzip')        
-    h5file.create_dataset('controlN', data=controlN, 
-                          chunks=True, fletcher32=True, compression='gzip')
-    h5file.create_dataset('caseN', data=caseN, 
-                          chunks=True, fletcher32=True, compression='gzip')
-    h5file.close()
-    return loc, call, controlMu, caseMu, controlN, caseN
+def germline_test(HDF5Name, intvl=[0.05, np.inf], alpha=0.05, chi2=True, outputFile='variants_germline'):
+    # Germline test: Bayesian posterior density test of one single sample, one sided together with optional chi square test; 
+    [call, loc, Mu] = one_sample_test(HDF5Name, intvl, alpha, chi2, outputFile)
+    return call, loc, Mu
 
+def paired_difference_test_main(args):
+    intvl=(min(args.intvl),max(args.intvl))
+    paired_difference_test(controlHDF5Name=args.controlHDF5Name, caseHDF5Name=args.caseHDF5Name, 
+        N =args.N, intvl=intvl, alpha=args.alpha, chi2=args.chi2, outputFile=args.outputFile, seedint = args.seedint )
 
-def somatic_test(controlHDF5Name, caseHDF5Name, alpha=0.05, tau= 0, N=1000,  outputFile='somaticcalltable.vcf'):
-    # Two sided difference test. Somatic status will be more specific classified. Threshold hold and alpha should be assign
-    logging.debug('Running two sided posterior somatic test on sample %s and %s)'%(controlHDF5Name, caseHDF5Name))
+def paired_difference_test(controlHDF5Name, caseHDF5Name, N = 1000, intvl=[0, np.inf], alpha=0.05,
+ chi2 = False, outputFile = 'variants_paired_difference', seedint = None):
+    # Bayesian posterior difference test of case-control paired samples, one sided; 
+    # If 1-alpha percent of samples are within a open intvl in the posterior distribution of a position, 
+    # the position will be reported in a vcf file and hdf5 file
 
+    if seedint is not None: 
+        np.random.seed(seedint)
+
+    logging.debug('Running Bayesian posterior difference test on paired sample %s and %s)' \
+    %(os.path.basename(caseHDF5Name), os.path.basename(controlHDF5Name)))
+    
     loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
              caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
 
-    somatic_roi = [tau, np.inf]
+    (Z, _, _) = sample_post_diff(caseMu-caseMu0, controlMu-controlMu0, N)
 
-    # test if caseMu is significantly higher than controlMu
-    [call1, _ , _, _, _] = one_side_diff_test(alpha, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
-             caseMu, caseMu0, caseR, caseN, N, somatic_roi)
+    if len(np.shape(intvl))==1:
+        intvl = [intvl]
+    postP = bayes_test(Z, intvl,'open')
 
-    # test if controlMu is significantly higher than caseMu
-    [call2, _ , _, _, _] = one_side_diff_test(alpha, loc, refb, altb, caseMu, caseMu0, caseR, caseN, \
-             controlMu, controlMu0, controlR, controlN, N, somatic_roi)
+    bayescall = postP > 1-alpha
 
-    call = [call1,call2]
+    if chi2:
+        chi2call , chi2P = chi2combinetest(caseR,caseN,bayescall)
+        call = np.logical_and(bayescall, chi2call)
+    else:
+        call = bayescall
+
+    if outputFile is not None:
+        # output vcf file
+        vcfFilename = outputFile+'.vcf'
+
+        write_dualvcf(vcfFilename, loc, bayescall, refb, altb, controlMu, controlR, controlN,
+                  caseMu, caseR, caseN)
+        # output hdf5 file
+        h5Filename = outputFile +'.hdf5'
+        h5file = h5py.File(h5Filename, 'w')
+
+        h5file.create_dataset('call', data=bayescall)
+        h5file.create_dataset('refb', data=refb)
+        h5file.create_dataset('loc', data=loc, 
+                              chunks=True, fletcher32=True, compression='gzip')        
+        h5file.create_dataset('controlMu', data=controlMu, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('caseMu', data=caseMu, 
+                              chunks=True, fletcher32=True, compression='gzip')        
+        h5file.create_dataset('controlN', data=controlN, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('caseN', data=caseN, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('controlR', data=controlR, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('caseR', data=caseR, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.close()
+
+    return  call, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+             caseMu, caseMu0, caseR, caseN
+
+def somatic_test_main(args):
+    intvl=(min(args.intvl),max(args.intvl))
+    somatic_test(controlHDF5Name=args.controlHDF5Name, caseHDF5Na=args.caseHDF5Name, 
+        N =args.N, intvl=intvl, alpha=args.alpha, chi2=args.chi2, outputFile=args.outputFile, seedint = args.seedint )
+
+def somatic_test(controlHDF5Name, caseHDF5Name, N = 1000, intvl=[0, np.inf], 
+    alpha=0.05, chi2 = True, outputFile='variants_somatic', seedint = None):
+    logging.debug('Running somatic test on paired sample %s and %s)' 
+    %(os.path.basename(caseHDF5Name), os.path.basename(controlHDF5Name)))
+    # Somatic test: Bayesian posterior difference test of case-control paired samples, one sided, together with optional chi square test; 
+    bayescall_pos, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+             caseMu, caseMu0, caseR, caseN = paired_difference_test(controlHDF5Name, caseHDF5Name, N, intvl, alpha, chi2, outputFile = None, seedint = seedint)
+    bayescall_neg, _, _, _, _, _, _, _, \
+             _, _, _, _ = paired_difference_test(caseHDF5Name, controlHDF5Name, N, intvl, alpha, chi2,  outputFile = None, seedint = seedint)
+
+    # Combine the calls from two sided paired difference test
+    call = [bayescall_pos,bayescall_neg]
     call = np.sum(call,0) > 0
 
-    # write_dualvcf(outputFile,loc, call, refb, altb, np.mean(controlMu, axis=1), np.median(controlR,0), controlN, \
-    #               np.mean(caseMu, axis=1), np.median(caseR,0), caseN, tau, alpha)
+    # output result
+    if outputFile is not None:
+        # output vcf file
+        vcfFilename = outputFile+'.vcf'
 
-    write_vcf(outputFile, loc, call, refb, altb, np.mean(caseMu, axis=1),  np.mean(controlMu, axis=1))
-    
-    h5Filename = 'somaticcall.hdf5'
+        write_dualvcf(vcfFilename, loc, call, refb, altb, controlMu, controlR, controlN,
+                  caseMu, caseR, caseN)
+        # output hdf5 file
+        h5Filename = outputFile +'.hdf5'
+        h5file = h5py.File(h5Filename, 'w')
 
-    h5file = h5py.File(h5Filename, 'w')
+        h5file.create_dataset('call', data=call)
+        h5file.create_dataset('refb', data=refb)
+        h5file.create_dataset('loc', data=loc, 
+                              chunks=True, fletcher32=True, compression='gzip')        
+        h5file.create_dataset('controlMu', data=controlMu, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('caseMu', data=caseMu, 
+                              chunks=True, fletcher32=True, compression='gzip')        
+        h5file.create_dataset('controlN', data=controlN, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('caseN', data=caseN, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('controlR', data=controlR, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.create_dataset('caseR', data=caseR, 
+                              chunks=True, fletcher32=True, compression='gzip')
+        h5file.close()
 
-    h5file.create_dataset('call', data=call)
-    h5file.create_dataset('refb', data=refb)
-    h5file.create_dataset('loc', data=loc, 
-                          chunks=True, fletcher32=True, compression='gzip')        
-    h5file.create_dataset('controlMu', data=controlMu, 
-                          chunks=True, fletcher32=True, compression='gzip')
-    h5file.create_dataset('caseMu', data=caseMu, 
-                          chunks=True, fletcher32=True, compression='gzip')        
-    h5file.create_dataset('controlN', data=controlN, 
-                          chunks=True, fletcher32=True, compression='gzip')
-    h5file.create_dataset('caseN', data=caseN, 
-                          chunks=True, fletcher32=True, compression='gzip')
-    h5file.close()
+    return call, loc, controlMu, caseMu
 
-    return loc, call, controlMu, caseMu, controlN, caseN
-
-
-def disparity_test(controlHDF5Name, caseHDF5Name, alpha=0.05, tau= 0, N=1000,  outputFile='somaticcalltable.vcf'):
-    # Oneside posterior difference test in case when somatic test is not appropriate. Also compatible to synthetic data
-    # The function will test if the caseMu is significantly higher than controlMu. 
-    # If we want to test if controlMu is significantly higher than caseMu, we need to switch the place for controlHDF5Name and caseHDF5Name
-    # since chi2 test will only apply to the second HDF5 file. 
-
-    logging.debug('Running posterior disparity test on whether local mutation rate in sample %s is significantly higher than sample %s)'%(caseHDF5Name, controlHDF5Name))
-    
-    loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
-             caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
-
-    disroi = [tau, np.inf]
-
-    call, chi2call , chi2P, bayescall, postP = one_side_diff_test(alpha, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
-             caseMu, caseMu0, caseR, caseN, N, disroi)
-
-    write_dualvcf(outputFile,loc, call, refb, altb, np.mean(controlMu, axis=1), np.median(controlR,0), controlN, \
-                  np.mean(caseMu, axis=1), np.median(caseR,0), caseN, tau, alpha)
-
-    # write_vcf(outputFile, loc, call, refb, altb, np.mean(caseMu, axis=1), np.mean(controlMu, axis=1))
-
-    return loc, call, controlMu, caseMu, controlN, caseN,  chi2call , chi2P, bayescall, postP 
-
-def one_side_diff_test(alpha, loc, refb, altb, Mu1, Mu01, R1, N1, Mu2, Mu02, R2, N2, N, diffroi):
-
-    (Z, MuS2, MuS1) = sample_post_diff(Mu2-Mu02, Mu1-Mu01, N)
-    # (Z, MuS2, MuS1) = sample_post_diff(Mu2, Mu1, N)
-
-    if len(np.shape(diffroi))==1:
-        diffroi = [diffroi]
-    postP = bayes_test(Z, diffroi,'open')
-
-    bayescall = postP > 1-alpha
-
-    # chi2 test on  sample
-    chi2call , chi2P = chi2combinetest(R2,N2,bayescall)
-
-    call = np.logical_and(bayescall, chi2call)
-
-    return call, chi2call , chi2P, bayescall, postP
 
 def chi2combinetest(R, N, bayescall = 1, pvalue = 0.05):
 
@@ -292,160 +450,6 @@ def chi2combinetest(R, N, bayescall = 1, pvalue = 0.05):
     chi2P = chi2P.flatten()
 
     return  chi2call, chi2P
-
-def load_dualmodel(controlHDF5Name, caseHDF5Name):
-    '''
-        Load and synchonize the Case and Control Model files 
-    '''
-    # Load the Case and Control Model files
-    (controlPhi, controlTheta, controlMu, controlLoc, controlR, controlN) = load_model(controlHDF5Name)
-    (casePhi, caseTheta, caseMu, caseLoc, caseR, caseN) = load_model(caseHDF5Name)
-
-    # Extract the common locations in case and control
-    caseLocIdx = [i for i in xrange(len(caseLoc)) if caseLoc[i] in controlLoc]
-    controlLocIdx = [i for i in xrange(len(controlLoc)) if controlLoc[i] in caseLoc]
-
-    caseMu = caseMu[caseLocIdx,:]
-    controlMu = controlMu[controlLocIdx,:]
-    caseR = caseR[:,caseLocIdx,:]
-    controlR = controlR[:,controlLocIdx,:]
-
-    loc = caseLoc[caseLocIdx]
-
-    J = len(caseLoc)
-
-    with h5py.File(controlHDF5Name, 'r') as f:
-        refb = f['/refb'][...]
-        f.close()
-    refb = refb[controlLocIdx]
-
-    altb = []
-    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
-    for i in xrange(J):
-        r = np.squeeze(caseR[:,i,:]) # replicates x bases
-        
-        # Make a list of the alternate bases for each replicate
-        acgt_r = ['A','C','G','T']
-        del acgt_r[ acgt[refb[i]] ]
-
-        if not np.iterable(np.argmax(r, axis=-1)):
-            altb_r = acgt_r[np.argmax(r, axis=-1)]
-        else:
-            altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
-        altb.append(altb_r[0])
-
-    return loc, refb, altb, controlMu, controlPhi['mu0'], controlR, controlN,\
-           caseMu, casePhi['mu0'], caseR, caseN
-
-
-def write_dualvcf(outputFile, loc, call, refb, altb, controlMu, controlR, controlN,\
-                  caseMu, caseR, caseN, tau, alpha=0.95):
-    '''
-        Write high confidence variant calls from somatic test when there are both control and case sample to VCF 4.2 file.
-    '''
-    J = len(loc)
-    
-    today=date.today()
-    
-    chrom = [x.split(':')[0][3:] for x in loc]
-    pos = [int(x.split(':')[1]) for x in loc]
-    
-    vcfF = open(outputFile,'w')
-    
-    print("##fileformat=VCFv4.1", file=vcfF)
-    print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
-
-    print("##source=rvd2", file=vcfF)
-
-    print('##Posterior test in cancer-normal-paired sample.', file=vcfF)
-
-    print("##Posterior difference threshold = %0.2f" %tau, file=vcfF)
-    print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
-    
-    print("##Chi square test is included", file=vcfF)
-
-    uniquechrom = set(chrom)
-    uniquechrom = list(uniquechrom)
-
-    for i in xrange(len(uniquechrom)):
-        seq = [idx for idx, name in enumerate(chrom) if name==uniquechrom[i]]
-        seqlen = len(seq)
-        print("##contig=<ID=%(chr)s,length=%(seqlen)d>" %{'chr': uniquechrom[i],'seqlen': seqlen}, file=vcfF)
-
-    
-    print("##INFO=<ID=COAF,Number=1,Type=Float,Description=\"Control Allele Frequency\">", file=vcfF)
-    print("##INFO=<ID=CAAF,Number=1,Type=Float,Description=\"Case Allele Frequency\">", file=vcfF)
-
-    print("##FORMAT=<ID=AU,Number=1,Type=Integer,Description=\"Number of 'A' alleles used in fitting the model\">", file=vcfF)
-    print("##FORMAT=<ID=CU,Number=1,Type=Integer,Description=\"Number of 'C' alleles used in fitting the model\">", file=vcfF)
-    print("##FORMAT=<ID=GU,Number=1,Type=Integer,Description=\"Number of 'G' alleles used in fitting the model\">", file=vcfF)
-    print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles used in fitting the model\">", file=vcfF)
-    
-    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
-
-    for i in xrange(J):
-        if call[i]:           
-            # restore R
-            actg = ['A','C','G','T']
-
-            idx = actg.index(refb[i])
-            caseR4 = np.zeros(4)
-            controlR4 = np.zeros(4)
-            caseR4[idx] = np.median(caseN[:,i])-np.sum(caseR[i,:])
-            controlR4[idx] = np.median(controlN[:,i])-np.sum(controlR[i,:])
-            for d in xrange(idx):
-                caseR4[d] = caseR[i,d]
-                controlR4[d] = controlR[i,d]
-            for d in xrange(3-idx):
-                caseR4[d+idx+1] = caseR[i,d+idx]
-                controlR4[d+idx+1] = controlR[i,d+idx]
-
-            print ("chr%s\t%d\t.\t%s\t%s\t.\tPASS\tCOAF=%0.3f;CAAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
-                   % (chrom[i], pos[i], refb[i], altb[i],controlMu[i]*100.0, caseMu[i]*100.0,\
-                      controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
-                      caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
-                
-    vcfF.close()
-
-def write_vcf(outputFile, loc, call, refb, altb, caseMu, controlMu):
-    """ Write high confidence variant calls to VCF 4.2 file.   //for compatible to previous programms before test functions adapted for somatic test.
-    """
-    
-    #TODO: get dbSNP id for chrom:pos
-    J = len(loc)
-    
-    today=date.today()
-    
-    chrom = [x.split(':')[0][3:] for x in loc]
-    pos = [int(x.split(':')[1]) for x in loc]
-    vcfF = open(outputFile,'w')
-    
-    print("##fileformat=VCFv4.1", file=vcfF)
-    print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
-    
-    print("##INFO=<ID=COAF,Number=1,Type=Float,Description=\"Control Allele Frequency\">", file=vcfF)
-    print("##INFO=<ID=CAAF,Number=1,Type=Float,Description=\"Case Allele Frequency\">", file=vcfF)
-    
-    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO", file=vcfF)
-    for i in xrange(J):
-        if call[i]:
-            print("%s\t%d\t.\t%c\t%s\t.\tPASS\tCOAF=%0.3f;CAAF=%0.3f" % (chrom[i], pos[i], refb[i], altb[i], controlMu[i]*100.0, caseMu[i]*100.0), file=vcfF)
-    
-    vcfF.close()
-    
-
-def sample_run():
-    n = 1000
-    J = 10
-    phi = {'mu0': 0.20, 'M0': 2e3, 'a': 1e6, 'b': 1}
-    r, theta, mu, M = generate_sample(phi, n=n, J=J, seedint=10)
-    r[:, int(J / 2)] = n * np.array([0.50, 0.55, 0.45])
-
-    phi, theta_s, mu_s = mh_sample(r, n, 
-                                        nsample=100, 
-                                        thin=0, 
-                                        burnin=0)
-
 
 def load_model(h5Filename):
     """ Returns the RVD2.7 model samples and parameters.
@@ -475,7 +479,7 @@ def load_model(h5Filename):
         if u"loc" in h5file.keys():
             loc = h5file['loc'][...]
             out.append(loc)
-	
+    
         # Load r if it exists
         if u"r" in h5file.keys():
             r = h5file['r'][...]
@@ -485,11 +489,15 @@ def load_model(h5Filename):
             n = h5file['n'][...]
             out.append(n)
 
+        if u"refb" in h5file.keys():
+            refb = h5file['refb'][...]
+            out.append(refb)
+
+        h5file.close()
+
             
     return tuple(out)
     
-    
-
 def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, refb=None):
     """ Save the RVD2.7 model samples and parameters """
     
@@ -530,29 +538,188 @@ def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, r
 
     h5file.close()
 
+def load_dualmodel(controlHDF5Name, caseHDF5Name):
+    '''
+        Load and synchonize the Case and Control Model files 
+    '''
+    # Load the Case and Control Model files
+    (controlPhi, controlTheta, controlMu, controlloc, controlR, controlN, controlrefb) = load_model(controlHDF5Name)
+    (casePhi, caseTheta, caseMu, caseloc, caseR, caseN,_) = load_model(caseHDF5Name)
 
-def generate_sample(phi, n=100, N=3, J=100, seedint=None):
-    """Returns a sample with n reads, N replicates, and
-    J locations. The parameters of the model are in the structure phi.
-    """
+    # Extract the common locations in case and control
+    caselocIdx = [i for i in xrange(len(caseloc)) if caseloc[i] in controlloc]
+    controllocIdx = [i for i in xrange(len(controlloc)) if controlloc[i] in caseloc]
+
+    caseMu = caseMu[caselocIdx,:]
+    controlMu = controlMu[controllocIdx,:]
+    pdb.set_trace()
+    caseR = caseR[:,caselocIdx,:]
+    controlR = controlR[:,controllocIdx,:]
+
+    loc = caseloc[caselocIdx]
+
+    J = len(loc)
+
+
+    refb = controlrefb[controllocIdx]
+
+    altb = []
+    acgt = {'A':0, 'C':1, 'G':2, 'T':3}
+    for i in xrange(J):
+        r = np.squeeze(caseR[:,i,:]) # replicates x bases
+        
+        # Make a list of the alternate bases for each replicate
+        acgt_r = ['A','C','G','T']
+        del acgt_r[ acgt[refb[i]] ]
+
+        if not np.iterable(np.argmax(r, axis=-1)):
+            altb_r = acgt_r[np.argmax(r, axis=-1)]
+        else:
+            altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
+        altb.append(altb_r[0])
+
+    return loc, refb, altb, controlMu, controlPhi['mu0'], controlR, controlN,\
+           caseMu, casePhi['mu0'], caseR, caseN
+
+def write_dualvcf(outputFile, loc, call, refb, altb, controlMu=None, controlR=None, controlN=None,\
+                  caseMu=None, caseR=None, caseN=None):
+    controlMu = np.mean(controlMu, axis=1);
+    caseMu = np.mean(caseMu, axis=1)
+
+    controlR = np.median(controlR,0)
+    caseR = np.median(caseR,0)
+    '''
+        Write high confidence variant calls from somatic test when there are both control and case sample to VCF 4.2 file.
+    '''
+    J = len(loc)
     
-    if seedint is not None: 
-        np.random.seed(seedint)
+    today=date.today()
     
-    # Draw J location-specific error rates from a Beta
-    alpha0 = phi['M0']*phi['mu0']
-    beta0 = phi['M0']*(1-phi['mu0'])
-    mu = ss.beta.rvs(alpha0, beta0, size=J)
+    chrom = [x.split(':')[0][3:] for x in loc]
+    pos = [int(x.split(':')[1]) for x in loc]
     
-    # Draw sample error rate and error count
-    theta=np.zeros((N,J))
-    r = np.zeros((N,J))
-    for j in xrange(0, J):
-        alpha = mu[j]*phi['M'][j]
-        beta = (1-mu[j])*phi['M'][j]
-        theta[:,j] = ss.beta.rvs(alpha, beta, size=N)
-        r[:,j] = ss.binom.rvs(n, theta[:,j])
-    return r, theta, mu
+    vcfF = open(outputFile,'w')
+    
+    print("##fileformat=VCFv4.1", file=vcfF)
+    print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
+
+    print("##source=rvd2", file=vcfF)
+
+    print('##Posterior test in cancer-normal-paired sample.', file=vcfF)
+
+    # print("##Posterior difference threshold = %0.2f" %tau, file=vcfF)
+    # print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
+    
+    # print("##Chi square test is included", file=vcfF)
+
+    uniquechrom = set(chrom)
+    uniquechrom = list(uniquechrom)
+
+    for i in xrange(len(uniquechrom)):
+        seq = [idx for idx, name in enumerate(chrom) if name==uniquechrom[i]]
+        seqlen = len(seq)
+        print("##contig=<ID=%(chr)s,length=%(seqlen)d>" %{'chr': uniquechrom[i],'seqlen': seqlen}, file=vcfF)
+
+    
+    print("##INFO=<ID=COAF,Number=1,Type=Float,Description=\"Control Allele Frequency\">", file=vcfF)
+    print("##INFO=<ID=CAAF,Number=1,Type=Float,Description=\"Case Allele Frequency\">", file=vcfF)
+
+    print("##FORMAT=<ID=AU,Number=1,Type=Integer,Description=\"Number of 'A' alleles\">", file=vcfF)
+    print("##FORMAT=<ID=CU,Number=1,Type=Integer,Description=\"Number of 'C' alleles\">", file=vcfF)
+    print("##FORMAT=<ID=GU,Number=1,Type=Integer,Description=\"Number of 'G' alleles\">", file=vcfF)
+    print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles\">", file=vcfF)
+    
+    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
+
+    for i in xrange(J):
+        if call[i]:           
+            # restore R
+            actg = ['A','C','G','T']
+
+            idx = actg.index(refb[i])
+            caseR4 = np.zeros(4)
+            controlR4 = np.zeros(4)
+            caseR4[idx] = np.median(caseN[:,i])-np.sum(caseR[i,:])
+            controlR4[idx] = np.median(controlN[:,i])-np.sum(controlR[i,:])
+            for d in xrange(idx):
+                caseR4[d] = caseR[i,d]
+                controlR4[d] = controlR[i,d]
+            for d in xrange(3-idx):
+                caseR4[d+idx+1] = caseR[i,d+idx]
+                controlR4[d+idx+1] = controlR[i,d+idx]
+
+            print ("chr%s\t%d\t.\t%s\t%s\t.\tPASS\tCOAF=%0.3f;CAAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
+                   % (chrom[i], pos[i], refb[i], altb[i],controlMu[i]*100.0, caseMu[i]*100.0,\
+                      controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
+                      caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
+                
+    vcfF.close()
+
+def write_vcf(outputFile, loc, call, refb, altb, Mu, R, N):
+    '''
+        Write high confidence variant calls from one sample test to VCF 4.2 file.
+    '''
+    Mu = np.mean(Mu, axis=1);
+
+    R = np.median(R,0)
+
+
+    J = len(loc)
+    
+    today=date.today()
+    
+    chrom = [x.split(':')[0][3:] for x in loc]
+    pos = [int(x.split(':')[1]) for x in loc]
+    
+    vcfF = open(outputFile,'w')
+    
+    print("##fileformat=VCFv4.1", file=vcfF)
+    print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
+
+    print("##source=rvd2", file=vcfF)
+
+    print('##Posterior test in a single sample.', file=vcfF)
+
+    # print("##Posterior difference threshold = %0.2f" %tau, file=vcfF)
+    # print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
+    
+    # print("##Chi square test is included", file=vcfF)
+
+    uniquechrom = set(chrom)
+    uniquechrom = list(uniquechrom)
+
+    for i in xrange(len(uniquechrom)):
+        seq = [idx for idx, name in enumerate(chrom) if name==uniquechrom[i]]
+        seqlen = len(seq)
+        print("##contig=<ID=%(chr)s,length=%(seqlen)d>" %{'chr': uniquechrom[i],'seqlen': seqlen}, file=vcfF)
+
+    
+    print("##INFO=<ID=COAF,Number=1,Type=Float,Description=\"Allele Frequency\">", file=vcfF)
+
+    print("##FORMAT=<ID=AU,Number=1,Type=Integer,Description=\"Number of 'A' alleles\">", file=vcfF)
+    print("##FORMAT=<ID=CU,Number=1,Type=Integer,Description=\"Number of 'C' alleles\">", file=vcfF)
+    print("##FORMAT=<ID=GU,Number=1,Type=Integer,Description=\"Number of 'G' alleles\">", file=vcfF)
+    print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles\">", file=vcfF)
+    
+    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSample", file=vcfF)
+
+    for i in xrange(J):
+        if call[i]:           
+            # restore R
+            actg = ['A','C','G','T']
+
+            idx = actg.index(refb[i])
+            R4 = np.zeros(4)
+            R4[idx] = np.median(N[:,i])-np.sum(R[i,:])
+            
+            for d in xrange(idx):
+                R4[d] = R[i,d]
+            for d in xrange(3-idx):
+                R4[d+idx+1] = R[i,d+idx]
+
+            print ("chr%s\t%d\t.\t%s\t%s\t.\tPASS\tAF=%0.3f\tAU:CU:GU:TU\t%d:%d:%d:%d" \
+                   % (chrom[i], pos[i], refb[i], altb[i],Mu[i]*100.0, R4[0], R4[1], R4[2], R4[3]), file=vcfF)
+    vcfF.close()
 
 def complete_ll(phi, r, n, theta, mu):
     """ Return the complete data log-likelihood.
@@ -594,7 +761,7 @@ def estimate_mom(r, n):
     phi = {'mu0':mu0, 'M0':M0, 'M':M}
     return phi, mu, theta
     
-def sampleLocMuMH(args):
+def samplelocMuMH(args):
     # Sample from the proposal distribution at a particular location
     mu, Qsd, theta, M, alpha0, beta0 = args
     
@@ -621,7 +788,7 @@ def sampleLocMuMH(args):
         mu = mu_p
     return mu
     
-def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), Qsd=0.1, burnin=0, mh_nsample=1, thin=0, pool=None):
+def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), Qsd=0.1, burnin=0, nmh=1, thin=0, pool=None):
     """ Return a sample of mu with parameters mu0 and M0.
     """
     if np.ndim(theta) == 1: (N, J) = (1, np.shape(theta)[0])
@@ -630,32 +797,33 @@ def sampleMuMH(theta, mu0, M0, M, mu=ss.beta.rvs(1, 1), Qsd=0.1, burnin=0, mh_ns
     alpha0 = mu0*M0 + np.finfo(np.float).eps
     beta0 = (1-mu0)*M0 + np.finfo(np.float).eps
 
-    mu_s = np.zeros( (mh_nsample, J) ) 
-    for ns in xrange(0, mh_nsample):
+    mu_s = np.zeros( (nmh, J) ) 
+    for ns in xrange(0, nmh):
         if pool is not None:
             args = zip(mu, Qsd, theta.T, M, repeat(alpha0, J), repeat(beta0, J))
-            mu = pool.map(sampleLocMuMH, args)
+            mu = pool.map(samplelocMuMH, args)
         else:
             for j in xrange(0, J):
                 args = (mu[j], Qsd[j], theta[:,j], M[j], alpha0, beta0)
-                mu[j] = sampleLocMuMH(args)
+                mu[j] = samplelocMuMH(args)
         # Save the new sample
         mu_s[ns, :] = np.copy(mu)
 
     if burnin > 0.0:
-        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*mh_nsample):], 0)
+        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*nmh):], 0)
     if thin > 0:
         mu_s = np.delete(mu_s, np.s_[::thin], 0)
     
     return mu_s
     
-def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=None):
+def mh_sample(r, n, ngibbs=4000,nmh=10, burnin=0.2, thin=2, pool=None):
     """ Return MAP parameter and latent variable estimates obtained by 
 
     Metropolis-Hastings sampling.
-    By default, sample 10000 M-H with a 20% burn-in and thinning factor of 2. 
+    By default, sample 4000 M-H with a 20% burn-in and thinning factor of 2. 
     Stop when the change in complete data log-likelihood is less than 0.01%.
     """
+
     if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
     elif np.ndim(r) == 2: N, J = np.shape(r)
     elif np.ndim(r) == 3: 
@@ -670,8 +838,8 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
     h5file['phi'].create_dataset('mu0', (1,), dtype='f')
     h5file['phi'].create_dataset('M0', (1,), dtype='f')
     h5file['phi'].create_dataset('M', (J,), dtype='f')
-    h5file.create_dataset('theta_s', (N, J, gibbs_nsample), dtype='f')
-    h5file.create_dataset('mu_s', (J, gibbs_nsample), dtype='f')
+    h5file.create_dataset('theta_s', (N, J, ngibbs), dtype='f')
+    h5file.create_dataset('mu_s', (J, ngibbs), dtype='f')
     # Initialize estimates using MoM
     phi, mu, theta = estimate_mom(r, n)
     logging.debug("MoM: mu0 = %0.3e; M0 = %0.3e." % (phi['mu0'], phi['M0']) )
@@ -701,9 +869,9 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
     Qsd = map(boundfn, mu)       
 
     # Sample theta, mu by gibbs sampling
-    theta_s = np.zeros( (N, J, gibbs_nsample) )
-    mu_s = np.zeros( (J, gibbs_nsample) )
-    for i in xrange(gibbs_nsample):
+    theta_s = np.zeros( (N, J, ngibbs) )
+    mu_s = np.zeros( (J, ngibbs) )
+    for i in xrange(ngibbs):
         if i % 100 == 0 and i > 0: logging.debug("Gibbs Iteration %d" % i)
             
         # Draw samples from p(theta | r, mu, M) by Gibbs
@@ -712,7 +880,7 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
         theta = ss.beta.rvs(alpha, beta)
         
         # Draw samples from p(mu | theta, mu0, M0) by Metropolis-Hastings
-        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], phi['M'], mu=mu, Qsd=Qsd, mh_nsample=mh_nsample, pool=pool)
+        mu_mh = sampleMuMH(theta, phi['mu0'], phi['M0'], phi['M'], mu=mu, Qsd=Qsd, nmh=nmh, pool=pool)
         mu = np.median(mu_mh, axis=0)
         # Store the sample
         theta_s[:,:,i] = np.copy(theta)
@@ -731,8 +899,8 @@ def mh_sample(r, n, gibbs_nsample=10000,mh_nsample=10, burnin=0.2, thin=2, pool=
         h5file.flush()
     # Apply the burn-in and thinning
     if burnin > 0.0:
-        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*gibbs_nsample):], 1)
-        theta_s = np.delete(theta_s, np.s_[0:np.int(burnin*gibbs_nsample):], 2)
+        mu_s = np.delete(mu_s, np.s_[0:np.int(burnin*ngibbs):], 1)
+        theta_s = np.delete(theta_s, np.s_[0:np.int(burnin*ngibbs):], 2)
     if thin > 1:
         mu_s = np.delete(mu_s, np.s_[::thin], 1)
         theta_s = np.delete(theta_s, np.s_[::thin], 2)
