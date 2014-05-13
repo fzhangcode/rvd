@@ -377,7 +377,7 @@ def paired_difference_test(controlHDF5Name, caseHDF5Name, N = 1000, intvl=[0, np
 
 def somatic_test_main(args):
     intvl=(min(args.intvl),max(args.intvl))
-    somatic_test(controlHDF5Name=args.controlHDF5Name, caseHDF5Na=args.caseHDF5Name, 
+    somatic_test(controlHDF5Name=args.controlHDF5Name, caseHDF5Name=args.caseHDF5Name, 
         N =args.N, intvl=intvl, alpha=args.alpha, chi2=args.chi2, outputFile=args.outputFile, seedint = args.seedint )
 
 def somatic_test(controlHDF5Name, caseHDF5Name, N = 1000, intvl=[0, np.inf], 
