@@ -25,6 +25,7 @@ import re
 import pdb
 import time
 
+import pandas as pd
 import random
 
 def main():
@@ -83,7 +84,7 @@ def main():
     argpOneTest.add_argument('-i', '--intvl', nargs =2, type=float, default=(0.05, np.inf), 
         help='interval of interest in in posterior distribution.')
     argpOneTest.add_argument('-a','--alpha', type=float, default = 0.05, 
-        help='one sample test credible level')
+        help='hypothesis test credible level')
     argpOneTest.add_argument('-o', dest='outputFile', 
                 default='variants_one_sample',
                 help='output HDF5 file name, default (output)')
@@ -96,7 +97,7 @@ def main():
     argpGermTest.add_argument('-i', '--intvl', nargs =2, type=float, default=(0.05, np.inf), 
         help='interval of interest in in posterior distribution.')
     argpGermTest.add_argument('-a','--alpha', type=float, default = 0.05, 
-        help='one sample test credible level')
+        help='hypothesis test credible level')
     argpGermTest.add_argument('-o', dest='outputFile', 
                 default='variants_germline',
                 help='output HDF5 file name, default (variants_germline)')
@@ -113,7 +114,7 @@ def main():
     argpDiffTest.add_argument('-i', '--intvl', nargs =2, type=float, default=(0.0, np.inf), 
         help='interval of interest in in posterior distribution.')
     argpDiffTest.add_argument('-a','--alpha', type=float, default = 0.05, 
-        help='one sample test credible level')
+        help='hypothesis test credible level')
     argpDiffTest.add_argument('-o', dest='outputFile', 
                 default='variants_paired_difference',
                 help='output HDF5 file name, default (variants_paired_difference)')
@@ -134,7 +135,7 @@ def main():
     argpSomTest.add_argument('-i', '--intvl', nargs =2, type=float, default=(0.0, np.inf), 
         help='interval of interest in in posterior distribution.')
     argpSomTest.add_argument('-a','--alpha', type=float, default = 0.05, 
-        help='one sample test credible level')
+        help='hypothesis test credible level')
     argpSomTest.add_argument('-o', dest='outputFile', 
                 default='variants_somatic',
                 help='output HDF5 file name, default (variants_somatic)')
@@ -167,7 +168,6 @@ def main():
     
 
 def gen(args):
-    # function to generate simulation control-case paired data using computer
     sample_run(N=args.N, J=args.J, seedint = args.seedint)
 
 def sample_run( N=3, J=10, seedint = None):
@@ -179,7 +179,7 @@ def sample_run( N=3, J=10, seedint = None):
         np.random.seed(seedint)
     loc = range(J)
     loc = ['chr0:'+str(j+1) for j in loc]
-    refb = ['.']*J
+    refb = ['A']*J
 
     # simulate the control sample
     phi = {'M0':100, 'mu0':0.01, 'M':[1000]*J}
@@ -552,15 +552,13 @@ def load_dualmodel(controlHDF5Name, caseHDF5Name):
 
     caseMu = caseMu[caselocIdx,:]
     controlMu = controlMu[controllocIdx,:]
-    pdb.set_trace()
     caseR = caseR[:,caselocIdx,:]
     controlR = controlR[:,controllocIdx,:]
 
     loc = caseloc[caselocIdx]
 
     J = len(loc)
-
-
+    
     refb = controlrefb[controllocIdx]
 
     altb = []
