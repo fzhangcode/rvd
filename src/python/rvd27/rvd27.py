@@ -75,7 +75,9 @@ def main():
                 help='burnin, default 0.2')
     argpGibbs.add_argument('-t', '--thin', type=int, default=2,
                 help='thin, default 2')
-    argpGibbs.set_defaults(func=gibbs)
+    argpGibbs.add_argument('-s', dest='seedint', type = int, default=None,
+        help='random process seed.')
+    argpGibbs.set_defaults(func=gibbs_main)
 
     ## create subparse for one sample one sided test
     argpOneTest = subparsers.add_parser('one_sample_test', 
@@ -983,6 +985,7 @@ def load_depth(dcFileNameList):
     loc = []
     refb = {}
     cd = []
+
     for dcFileName in dcFileNameList:
         with open(dcFileName, 'r') as dcFile:
             header = dcFile.readline().strip()
