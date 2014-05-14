@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+
+<!-- Google Analytics Snippet -->
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-49433808-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="description" content="Flaherty Lab - RVD2">
+	<meta name="author" content="Patrick Flaherty">
+	
+	<title>Flaherty Lab - RVD2</title>
+
+	<link rel="stylesheet" href="../mystyle.css">
+</head>
+
+<body>
+	
+
+
+<!-- Site navigation menu -->
+<!-- TODO: make this a server side include -->
+<aside class="navbar">
+	<div class="vcard">
+		<a href="photos/flaherty_high-res.jpg"><img class="photo fn" style="margin:20px auto;display:block" src="../photos/flaherty_low-res.jpg" width="150" alt="Patrick Flaherty" /></a>
+
+	<nav>
+		<ul>
+		<li><a href="index.html">About</a></li>
+		<li><a href="pubs.html">Publications</a></li>
+		<li><a href="courses.html">Courses</a></li>
+		<li><a href="tools.html">Tools</a></li>
+		<li><a href="mqp.html">MQP Projects</a></li>
+		</ul>
+	</nav>
+
+		Biomedical Engineering Department<br/>
+		<div class="org">Worcester Polytechnic Institute</div>
+		Gateway Park Room 3003<br/>
+		<div class="adr">
+		  <div class="street-address">60 Prescott St</div>
+		  <span class="locality">Worcester</span>, 
+		  <span class="region">MA</span>, 
+		  <span class="postal-code">01605</span>
+		</div>
+		<div class="tel">
+			<span class="type">work</span>:
+			<span class="value">(508) 831-6583</span>
+		</div>
+		<div class="tel">
+			<span class="type">fax</span>:
+			<span class="value">(508) 831-4121</span>
+		</div>
+		<a class="email" href="mailto:pjflaherty@wpi.edu">pjflaherty@wpi.edu</a>
+	</div>
+	
+	<div>
+		<h1> News </h1>
+		<time>2014-03-31</time> Our article "Robust Optimization of Biological Protocols" accepted to Technometrics.<p/>
+		<time>2014-03-20</time> Tim DeFreitas wins <a href="https://goldwater.scholarsapply.org/hm-2014.php">Goldwater scholarship honorable mention</a>. Congrats Tim!<p/>
+		<time>2013-12-15</time> Awarded <a href="http://www.phrmafoundation.org">PhRMA Foundation</a> Informatics Starter Grant. Thanks PhRMA Foundation!
+	</div>
+
+</aside>
+
+<section>
+	<!-- Main content -->
+	<h1>RVD2: An ultra-sensitive variant detection model for low-depth targeted next-generation sequencing data</h1>
+	
+	This page contains supplemental data files and computer code for RVD2.
+	
+	<!-- An early draft of the manuscript is provided <a href="">here</a> and the supplementary information is provided <a href="">here</a>. -->
+	
+	<h2> Code </h2>
+	<p> We provide a python module containing the core functionality of RVD2. This module depends on the following modules: numpy, scipy, itertools, h5py tempfile, logging, datetime, os, subprocess, re, pdb and time. To run in multithreaded mode, you also need the multiprocessing module. </p>
+	<a href="rvd27.py">Download RVD2</a>
+	<p> RVD2 can be run as a command line program or imported into an existing python script as a module. Make the file executable and call <code>$ rvd27.py</code> from the command line to print a usage message. 
+		<p> We will be adding the option to simulate data and test RVD2 shortly. </p>
+	
+	<h2> Data </h2>
+	<p> The simulation data used for the experiment in the results section are provided at the following locations:
+		<ul>
+			<li> Tumor and Normal data for HCC1187 was obtained from <a href="https://basespace.illumina.com/project/744744/TumorNormal_WGS_HiSeq2000_CSW_0-23">https://basespace.illumina.com/project/744744/TumorNormal_WGS_HiSeq2000_CSW_0-23</a> on 10/30/2013. </li>
+			<li> Synthetic DNA data was obtained from <a href="http://dna-discovery.stanford.edu/software/rvd/ under">http://dna-discovery.stanford.edu/software/rvd/</a> under the heading "Synthetic DNA Data"</li>
+</section>
+</body>
+
+</html>
