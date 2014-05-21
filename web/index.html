@@ -105,17 +105,16 @@
 
 	<h2> Demo </h2>
 	<p> We provide a <a href="src\demo.sh"> demo</a> to test if RVD2 CLI can be successfully run in your computer. </p>
-	<p> A success message will be displayed upon finish. Three hdf5 files and a vcf file will be created in the directory provided, same as what is in <a href="src\demo.zip">Download demo result files. </a> </p>
+	<p> A success message will be displayed upon finish. Three hdf5 files and a vcf file will be created in the directory provided those should match these results: <a href="src\demo.zip">demo result files </a>. </p>
 
+<!--
 	<h2> Result reproduce </h2>
-	<p>To call variants, we start from bam files, and then use <a href="http://samtools.sourceforge.net/samtools.shtml">SAMtools mpileup</a> to convert bam files to pileup files. Next, we use a <a href="src\main.c"> pileup2dc program</a> to convert pileup files(.pileup) to depth chart files (.dc). Finally, we feed depth chart files to RVD2 program to call variants.  <br>
-	In the RVD2 program, first you apply the function <b>gibbs</b> to the depth chart, to fit the RVD2 statistical model and generate hdf5 files. Then you feed the hdf5 files to the <b>test</b> functions and call variants. Results including hdf5 files and vcf files will be created upon finish. </p>
-
 		<p>A clinical HCC1187 breast cancer dataset and a synthetic DNA dataset were analyzed using RVD2 in our paper. Here we provide scripts to reproduce (partial) results we obtained. Depth chart files for this dataset need to be created before running the bash scripts. Directoris to the depth chart file of control and case sample are required in running the scripts.</p>
 		<ul>
 			<li> <a href="src/HCC1187_data_rvd2.sh">Script for HCC1187 dataset analysis. </a> </li>
 			<li> <a href="src/synthetic_data_rvd2.sh">Script for synthetic dataset analysis. </a> The synthetic dataset is composed of a control sample and case samples at five MAF level (0.1%, 0.3%, 1%, 10%, 100%). There are also four levels of downsampling rate (10, 100, 1000, 10000). This script is only able to accept the control sample and case sample at one MAF level at one downsampling rate at a time.</li>
 		</ul>
+-->
 	
 		
 
