@@ -85,11 +85,13 @@
 	
 	<h2> Code </h2>
 	<p> We provide a python module containing the core functionality of RVD2. This module depends on the following modules: numpy, scipy, itertools, h5py tempfile, logging, datetime, os, subprocess, re, pdb and time. To run in multithreaded mode, you also need the multiprocessing module. </p>
-	<p> RVD2 can be run as a command line program or imported into an existing python script as a module. Make the file executable and call <code>$ rvd27.py</code> from the command line to print a usage message.	
+	<p> RVD2 can be run as a command line program or imported into an existing python script as a module. Make the file executable and call <code>$ rvd27.py</code> from the command line to print a usage message.	</p>
+    <p> You'll need a small utility program to convert the pileup files to tab-deliminted depth chart format required by RVD2. Download the main.c program below and compile it to an executable using gcc. </p>
 
 	<ul>	
-	<li><a href="src\rvd27.py">Download RVD2</a></li>
-	<li><a href="src\Readme.pdf">Download RVD2 CLI Instruction</a></li>
+    <li><a href="src/main.c">pileup2dc main.c file</a></li>
+	<li><a href="src/rvd27.py">Download RVD2</a></li>
+	<li><a href="src/Readme.pdf">Download RVD2 CLI Instruction</a></li>
 	</ul>
 
 
