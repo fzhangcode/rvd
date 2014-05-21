@@ -1,0 +1,7 @@
+# RVD2 Project Ideas
+* Finalize sampling & hypothesis testing
+* Run simulated low seq depth
+* Run on MS samples
+* Publish RVD2 paper
+* Write review article on rare variant detection
+* Temperature-sensitive mutant screening using RVD2
