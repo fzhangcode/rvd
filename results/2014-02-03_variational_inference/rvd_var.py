@@ -19,7 +19,7 @@ import tempfile
 import logging
 import time
 from datetime import datetime
-
+import warnings
 import pdb
 
 def main():
@@ -27,8 +27,8 @@ def main():
     logging.basicConfig(level=log_level, format='%(levelname)s:%(module)s:%(message)s')
 
     ## Generate simulation data
-    J = 7 # number of positions
-    N = 3 # number of replicates
+    J = 2 # number of positions
+    N = 2 # number of replicates
     
     n = np.empty([N,J], dtype=np.int64) # read depth (rep, location)
     n.fill(1000)
@@ -70,40 +70,55 @@ def generate_sample(phi, N=3, J=100, n=100, seedint=None):
 
 ## compute sufficient statistics
 def EqlogTheta(delta):
-    try:
-        return psi(delta[0]) - psi(np.sum(delta))
-    except RuntimeWarning:
-        pdb.set_trace()
-	
+    if delta[0] < np.finfo(float).eps:
+        delta[0] += np.finfo(float).eps
+    return psi(delta[0]) - psi(np.sum(delta))
 
 def Eqlog1_Theta(delta):
-	return psi(delta[1]) - psi(np.sum(delta))
+    if delta[1] < np.finfo(float).eps:
+        delta[1]+=np.finfo(float).eps
+    return psi(delta[1]) - psi(np.sum(delta))
 
 def EqMu(gam):
-	return gam[0] / (np.sum(gam)) # eps?
+    if gam[0] < np.finfo(float).eps:
+        gam[0] += np.finfo(float).eps
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error')
+        # pdb.set_trace()
+        try:
+            x = gam[0] / (np.sum(gam)) # eps?
+        except RuntimeWarning: 
+            # print 'Raised!'
+            pdb.set_trace()
+    return gam[0] / (np.sum(gam)) # eps?
 
 def EqlogMu(gam):
-    try:
-        return psi(gam[0]) - psi(np.sum(gam))
-    except ValueError:
-        pdb.set_trace()
-    
+    if gam[0] < np.finfo(float).eps:
+        gam[0] += np.finfo(float).eps
+    return psi(gam[0]) - psi(np.sum(gam))    
 
 def Eqlog1_Mu(gam):
 	return psi(gam[1]) - psi(np.sum(gam))
 
-def EqlogGamma(gam, M):
+def EqlogGamma(gam, M): 
     # Expectation of Beta function coefficient
+    # logGamma = integrate.quad(kernel, np.finfo(float).eps, 1-np.finfo(float).eps, args=(gam, M), full_output=1)
     logGamma = integrate.quad(kernel, 1e-3, 1-1e-3, args=(gam, M), full_output=1)
     return logGamma[0]
 
-def kernel(mu, gam, M):
-    return ss.beta.pdf(mu, gam[0], gam[1])*betaln(mu*M, (1-mu)*M)
+def kernel(mu, gam, M): ## minus sign here in the kernel?
+    return -ss.beta.pdf(mu, gam[0], gam[1])*betaln(mu*M, (1-mu)*M)
 
 ## compute entropy
 def BetaEntropy(x):
 	# To compute EqlogQmu and EqlogQtheta
-	return betaln(x[0],x[1]) - (x[0]-1) * psi(x[0]) - (x[1] - 1) * psi(x[1]) +(x[0] + x[1] -2) * psi(x[0] + x[1])
+    return betaln(x[0] ,x[1]) - (x[0]-1) * psi(x[0]) - (x[1] - 1) * psi(x[1]) + (x[0] + x[1] -2) * psi(x[0] + x[1])
+
+    # return betaln(x[0]+np.finfo(float).eps,x[1]+np.finfo(float).eps) \
+    # - (x[0]-1) * psi(x[0]+np.finfo(float).eps) - \
+    # (x[1] - 1) * psi(x[1]+np.finfo(float).eps) + \
+    # (x[0] + x[1] -2) * psi(x[0] + x[1]+np.finfo(float).eps)
 
 ## compute ELBO
 def ELBO(r, n, M, mu0, M0, delta, gam):
@@ -153,7 +168,8 @@ def ELBO(r, n, M, mu0, M0, delta, gam):
     for j in xrange(J):
         EqlogQmu += BetaEntropy(gam[j,:])
 
-    return EqlogPr + EqlogPtheta + EqlogPmu - EqlogQtheta - EqlogQmu
+    # return EqlogPr + EqlogPtheta + EqlogPmu - EqlogQtheta - EqlogQmu
+    return EqlogPr + EqlogPtheta + EqlogPmu
 
 def ELBO_delta_ij(r, n, M, delta, gam):
     ## partial ELBO from replicate i position j
@@ -176,7 +192,8 @@ def ELBO_delta_ij(r, n, M, delta, gam):
 
     EqlogQtheta = BetaEntropy(delta)
 
-    return EqlogPr + EqlogPtheta - EqlogQtheta
+    # return EqlogPr + EqlogPtheta - EqlogQtheta
+    return EqlogPr + EqlogPtheta
 
 def neg_ELBO_delta_ij(logdelta, gam, r, n, M):
     return -ELBO_delta_ij(r, n, M, np.exp(logdelta), gam)
@@ -184,10 +201,15 @@ def neg_ELBO_delta_ij(logdelta, gam, r, n, M):
 def opt_delta_ij(args):
     # pdb.set_trace()
     r, n, M, delta, gam = args
-
-    bnds = [[0, 7]]*2# limit delta to [0.0001, 10000]
+    # pdb.set_trace()
+    bnds = [[-7, 7]]*2# limit delta to [0.0001, 10000]
+    # bnds = [[0, 7]]*2# limit delta to [0.0001, 10000]
     args=(gam, r, n, M)
 
+    logging.debug(bnds)
+    logging.debug(np.log(delta))
+    # logging.debug(len(bnds))
+    # logging.debug(len(np.log(delta)))
     logdelta = opt_par(neg_ELBO_delta_ij, np.log(delta), args, bnds, 'delta')
     delta = np.exp(logdelta)
 
@@ -199,13 +221,13 @@ def opt_delta(r, n, M, delta, gam, pool = None):
     if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
     elif np.ndim(r) == 2: N, J = np.shape(r)
 
+    # pdb.set_trace()
     st = time.time()
     if pool is not None:
         for i in xrange(N):
-            args = zip (r[i,:], n[i,:], M, delta[i,:,:], gam)
+            args = zip (r[i,:], n[i,:], M, delta[i,:], gam)
             temp = pool.map(opt_delta_ij, args)
             delta = np.array(temp)
-
     else:
         logging.debug('Optimizing delta in single thread')
         for i in xrange(N):
@@ -236,20 +258,22 @@ def ELBO_gam_j( M, mu0, M0, delta, gam):
 
     EqlogPtheta = N*EqlogGamma(gam,M)
     for i in xrange(N):
-        EqlogPtheta += (M*M-1) * logTheta[i] + (M*(1-Mu)-1)*log1_Theta[i]
+        EqlogPtheta += (M*Mu-1) * logTheta[i] + (M*(1-Mu)-1)*log1_Theta[i] ## I had a typo here (M->Mu)
 
     EqlogPmu= -betaln(mu0*M0, (1-mu0)*M0)+ (M0*mu0-1)*logMu + (M0*(1-mu0)-1)*log1_Mu
 
     EqlogQmu = BetaEntropy(gam)
 
-    return  EqlogPtheta + EqlogPmu - EqlogQmu
+    # return  EqlogPtheta + EqlogPmu - EqlogQmu
+    return  EqlogPtheta + EqlogPmu
 
 def neg_ELBO_gam_j(loggam, delta, M, mu0, M0):
     return -ELBO_gam_j(M, mu0, M0, delta, np.exp(loggam))
 
 def opt_gam_j(args):
     M, mu0, M0, delta, gam = args
-    bnds = [[0, 7]]*2# limit delta to [0.0001, 10000]
+    bnds = [[-7, 7]]*2# limit delta to [0.0001, 10000]
+    # bnds = [[0, 7]]*2# limit delta to [0.0001, 10000]
     args = (delta, M, mu0, M0)
     loggam = opt_par(neg_ELBO_gam_j, np.log(gam), args, bnds, 'gamma')
     gam = np.exp(loggam)
@@ -333,7 +357,7 @@ def ELBO_M_j(M, delta, gam):
 
     EqlogPtheta = N*EqlogGamma(gam,M)
     for i in xrange(N):
-        EqlogPtheta += (M*M-1) * logTheta[i] + (M*(1-Mu)-1)*log1_Theta[i]
+        EqlogPtheta += (M*Mu-1) * logTheta[i] + (M*(1-Mu)-1)*log1_Theta[i]
 
     return  EqlogPtheta 
 
@@ -377,9 +401,6 @@ def opt_par(func, x, args, bnds, parlabel):
     #     args=args, bounds=bnds, 
     #     method='Newton-CG') 
 
-    res = so.minimize(func, x, 
-        args=args, bounds=bnds, 
-        method='L-BFGS-B') # limited memory BFGS method
 
     # logging.debug("Inside of optimize function. got res")
     # Nelder-Mead is the simplest way to minimize a fairly well-behaved function. 
@@ -390,29 +411,43 @@ def opt_par(func, x, args, bnds, parlabel):
     #     res = so.minimize(func, x, 
     #         args=args, bounds=bnds, method='Nelder-Mead')
 
-    if res.success == False: # There is no bounds for Nelder-Mead method
+    res = so.minimize(func, x, 
+        args=args, bounds=bnds, 
+        method='L-BFGS-B' ) # limited memory BFGS method
+# , tol = 1e-6, options={'maxiter': 5}
+    if res.success == False: 
         logging.debug(2)  
         res = so.minimize(func, x, 
-            args=args, bounds=bnds, method='TNC')
+            args=args, bounds=bnds, method='TNC') 
+            # truncated Newton algorithm to minimize a function with variables subject to bounds.
 
-    if res.success == False: # There is no bounds for Nelder-Mead method
+    if res.success == False:
         logging.debug(3)  
         res = so.minimize(func, x, 
-            args=args, bounds=bnds, method='SLSQP')
+            args=args, bounds=bnds, method='SLSQP') #Sequential Least SQuares Programming to minimize 
+        #a function of several variables with any combination of bounds, equality and inequality constraints
 
     # use the gradient of the objective function, which can be given by the user. 
-    if res.success == False:
-        logging.debug(4)  
-        res = so.minimize(func, x, bounds=bnds,\
-            args=args, method='BFGS')
-    
-    if res.success == False or np.any ( np.isnan(res.x) ):
+    # if res.success == False:
+    #     logging.debug(4)  
+    #     pdb.set_trace()
+    #     res = so.minimize(func, x, bounds=bnds,\
+    #         args=args, method='BFGS') # quasi-Newton method of Broyden, Fletcher, Goldfarb, and Shanno
+
+    # res = so.minimize(func, x, 
+    #         args=args, bounds=bnds, method='TNC')    
+
+    if res.success == False or np.any ( np.isnan(res.x) ) or np.any(np.isinf(res.x)):
         logging.warning("Could not optimize %s or %s is NaN." %(parlabel, parlabel))
         x = np.random.uniform(low=np.amin(bnds), high=np.amax(bnds), size = np.shape(x))      
         return x
+        
     return res.x
 
 def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
+
+    if pool is not None:
+        pool = mp.Pool(processes=pool)
     # t = str(datetime.now)
     f = open('ELBO.txt','w')
     t = time.time()
@@ -438,10 +473,9 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
     # MAXVARITER = 10
     # NORMTOL = 0.1
     MAXITER = 20
-    ELBOTOLPCT = 0.1    
+    ELBOTOLPCT = 0.01    
     MAXVARITER = 10
-    NORMTOL = 0.1
-
+    NORMTOL = 0.01
 
     ## Initialize model parameters
     if phi is None:
@@ -455,8 +489,6 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
     ## Initialize the variational parameters
    
     if q is None:
-        # delta = np.transpose(np.array([r + mu*M+ np.finfo(np.float).eps, 
-        #     (n - r) + (1-mu)*M+ np.finfo(np.float).eps]), axes = (1,2,0))
         delta = np.random.uniform(low = 0.1, high = 100, size = (N,J,2))
         gam = np.random.uniform(low=0.1, high=100, size = (J,2))
     else:
@@ -477,7 +509,7 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
     moditer = 0
     delta_elbo_pct = np.inf
 
-    while moditer < MAXITER and delta_elbo_pct > ELBOTOLPCT:
+    while moditer < MAXITER and np.abs(delta_elbo_pct) > ELBOTOLPCT:
         # E-step: Update the variational distribution
         variter = 0
         var_elbo = [ elbo[-1] ]
