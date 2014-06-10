@@ -80,18 +80,19 @@ def Eqlog1_Theta(delta):
     return psi(delta[1]) - psi(np.sum(delta))
 
 def EqMu(gam):
-    if gam[0] < np.finfo(float).eps:
-        gam[0] += np.finfo(float).eps
-
-    with warnings.catch_warnings():
-        warnings.filterwarnings('error')
-        # pdb.set_trace()
-        try:
-            x = gam[0] / (np.sum(gam)) # eps?
-        except RuntimeWarning: 
-            # print 'Raised!'
-            pdb.set_trace()
     return gam[0] / (np.sum(gam)) # eps?
+    # if gam[0] < np.finfo(float).eps:
+    #     gam[0] += np.finfo(float).eps
+
+    # with warnings.catch_warnings():
+    #     warnings.filterwarnings('error')
+    #     # pdb.set_trace()
+    #     try:
+    #         x = gam[0] / (np.sum(gam)) # eps?
+    #     except RuntimeWarning: 
+    #         # print 'Raised!'
+    #         pdb.set_trace()
+
 
 def EqlogMu(gam):
     if gam[0] < np.finfo(float).eps:
@@ -113,18 +114,14 @@ def kernel(mu, gam, M): ## minus sign here in the kernel?
 ## compute entropy
 def BetaEntropy(x):
 	# To compute EqlogQmu and EqlogQtheta
-    return betaln(x[0] ,x[1]) - (x[0]-1) * psi(x[0]) - (x[1] - 1) * psi(x[1]) + (x[0] + x[1] -2) * psi(x[0] + x[1])
-
-    # return betaln(x[0]+np.finfo(float).eps,x[1]+np.finfo(float).eps) \
-    # - (x[0]-1) * psi(x[0]+np.finfo(float).eps) - \
-    # (x[1] - 1) * psi(x[1]+np.finfo(float).eps) + \
-    # (x[0] + x[1] -2) * psi(x[0] + x[1]+np.finfo(float).eps)
+    return betaln(x[0], x[1]) - (x[0]-1) * psi(x[0]) - (x[1] - 1) * psi(x[1]) + (x[0] + x[1] -2) * psi(x[0] + x[1])
 
 ## compute ELBO
 def ELBO(r, n, M, mu0, M0, delta, gam):
-    if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
-    elif np.ndim(r) == 2: N, J = np.shape(r)
-
+    if np.ndim(r) == 1: 
+        N, J = (1, np.shape(r)[0])
+    elif np.ndim(r) == 2: 
+        N, J = np.shape(r)
 
     # Compute the expectations  
     Mu = np.array([EqMu(gam[j,:]) for j in xrange(J)])
@@ -162,14 +159,14 @@ def ELBO(r, n, M, mu0, M0, delta, gam):
     EqlogQtheta = 0.0
     for j in xrange(J):
         for i in xrange(N):
-            EqlogQtheta += BetaEntropy(delta[i,j,:])
+            EqlogQtheta -= BetaEntropy(delta[i,j,:])
 
     EqlogQmu = 0.0
     for j in xrange(J):
-        EqlogQmu += BetaEntropy(gam[j,:])
+        EqlogQmu -= BetaEntropy(gam[j,:])
 
-    # return EqlogPr + EqlogPtheta + EqlogPmu - EqlogQtheta - EqlogQmu
-    return EqlogPr + EqlogPtheta + EqlogPmu
+    return EqlogPr + EqlogPtheta + EqlogPmu - EqlogQtheta - EqlogQmu
+    # return EqlogPr + EqlogPtheta + EqlogPmu
 
 def ELBO_delta_ij(r, n, M, delta, gam):
     ## partial ELBO from replicate i position j
@@ -190,10 +187,10 @@ def ELBO_delta_ij(r, n, M, delta, gam):
 
     EqlogPtheta = (M*Mu - 1)*logTheta + (M*(1-Mu)-1)*log1_Theta
 
-    EqlogQtheta = BetaEntropy(delta)
+    EqlogQtheta = -BetaEntropy(delta)
 
-    # return EqlogPr + EqlogPtheta - EqlogQtheta
-    return EqlogPr + EqlogPtheta
+    return EqlogPr + EqlogPtheta - EqlogQtheta
+    # return EqlogPr + EqlogPtheta
 
 def neg_ELBO_delta_ij(logdelta, gam, r, n, M):
     return -ELBO_delta_ij(r, n, M, np.exp(logdelta), gam)
@@ -262,10 +259,10 @@ def ELBO_gam_j( M, mu0, M0, delta, gam):
 
     EqlogPmu= -betaln(mu0*M0, (1-mu0)*M0)+ (M0*mu0-1)*logMu + (M0*(1-mu0)-1)*log1_Mu
 
-    EqlogQmu = BetaEntropy(gam)
+    EqlogQmu = -BetaEntropy(gam)
 
-    # return  EqlogPtheta + EqlogPmu - EqlogQmu
-    return  EqlogPtheta + EqlogPmu
+    return  EqlogPtheta + EqlogPmu - EqlogQmu
+    # return  EqlogPtheta + EqlogPmu
 
 def neg_ELBO_gam_j(loggam, delta, M, mu0, M0):
     return -ELBO_gam_j(M, mu0, M0, delta, np.exp(loggam))
@@ -468,14 +465,10 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
     logging.info('Storing model updates in %s' % h5file.name)   
 
     ## Define optimization stopping criterion
-    # MAXITER = 20
-    # ELBOTOLPCT = 0.1    
-    # MAXVARITER = 10
-    # NORMTOL = 0.1
     MAXITER = 20
     ELBOTOLPCT = 0.01    
     MAXVARITER = 10
-    NORMTOL = 0.01
+    NORMTOL = 0.1
 
     ## Initialize model parameters
     if phi is None:
@@ -596,8 +589,6 @@ def estimate_mom(r, n):
         if M[i] < 1:
             M[i] = 1
    
-
-
     phi = {'mu0':mu0, 'M0':M0, 'M':M}
     return phi, mu, theta
 
