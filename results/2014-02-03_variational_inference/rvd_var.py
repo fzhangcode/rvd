@@ -37,7 +37,7 @@ def main():
     (r, theta, mu) = generate_sample(phi, N, J, n, seedint=19891129)
 
     ## model optimization  
-    (phiHat, qHat) = ELBO_opt(r, n, seed = 199096, pool = None)
+    (phiHat, qHat) = ELBO_opt(r, n, seed = 199096, pool = 5)
 
     ## save the parameters.
     save_model('model.hdf5', r, n, phiHat, qHat)
@@ -124,7 +124,11 @@ def ELBO(r, n, M, mu0, M0, delta, gam):
         N, J = np.shape(r)
 
     # Compute the expectations  
-    Mu = np.array([EqMu(gam[j,:]) for j in xrange(J)])
+    try:
+        Mu = np.array([EqMu(gam[j,:]) for j in xrange(J)])
+    except TypeError:
+        pdb.set_trace()
+    # Mu = np.array([EqMu(gam[j,:]) for j in xrange(J)])
     logMu = np.array([EqlogMu(gam[j,:]) for j in xrange(J)])
     log1_Mu = np.array([Eqlog1_Mu(gam[j,:]) for j in xrange(J)])
 
@@ -222,9 +226,10 @@ def opt_delta(r, n, M, delta, gam, pool = None):
     st = time.time()
     if pool is not None:
         for i in xrange(N):
+            # pdb.set_trace()
             args = zip (r[i,:], n[i,:], M, delta[i,:], gam)
-            temp = pool.map(opt_delta_ij, args)
-            delta = np.array(temp)
+            temp  = pool.map(opt_delta_ij, args)
+            delta[i,:] = np.array(temp)
     else:
         logging.debug('Optimizing delta in single thread')
         for i in xrange(N):
@@ -287,6 +292,7 @@ def opt_gam(M, mu0, M0, delta, gam, pool = None):
     if pool is not None:
         args = zip( M, repeat(mu0,J), repeat(M0,J), np.transpose(delta,axes=(1,0,2)),gam)
         gam = pool.map(opt_gam_j, args)
+        gam = np.array(gam)
 
     else:
         for j in xrange(J):
@@ -465,9 +471,9 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
     logging.info('Storing model updates in %s' % h5file.name)   
 
     ## Define optimization stopping criterion
-    MAXITER = 20
+    MAXITER = 10
     ELBOTOLPCT = 0.01    
-    MAXVARITER = 10
+    MAXVARITER = 5
     NORMTOL = 0.1
 
     ## Initialize model parameters
@@ -507,17 +513,19 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
         variter = 0
         var_elbo = [ elbo[-1] ]
         (norm_delta_delta, norm_delta_gam) = (np.inf, np.inf)
+        delta_varelbo_pct = np.inf
 
         while variter < MAXVARITER \
-            and delta_elbo_pct > ELBOTOLPCT \
+            and delta_varelbo_pct > ELBOTOLPCT \
             and (norm_delta_delta > NORMTOL or norm_delta_gam > NORMTOL):
 
             #Store the previous parameter values
             (delta_prev, gam_prev) = (np.copy(delta), np.copy(gam))
 
             #Update the variational distribution
+            delta = opt_delta(r, n, M, delta, gam, pool = pool)            
             gam = opt_gam( M, mu0, M0, delta, gam, pool = pool)
-            delta = opt_delta(r, n, M, delta, gam, pool = pool)
+
             
             #Test for convergence
             var_elbo.append(ELBO(r, n, M, mu0, M0, delta, gam))
@@ -541,6 +549,7 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
         elbo.append(ELBO(r, n, M, mu0, M0, delta, gam))
         delta_elbo_pct = 100*(elbo[-1] - elbo[-2])/abs(elbo[-2])
         moditer += 1
+
 
         # ibic
 
