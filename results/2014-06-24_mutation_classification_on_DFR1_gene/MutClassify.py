@@ -31,20 +31,20 @@ def main():
     [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI, srows = 9)
     mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))
 
-    # ######## Somatic mutation: T0 diploid as control, T0 haploid as case ########
-    # vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T0haploid_S1.vcf'
-    # [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI)
-    # mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))
+    ######## Somatic mutation: T0 diploid as control, T0 haploid as case ########
+    vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T0haploid_S1.vcf'
+    [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI)
+    mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))
 
-    # ######## Somatic mutation: T0 diploid as control, T1 diploid as case ########
-    # vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T1diploid_S3.vcf'
-    # [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI)
-    # mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))
+    ######## Somatic mutation: T0 diploid as control, T1 diploid as case ########
+    vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T1diploid_S3.vcf'
+    [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI)
+    mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))
 
-    # ######## Somatic mutation: T0 diploid as control, T2 diploid as case ########
-    # vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T2diploid_S4.vcf'
-    # [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI)
-    # mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))    
+    ######## Somatic mutation: T0 diploid as control, T2 diploid as case ########
+    vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T2diploid_S4.vcf'
+    [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI)
+    mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))    
 
     ## what about bases next to each other?
 def import_altSeq(vcffile, RefSeq, ROI, srows = 10):

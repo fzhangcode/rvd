@@ -605,7 +605,7 @@ def write_dualvcf(outputFile, loc, call, refb, altb, controlMu=None, controlR=No
 
     print("##source=rvd2", file=vcfF)
 
-    print('##Posterior test in cancer-normal-paired sample.', file=vcfF)
+    print('##Posterior test in control-case-paired sample.', file=vcfF)
 
     # print("##Posterior difference threshold = %0.2f" %tau, file=vcfF)
     # print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
