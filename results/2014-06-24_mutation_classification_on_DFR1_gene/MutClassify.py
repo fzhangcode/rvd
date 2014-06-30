@@ -9,24 +9,48 @@ import pdb
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib_venn import venn3, venn2
 import vcf
 import re
 
 import random
 import textwrap
+import os
 
 def main():
     ## read in the fasta files
-    filename = 'DFR11.fa'
+    filename = './../2014-06-18_apply_rvd27_to_elisa_data/DFR11.fa'
     with open(filename,'r') as fin:
         RefSeq = fin.read()
     RefSeq = clean_sequence(RefSeq)
     RefPepSeq= translate(RefSeq)
 
-    ## read in the vcf files
-    vcffile = 'T1diploid_S3.vcf'
-    t = pd.read_table(vcffile, header = 1, skiprows = 10)
+    ROI = range(780907,781543)
+
+    ######## Germline mutation: T0 diploid as test sample########
+    vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T0diploid_S2_0_01.vcf'
+    [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI, srows = 9)
+    mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))
+
+    # ######## Somatic mutation: T0 diploid as control, T0 haploid as case ########
+    # vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T0haploid_S1.vcf'
+    # [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI)
+    # mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))
+
+    # ######## Somatic mutation: T0 diploid as control, T1 diploid as case ########
+    # vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T1diploid_S3.vcf'
+    # [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI)
+    # mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))
+
+    # ######## Somatic mutation: T0 diploid as control, T2 diploid as case ########
+    # vcffile = './../2014-06-18_apply_rvd27_to_elisa_data/T2diploid_S4.vcf'
+    # [AltPepSeq, pos, refb, altb] = import_altSeq(vcffile, RefSeq, ROI)
+    # mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb, outputfile = os.path.basename(vcffile).replace('vcf','txt'))    
+
+    ## what about bases next to each other?
+def import_altSeq(vcffile, RefSeq, ROI, srows = 10):
+## read in the vcf files
+    
+    t = pd.read_table(vcffile, header = 1, skiprows = srows)
     pos = t.POS
     pos = [int(s) for s in pos]
 
@@ -37,18 +61,14 @@ def main():
     AltSeq = list(RefSeq)
     # pdb.set_trace()
 
-    ROI = range(780907,781543)
     for i in pos:
         AltSeq[ROI.index(i)] = altb[pos.index(i)]
 
     ## convert the AltSeq to a str
     AltSeq = ''.join(s for s in AltSeq)
     AltPepSeq = translate(AltSeq)
+    return AltPepSeq, pos, refb, altb
 
-
-    mutationclf(RefPepSeq, AltPepSeq, pos, ROI, refb, altb)
-
-    ## what about bases next to each other?
 
 def mutationclf(sequence1, sequence2, pos, ROI, refb, altb, outputfile = 'Mutationtypes.txt'):
     f = open(outputfile, 'w')
@@ -104,7 +124,6 @@ def translate( sequence ):
     """Return the translated protein from 'sequence' assuming +1 reading frame"""
     ## Yeast genetic code
     # Difference from the standard Code: CUG-> Serine; standard CUG->Leucine
-    pdb.set_trace()
     gencode = {
     'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
     'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',

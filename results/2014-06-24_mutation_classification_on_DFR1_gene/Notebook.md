@@ -85,11 +85,101 @@ Experimental Protocol
 
 
 Results
------------
-![](T0S2T1T3POSbar.png)
+-----------	
+    ######## Germline mutation: T0 diploid as test sample########
+	#CHROM	POS	refBase	altBase	refAminoAcid	altAminoAcid	MutationType
+	chrXV	780948	T	.	C	X	Missense Mutation
+	chrXV	780959	A	.	E	X	Missense Mutation
+	chrXV	780978	T	.	R	X	Missense Mutation
+	chrXV	780984	T	.	G	X	Missense Mutation
+	chrXV	780997	T	.	L	X	Missense Mutation
+	chrXV	781226	A	.	N	X	Missense Mutation
+	chrXV	781278	T	.	G	X	Missense Mutation
+	chrXV	781403	T	.	V	X	Missense Mutation
+	chrXV	781454	T	.	V	X	Missense Mutation
+	chrXV	781522	A	.	T	X	Missense Mutation
+				
+	######## Somatic mutation: T0 diploid as control, T0 haploid as case ########
+	#CHROM	POS	refBase	altBase	refAminoAcid	altAminoAcid	MutationType
+	chrXV	780921	G	T	K	N	Missense Mutation
+	chrXV	781054	A	G	K	E	Missense Mutation
+	chrXV	781120	C	A	P	T	Missense Mutation
+	chrXV	781246	G	T	E	_	Nonsense Mutation
+	chrXV	781348	A	G	K	E	Missense Mutation
+	chrXV	781359	T	A	T	T	Silent Mutation
+	chrXV	781408	A	G	S	G	Missense Mutation
+	chrXV	781450	A	G	K	E	Missense Mutation
+	chrXV	781455	A	G	V	V	Silent Mutation
+	chrXV	781462	C	G	P	A	Missense Mutation
+	chrXV	781518	A	T	E	D	Missense Mutation
 
+	######## Somatic mutation: T0 diploid as control, T1 diploid as case ########
+	#CHROM	POS	refBase	altBase	refAminoAcid	altAminoAcid	MutationType
+	chrXV	780926	C	T	P	L	Missense Mutation
+	chrXV	780950	T	C	L	S	Missense Mutation
+	chrXV	780965	G	A	G	E	Missense Mutation
+	chrXV	780974	T	C	F	S	Missense Mutation
+	chrXV	780991	T	C	W	R	Missense Mutation
+	chrXV	781009	A	G	M	A	Missense Mutation
+	chrXV	781010	T	C	M	A	Missense Mutation
+	chrXV	781012	A	G	K	E	Missense Mutation
+	chrXV	781019	T	A	F	Y	Missense Mutation
+	chrXV	781021	A	G	R	G	Missense Mutation
+	chrXV	781086	A	G	T	T	Silent Mutation
+	chrXV	781097	T	C	I	T	Missense Mutation
+	chrXV	781108	T	C	F	L	Missense Mutation
+	chrXV	781118	T	C	S	P	Missense Mutation
+	chrXV	781271	T	G	I	S	Missense Mutation
+	chrXV	781292	G	A	S	N	Missense Mutation
+	chrXV	781333	A	G	I	V	Missense Mutation
+	chrXV	781369	G	A	D	S	Missense Mutation
+	chrXV	781370	A	G	D	S	Missense Mutation
+	chrXV	781411	G	A	E	K	Missense Mutation
+	chrXV	781433	A	C	K	T	Missense Mutation
+	chrXV	781457	A	G	E	G	Missense Mutation
+	chrXV	781507	T	C	Y	H	Missense Mutation
 
-
+	######## Somatic mutation: T0 diploid as control, T2 diploid as case ########
+	#CHROM	POS	refBase	altBase	refAminoAcid	altAminoAcid	MutationType
+	chrXV	780910	G	A	A	T	Missense Mutation
+	chrXV	780921	G	A	K	K	Silent Mutation
+	chrXV	780931	G	T	V	L	Missense Mutation
+	chrXV	780935	G	A	G	E	Missense Mutation
+	chrXV	780941	T	C	V	A	Missense Mutation
+	chrXV	780944	C	T	A	V	Missense Mutation
+	chrXV	780948	T	C	C	C	Silent Mutation
+	chrXV	780958	G	A	E	K	Missense Mutation
+	chrXV	780972	A	T	G	G	Silent Mutation
+	chrXV	780974	T	C	F	S	Missense Mutation
+	chrXV	780978	T	G	R	R	Silent Mutation
+	chrXV	780984	T	G	G	G	Silent Mutation
+	chrXV	780991	T	C	W	R	Missense Mutation
+	chrXV	780994	A	C	R	R	Silent Mutation
+	chrXV	780997	T	G	L	V	Missense Mutation
+	chrXV	781009	A	G	M	A	Missense Mutation
+	chrXV	781010	T	C	M	A	Missense Mutation
+	chrXV	781012	A	G	K	E	Missense Mutation
+	chrXV	781019	T	C	F	S	Missense Mutation
+	chrXV	781097	T	C	I	T	Missense Mutation
+	chrXV	781108	T	C	F	L	Missense Mutation
+	chrXV	781118	T	C	S	P	Missense Mutation
+	chrXV	781136	T	A	V	D	Missense Mutation
+	chrXV	781200	T	C	S	S	Silent Mutation
+	chrXV	781204	T	G	S	A	Missense Mutation
+	chrXV	781226	A	T	N	I	Missense Mutation
+	chrXV	781268	T	A	V	E	Missense Mutation
+	chrXV	781278	T	C	G	G	Silent Mutation
+	chrXV	781333	A	G	I	V	Missense Mutation
+	chrXV	781335	A	G	I	V	Missense Mutation
+	chrXV	781369	G	A	D	N	Missense Mutation
+	chrXV	781403	T	C	V	A	Missense Mutation
+	chrXV	781406	T	G	F	C	Missense Mutation
+	chrXV	781454	T	A	V	E	Missense Mutation
+	chrXV	781468	A	T	T	S	Missense Mutation
+	chrXV	781482	A	T	Q	H	Missense Mutation
+	chrXV	781506	T	C	G	G	Silent Mutation
+	chrXV	781522	A	T	T	S	Missense Mutation
+	chrXV	781529	A	T	Y	F	Missense Mutation
 
 Future work
 ------------------------
