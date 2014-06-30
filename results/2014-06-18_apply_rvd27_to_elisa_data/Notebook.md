@@ -12,6 +12,14 @@ Background
 ----------------
 Please refer to the lab meeting slides from Elisa Lai H.Wong under `\freeze\variomics`.
 
+###PCR mutagenesis used to generate the yeast variomics pools
+
+According to the Huang's paper in 2008, which describes the method of how the yeast variomics libraries were made, the PCR mutagenesis technique was based on the Ex Taq polymerase (please see attached supplementary table 1 for details on the conditions/recipe used in the PCR). This method is based on an old protocol published in Technique by Leung, DW, Chen, E, Goeddel, DV (1989) known as "A method for random mutagenesis of a defined DNA segment using a modified polymerase chain reaction". I cannot confirm whether the error rate has been estimated for this Ex Taq polymerase in Pan's work but after digging in the literature, the error rate of Ex Taq Polymerase seems to be about 8.7 x 10-6.
+
+The supplementary infomation can be found in `\freeze\variomics\nmeth.1173-S1.pdf`
+
+### Is using different set of primers to prepare the DFR1 amplicon useful/problematic from the analysis point of view?
+
 Materials and Equipment
 ------------------------------
 Reference fasta file was download from [here ](http://hgdownload-test.cse.ucsc.edu/goldenPath/sacCer2/chromosomes/ ). After decompression, file `chrXV.fa` was used as reference file.
@@ -63,7 +71,7 @@ Results
 
 **Figure: Bar plots shows the MAF level of positions which has significantly different MAF levels in T2 generation and T1 generation from T0 (diploid) generation. There were 11 positions reported, positions in common in file `T1diploid_S3.vcf` and file `T2diploid_S4.vcf`.**
 
-A general trend in the bar plot shows that the MAF levels in these 11 positions first increase (from generation T0 to T1), but then decrease to the similar MAF level as generation T0 (from generation T1 to T2). 
+A general trend in the bar plot shows that the MAF levels in these 11 positions first increase (from generation T0 to T1), but then decrease to the similar MAF level as generation T0 (from generation T1 to T2). The unexpected decreasing trend from T1 generation to T2 generation is possibly caused by the dilution process after T1 generation when preparing the data. 
 
 ![](T1_T0S2.png)
 
