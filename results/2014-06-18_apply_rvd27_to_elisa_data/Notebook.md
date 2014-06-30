@@ -3,7 +3,7 @@
 
 Purpose
 ------------
-To detect variants in Elisa's Variomics data (Yeast DFR1 gene chrXV:780,906-781,541, length 635). 
+To detect variants in Elisa's Variomics data (Yeast DFR1 gene chrXV:780,906-781,541, length 636). 
 
 Conclusions
 -----------------
@@ -107,41 +107,6 @@ It can be seen that the MAF levels in haploid sample is universally higher than 
 Future work
 ------------------------
 DFR1 region with extension, Chromosome 12, from base 779906 to base 782541 (length 2635) with no upstream or downstream probe.
-
-Translate DNA to Protein
-
-[sequence for a region of DFR1/YOR236W](http://www.yeastgenome.org/cgi-bin/getSeq?query=YOR236W&seqtype=ORF%20Genomic%20DNA&format=fasta)
-
-
-	>YOR236W  Chr 15  
-ATGGCTGGAGGAAAGATTCCTATTGTAGGAATTGTGGCATGTTTACAGCCGGAGATGGGG
-ATAGGATTTCGTGGAGGTCTACCATGGAGGTTGCCCAGTGAAATGAAGTATTTCAGACAG
-GTCACTTCATTGACGAAAGATCCAAACAAAAAAAATGCTTTGATAATGGGAAGGAAGACA
-TGGGAATCCATACCGCCCAAGTTTCGCCCACTGCCCAATAGAATGAATGTCATTATATCG
-AGAAGCTTCAAGGACGATTTTGTCCACGATAAAGAGAGATCAATAGTCCAAAGTAATTCA
-TTGGCAAACGCAATAATGAACCTAGAAAGCAATTTTAAGGAGCATCTGGAAAGAATCTAC
-GTGATTGGGGGTGGCGAAGTTTATAGTCAAATCTTCTCCATTACAGATCATTGGCTCATC
-ACGAAAATAAATCCATTAGATAAAAACGCAACTCCTGCAATGGACACTTTCCTTGATGCG
-AAGAAATTGGAAGAAGTATTTAGCGAGCAAGATCCGGCCCAGCTGAAAGAATTTCTTCCC
-CCTAAAGTAGAGTTGCCCGAAACAGACTGTGATCAACGCTACTCGCTGGAAGAAAAAGGT
-TATTGCTTCGAATTCACTCTATACAATCGTAAATGA
-
-deleterious mutations
-
-[yeast genetic code](http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?mode=c)
-
-start/stop codon
-yeast database
-http://www.yeastgenome.org/
-
-A **nonsense mutation** is a point mutation in a sequence of DNA that results in a premature stop codon, or a nonsense codon in the transcribed mRNA, and possibly a truncated, and often nonfunctional protein product. (See Stop codon.)
-
-**Missense mutations** or nonsynonymous mutations are types of point mutations where a single nucleotide is changed to cause substitution of a different amino acid. This in turn can render the resulting protein nonfunctional. Such mutations are responsible for diseases such as Epidermolysis bullosa, sickle-cell disease, and SOD1 mediated ALS (Boillée 2006, p. 39).
-
-A **neutral mutation** is a mutation that occurs in an amino acid codon that results in the use of a different, but chemically similar, amino acid. The similarity between the two is enough that little or no change is often rendered in the protein. For example, a change from AAA to AGA will encode arginine, a chemically similar molecule to the intended lysine.
-
-**Silent mutations** are mutations that do not result in a change to the amino acid sequence of a protein, unless the changed amino acid is sufficiently similar to the original. They may occur in a region that does not code for a protein, or they may occur within a codon in a manner that does not alter the final amino acid sequence. The phrase silent mutation is often used interchangeably with the phrase synonymous mutation; however, synonymous mutations are a subcategory of the former, occurring only within exons (and necessarily exactly preserving the amino acid sequence of the protein). Synonymous mutations occur due to the degenerate nature of the genetic code
-
 
 Archived Samples
 -------------------------
