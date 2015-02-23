@@ -294,7 +294,13 @@ We used two independent data sets to evaluate the performance of RVD2 and compar
 \subsection{Synthetic DNA Sequence Data}
 
 \subsubsection*{Experimental Methods.}
-Two 400bp DNA sequences that are identical except at 14 loci with variant bases were synthesized and clonally isolated and labeled case and control. Aliquots of the case and control DNA were mixed at defined fractions to yield defined minor allele fractions (MAFs) of 0.1\%, 0.3\%, 1\%, 10\%, and 100\%. More details of the experimental protocol are available from the original publication~\citep{Flaherty:2011ja}.
+Two 400bp DNA sequences (including linkers) that are identical except at 14 loci with variant bases were synthesized and clonally isolated.
+The samples with the mutations are taken as the case sample and the sample without the mutations is taken as the control. 
+Aliquots of the case and control DNA were mixed at defined fractions to yield defined minor allele fractions (MAFs) of 0.1\%, 0.3\%, 1\%, 10\%, and 100\%. 
+Paired-end sequencing was performed on an Illumina GAIIx sequencer (Illumina SCS 2.8) with real-time image analysis and base calling (Illumina RTA 2.8). 
+Eland II (from Illumina pipeline version 1.6) was used with the default parameters to perform sequence alignment to the 300-bp synthetic DNA construct.
+More details of the experimental protocol are available from the original publication~\citep{Flaherty:2011ja}.
+As shown in Supplementary Table S1, each sample has approximately 1,000,000 35bp paired end reads.
 
 \subsubsection*{Pre-processing Methods.}
  We aligned the reads to the reference sequence using BWA v0.7.4 with the -C50 option to filter for high mapping quality reads. To simulate lower coverage data while retaining the error structure of real NGS data, BAM files for the synthetic DNA data were downsampled $10\times$, $100\times$, $1,000\times$, and $10,000\times$ using Picard v1.96. The final data set contains read pairs for three replicates of each case and pairs of reads three replicates for the control sample giving $N=6$ replicates for the control and each MAF level.
