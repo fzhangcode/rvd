@@ -17,3 +17,10 @@ We have updated our results to reflect the accurate start/stop locations for PAX
 4. The authors cite a paper from 2011 to refer for the Synthetic DNA sequencing. Explicit details on the technology, read length and number of reads generated would greatly ease readers understanding of this section.
 
 Section 4.1 describing the details of the experimental protocol for the synthetic sequencing data is indeed brief. We have added the details the reviewer suggested and as expected, the narrative is much clearer. Briefly, Supplementary Table S1 in the Nucleic Acid Research publication shows that each sample has roughly 1,000,000 35bp paired-end reads with no errors in the multiplexing barcodes to give an average read depth of ~100,000 across the synthetic amplicon. We describe this and more detail as suggested in the protocol section.
+
+5. The authors greatly expose the comparison of sensibility, specificity, true positive and true negative rates. It seems that the caveat of the method is on memory consumption and
+processing time. It would be very informative to explicitly have a table with execution time
+and memory consumption of all utilized methods, preferably in a more realistic scenario,
+more specifically, a whole genome analysis.
+
+The memory consumption and computational time for the algorithm is an important consideration. We intentionally focused on the accuracy of the methodology here and so chose Metropolis-Hastings sampling as our inference algorithm. Metropolis-Hastings is known to converge to sampling from the true posterior distribution in the limit. As such, presently the algorithm is not as computationally fast as it could be. To improve the speed of the algorithm, we have implemented a multi-threaded version to take advantage of a multi-core computational configuration. We provide computational speed results in Section X.X and discuss avenues for improvement that we are currently pursuing.
