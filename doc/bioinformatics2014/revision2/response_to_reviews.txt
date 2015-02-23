@@ -1,0 +1,9 @@
+**When using synthetic DNA to evaluate the sensitivity and sensibility of RVD2, much is dedicated to (currently) unrealistic coverages. For example, in the Figure1 and Table1 (Figure 3) the authors presents a sequence coverage of 5.000x and even 55.000x. Despite being very useful for the own authors as high hypothetical control, I think ~30x - 100x coverage is more informative, and presenting these extremely high coverages can be misleading.**
+
+The reviewer correctly points out that much next-generation DNA sequencing data has a median depth in the 30x - 100x range. We have added a paragraph to our discussion of the sensitivity and specificity results (second paragraph in Section 5.2). In that paragraph, we discuss three primary median depth ranges and typical applications for those areas. Briefly, whole genome sequencing typically has depths in the range of 10x - 100x as noted. In addition, targeted cancer gene sequencing typically has median read depths in the range 100x - 1,000x because the region of interest is smaller and there is interest in measuring tumor heterogeneity. Microbial and viral sequencing can have median depths from 1,000x - 100,000x because one is interested in identifying rare subpopulations that may prove resistant to antibiotics or antivirals.
+
+We have chosen a broad range of median depths for our results so that researchers in whole genome sequencing, targeted sequencing and microbial sequencing can see how the methodology would perform in their application area.
+
+
+
+
