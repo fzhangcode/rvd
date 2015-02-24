@@ -1,0 +1,22 @@
+##fileformat=VCFv4.1
+##fileDate=20150224
+##source=rvd2
+##Posterior test in cancer-normal-paired sample.
+##contig=<ID=7,length=59283>
+##INFO=<ID=COAF,Number=1,Type=Float,Description="Control Allele Frequency">
+##INFO=<ID=CAAF,Number=1,Type=Float,Description="Case Allele Frequency">
+##FORMAT=<ID=AU,Number=1,Type=Integer,Description="Number of 'A' alleles">
+##FORMAT=<ID=CU,Number=1,Type=Integer,Description="Number of 'C' alleles">
+##FORMAT=<ID=GU,Number=1,Type=Integer,Description="Number of 'G' alleles">
+##FORMAT=<ID=TU,Number=1,Type=Integer,Description="Number of 'T' alleles">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Normal	Case
+chr7	154749704	.	G	A	.	PASS	COAF=20.826;CAAF=4.276	AU:CU:GU:TU	7:0:19:0	2:0:29:0
+chr7	154753635	.	T	C	.	PASS	COAF=99.075;CAAF=91.356	AU:CU:GU:TU	0:38:0:0	0:63:0:1
+chr7	154754371	.	T	C	.	PASS	COAF=32.307;CAAF=98.508	AU:CU:GU:TU	0:19:0:31	0:62:0:0
+chr7	154758813	.	G	A	.	PASS	COAF=28.376;CAAF=98.792	AU:CU:GU:TU	15:0:28:0	54:0:0:0
+chr7	154760439	.	A	C	.	PASS	COAF=0.335;CAAF=98.521	AU:CU:GU:TU	37:0:0:0	0:38:0:0
+chr7	154766732	.	T	G	.	PASS	COAF=0.079;CAAF=8.138	AU:CU:GU:TU	0:0:0:31	0:0:5:40
+chr7	154766832	.	A	C	.	PASS	COAF=0.142;CAAF=7.386	AU:CU:GU:TU	34:0:0:0	43:4:0:0
+chr7	154777118	.	A	C	.	PASS	COAF=0.143;CAAF=8.745	AU:CU:GU:TU	46:0:0:0	31:4:0:0
+chr7	154787612	.	A	C	.	PASS	COAF=44.468;CAAF=0.097	AU:CU:GU:TU	23:0:25:0	68:0:0:0
+chr7	154788798	.	A	C	.	PASS	COAF=41.412;CAAF=0.194	AU:CU:GU:TU	24:0:23:0	58:0:0:0

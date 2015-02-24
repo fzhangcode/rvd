@@ -1,0 +1,22 @@
+##fileformat=VCFv4.1
+##fileDate=20150224
+##source=rvd2
+##Posterior test in a single sample.
+##contig=<ID=7,length=59283>
+##INFO=<ID=COAF,Number=1,Type=Float,Description="Allele Frequency">
+##FORMAT=<ID=AU,Number=1,Type=Integer,Description="Number of 'A' alleles">
+##FORMAT=<ID=CU,Number=1,Type=Integer,Description="Number of 'C' alleles">
+##FORMAT=<ID=GU,Number=1,Type=Integer,Description="Number of 'G' alleles">
+##FORMAT=<ID=TU,Number=1,Type=Integer,Description="Number of 'T' alleles">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Sample
+chr7	154743899	.	C	.	.	PASS	AF=99.060	AU:CU:GU:TU	0:0:0:44
+chr7	154749704	.	G	.	.	PASS	AF=20.826	AU:CU:GU:TU	7:0:19:0
+chr7	154753635	.	T	.	.	PASS	AF=99.075	AU:CU:GU:TU	0:38:0:0
+chr7	154754371	.	T	.	.	PASS	AF=32.307	AU:CU:GU:TU	0:19:0:31
+chr7	154758813	.	G	.	.	PASS	AF=28.376	AU:CU:GU:TU	15:0:28:0
+chr7	154780960	.	C	.	.	PASS	AF=97.507	AU:CU:GU:TU	0:0:0:42
+chr7	154784369	.	A	.	.	PASS	AF=99.210	AU:CU:GU:TU	0:0:39:0
+chr7	154787357	.	C	.	.	PASS	AF=98.394	AU:CU:GU:TU	0:0:0:46
+chr7	154787367	.	C	.	.	PASS	AF=98.428	AU:CU:GU:TU	0:0:0:42
+chr7	154787612	.	A	.	.	PASS	AF=44.468	AU:CU:GU:TU	23:0:25:0
+chr7	154788798	.	A	.	.	PASS	AF=41.412	AU:CU:GU:TU	24:0:23:0
