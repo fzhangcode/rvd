@@ -1,0 +1,26 @@
+##fileformat=VCFv4.1
+##fileDate=20150224
+##source=rvd2
+##Posterior test in control-case-paired sample.
+##contig=<ID=_400,length=400>
+##INFO=<ID=COAF,Number=1,Type=Float,Description="Control Allele Frequency">
+##INFO=<ID=CAAF,Number=1,Type=Float,Description="Case Allele Frequency">
+##FORMAT=<ID=AU,Number=1,Type=Integer,Description="Number of 'A' alleles">
+##FORMAT=<ID=CU,Number=1,Type=Integer,Description="Number of 'C' alleles">
+##FORMAT=<ID=GU,Number=1,Type=Integer,Description="Number of 'G' alleles">
+##FORMAT=<ID=TU,Number=1,Type=Integer,Description="Number of 'T' alleles">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Normal	Case
+chr_400	85	.	C	A	.	PASS	COAF=1.144;CAAF=8.466	AU:CU:GU:TU	0:111:0:0	5:67:0:0
+chr_400	105	.	A	G	.	PASS	COAF=0.298;CAAF=8.700	AU:CU:GU:TU	134:0:0:0	73:0:7:0
+chr_400	125	.	C	T	.	PASS	COAF=0.221;CAAF=10.766	AU:CU:GU:TU	0:141:0:0	0:84:0:11
+chr_400	145	.	C	A	.	PASS	COAF=1.084;CAAF=11.506	AU:CU:GU:TU	0:132:0:0	12:80:0:0
+chr_400	165	.	T	G	.	PASS	COAF=0.281;CAAF=8.053	AU:CU:GU:TU	0:0:0:142	0:0:8:88
+chr_400	185	.	A	C	.	PASS	COAF=0.378;CAAF=8.030	AU:CU:GU:TU	145:0:0:0	89:8:0:0
+chr_400	205	.	T	A	.	PASS	COAF=0.447;CAAF=10.379	AU:CU:GU:TU	0:0:0:142	10:0:0:89
+chr_400	225	.	T	G	.	PASS	COAF=0.297;CAAF=10.235	AU:CU:GU:TU	0:0:0:133	0:0:10:83
+chr_400	245	.	A	T	.	PASS	COAF=0.176;CAAF=9.555	AU:CU:GU:TU	131:0:0:0	83:0:0:9
+chr_400	265	.	A	C	.	PASS	COAF=0.252;CAAF=10.810	AU:CU:GU:TU	153:0:0:0	88:13:0:0
+chr_400	285	.	A	G	.	PASS	COAF=0.228;CAAF=8.088	AU:CU:GU:TU	172:0:0:0	93:0:9:0
+chr_400	305	.	A	T	.	PASS	COAF=0.457;CAAF=9.638	AU:CU:GU:TU	158:0:0:0	87:0:0:10
+chr_400	325	.	C	A	.	PASS	COAF=0.263;CAAF=9.887	AU:CU:GU:TU	0:124:0:0	10:79:0:0
+chr_400	345	.	A	G	.	PASS	COAF=0.215;CAAF=10.790	AU:CU:GU:TU	103:0:0:0	66:0:8:0

@@ -1,0 +1,12 @@
+##fileformat=VCFv4.1
+##fileDate=20150224
+##source=rvd2
+##Posterior test in control-case-paired sample.
+##contig=<ID=_400,length=400>
+##INFO=<ID=COAF,Number=1,Type=Float,Description="Control Allele Frequency">
+##INFO=<ID=CAAF,Number=1,Type=Float,Description="Case Allele Frequency">
+##FORMAT=<ID=AU,Number=1,Type=Integer,Description="Number of 'A' alleles">
+##FORMAT=<ID=CU,Number=1,Type=Integer,Description="Number of 'C' alleles">
+##FORMAT=<ID=GU,Number=1,Type=Integer,Description="Number of 'G' alleles">
+##FORMAT=<ID=TU,Number=1,Type=Integer,Description="Number of 'T' alleles">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	Normal	Case
