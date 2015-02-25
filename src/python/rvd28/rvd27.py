@@ -249,7 +249,7 @@ def gibbs(dcfile,ngibbs=4000,nmh=10,burnin=0.2, thin=2, pool=None, outputFile='o
     (r, n, loc, refb) = load_depth(dcfile)
     (phi, theta_s, mu_s) = mh_sample(r, n, ngibbs=ngibbs,nmh=nmh, burnin=burnin, thin=thin, pool=pool)
     save_model(outputFile+'.hdf5', phi, mu=mu_s, theta=theta_s, r=r, n=n, loc=loc,
-               refb=refb)
+               refb=refb, ngibbs=ngibbs, nmh=nmh, burnin = burnin, thin=thin)
 
 def one_sample_test_main(args):
     intvl=(min(args.intvl),max(args.intvl))
@@ -261,7 +261,7 @@ def one_sample_test(HDF5Name, intvl=[0.05, np.inf], alpha=0.05, chi2 = False, ou
     # the position will be reported in a vcf file and hdf5 file
 
     logging.debug('Running one-sample-test on posterior distribution of sample %s' %os.path.basename(HDF5Name))
-    (Phi, Theta, Mu, loc, R, N, refb) = load_model(HDF5Name)
+    (attributes, Phi, Theta, Mu, loc, R, N, refb) = load_model(HDF5Name)
 
     if len(np.shape(intvl))==1:
         intvl = [intvl]
@@ -282,7 +282,7 @@ def one_sample_test(HDF5Name, intvl=[0.05, np.inf], alpha=0.05, chi2 = False, ou
         altb = np.copy(refb)
         altb = ['.' for b in altb]
 
-        write_vcf(vcfFilename, loc, bayescall, refb, altb, Mu, R, N)
+        write_vcf(vcfFilename, loc, bayescall, refb, altb, Mu, R, N, attributes)
 
         # output hdf5 file
         h5Filename = outputFile +'.hdf5'
@@ -327,7 +327,7 @@ def paired_difference_test(controlHDF5Name, caseHDF5Name, N = 1000, intvl=[0, np
     logging.debug('Running Bayesian posterior difference test on paired sample %s and %s)' \
     %(os.path.basename(caseHDF5Name), os.path.basename(controlHDF5Name)))
     
-    loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+    attributes,loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
              caseMu, caseMu0, caseR, caseN = load_dualmodel(controlHDF5Name, caseHDF5Name)
 
     (Z, _, _) = sample_post_diff(caseMu-caseMu0, controlMu-controlMu0, N)
@@ -349,7 +349,7 @@ def paired_difference_test(controlHDF5Name, caseHDF5Name, N = 1000, intvl=[0, np
         vcfFilename = outputFile+'.vcf'
 
         write_dualvcf(vcfFilename, loc, bayescall, refb, altb, controlMu, controlR, controlN,
-                  caseMu, caseR, caseN)
+                  caseMu, caseR, caseN, attributes)
         # output hdf5 file
         h5Filename = outputFile +'.hdf5'
         h5file = h5py.File(h5Filename, 'w')
@@ -372,7 +372,7 @@ def paired_difference_test(controlHDF5Name, caseHDF5Name, N = 1000, intvl=[0, np
                               chunks=True, fletcher32=True, compression='gzip')
         h5file.close()
 
-    return  call, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+    return  attributes, call, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
              caseMu, caseMu0, caseR, caseN
 
 def somatic_test_main(args):
@@ -385,9 +385,9 @@ def somatic_test(controlHDF5Name, caseHDF5Name, N = 1000, intvl=[0, np.inf],
     logging.debug('Running somatic test on paired sample %s and %s)' 
     %(os.path.basename(caseHDF5Name), os.path.basename(controlHDF5Name)))
     # Somatic test: Bayesian posterior difference test of case-control paired samples, one sided, together with optional chi square test; 
-    bayescall_pos, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
+    attributes, bayescall_pos, loc, refb, altb, controlMu, controlMu0, controlR, controlN, \
              caseMu, caseMu0, caseR, caseN = paired_difference_test(controlHDF5Name, caseHDF5Name, N, intvl, alpha, chi2, outputFile = None, seedint = seedint)
-    bayescall_neg, _, _, _, _, _, _, _, \
+    _, bayescall_neg, _, _, _, _, _, _, _, \
              _, _, _, _ = paired_difference_test(caseHDF5Name, controlHDF5Name, N, intvl, alpha, chi2,  outputFile = None, seedint = seedint)
 
     # Combine the calls from two sided paired difference test
@@ -400,7 +400,7 @@ def somatic_test(controlHDF5Name, caseHDF5Name, N = 1000, intvl=[0, np.inf],
         vcfFilename = outputFile+'.vcf'
 
         write_dualvcf(vcfFilename, loc, call, refb, altb, controlMu, controlR, controlN,
-                  caseMu, caseR, caseN)
+                  caseMu, caseR, caseN,attributes )
         # output hdf5 file
         h5Filename = outputFile +'.hdf5'
         h5file = h5py.File(h5Filename, 'w')
@@ -461,11 +461,27 @@ def load_model(h5Filename):
     out = []
 
     with h5py.File(h5Filename, 'r') as h5file:
+
+        # attributes = {'ngibbs':h5file.get('attributes/ngibbs') ,
+        #             'nmh': h5file.get('attributes/nmh') ,
+        #             'burnin': h5file.get('attributes/burnin') ,
+        #             'thin':h5file.get('attributes/thin') }
+        # out.append(attributes)        
+
+
+        attributes = {'ngibbs':h5file['attributes/ngibbs'][()] ,
+                    'nmh': h5file['attributes/nmh'][()] ,
+                    'burnin': h5file['attributes/burnin'][()] ,
+                    'thin':h5file['attributes/thin'][()] }
+        out.append(attributes)      
+
         # Load phi - it always exists
         phi = {'mu0': h5file['phi/mu0'][()],
                'M0': h5file['phi/M0'][()],
                'M': h5file['phi/M'][...]}
         out.append(phi)
+
+
         
         # Load theta if it exists
         if u"theta" in h5file.keys():
@@ -500,7 +516,7 @@ def load_model(h5Filename):
             
     return tuple(out)
     
-def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, refb=None):
+def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, refb=None , ngibbs=None, nmh=None, burnin = None, thin=None):
     """ Save the RVD2.7 model samples and parameters """
     
     # TODO add attributes to hdf5 file
@@ -538,6 +554,17 @@ def save_model(h5Filename, phi, mu=None, theta=None, r=None, n=None, loc=None, r
     if refb is not None:
         h5file.create_dataset('refb', data=refb)
 
+    h5file.create_group('attributes')
+
+    if ngibbs is not None:
+        h5file['attributes'].create_dataset('ngibbs', data=ngibbs)
+    if nmh is not None:
+        h5file['attributes'].create_dataset('nmh', data=nmh)
+    if burnin is not None:
+        h5file['attributes'].create_dataset('burnin', data=burnin)
+    if thin is not None:
+        h5file['attributes'].create_dataset('thin',data=thin)
+
     h5file.close()
 
 def load_dualmodel(controlHDF5Name, caseHDF5Name):
@@ -545,8 +572,8 @@ def load_dualmodel(controlHDF5Name, caseHDF5Name):
         Load and synchonize the Case and Control Model files 
     '''
     # Load the Case and Control Model files
-    (controlPhi, controlTheta, controlMu, controlloc, controlR, controlN, controlrefb) = load_model(controlHDF5Name)
-    (casePhi, caseTheta, caseMu, caseloc, caseR, caseN,_) = load_model(caseHDF5Name)
+    (attributes, controlPhi, controlTheta, controlMu, controlloc, controlR, controlN, controlrefb) = load_model(controlHDF5Name)
+    (_, casePhi,  caseTheta, caseMu, caseloc, caseR, caseN,_) = load_model(caseHDF5Name)
 
     # Extract the common locations in case and control
     caselocIdx = [i for i in xrange(len(caseloc)) if caseloc[i] in controlloc]
@@ -578,11 +605,11 @@ def load_dualmodel(controlHDF5Name, caseHDF5Name):
             altb_r = [acgt_r[x] for x in np.argmax(r, axis=-1)]
         altb.append(altb_r[0])
 
-    return loc, refb, altb, controlMu, controlPhi['mu0'], controlR, controlN,\
+    return attributes, loc, refb, altb, controlMu, controlPhi['mu0'], controlR, controlN,\
            caseMu, casePhi['mu0'], caseR, caseN
 
 def write_dualvcf(outputFile, loc, call, refb, altb, controlMu=None, controlR=None, controlN=None,\
-                  caseMu=None, caseR=None, caseN=None):
+                  caseMu=None, caseR=None, caseN=None, attributes=None):
     controlMu = np.mean(controlMu, axis=1);
     caseMu = np.mean(caseMu, axis=1)
 
@@ -604,8 +631,10 @@ def write_dualvcf(outputFile, loc, call, refb, altb, controlMu=None, controlR=No
     print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
 
     print("##source=rvd2", file=vcfF)
+    print('##rvd2 model esimation attributes: Gibbs sampling size=%d; Metropolis-Hastings sampling size=%d; burnin=%f; thin=%d' 
+        %(attributes['ngibbs'], attributes['nmh'], attributes['burnin'], attributes['thin']), file=vcfF)
+    print('##Posterior test in control-case-paired sample.', file=vcfF)
 
-    print('##Posterior test in cancer-normal-paired sample.', file=vcfF)
 
     # print("##Posterior difference threshold = %0.2f" %tau, file=vcfF)
     # print("##Probability threshold alpha = %0.2f" %alpha, file=vcfF)
@@ -655,7 +684,7 @@ def write_dualvcf(outputFile, loc, call, refb, altb, controlMu=None, controlR=No
                 
     vcfF.close()
 
-def write_vcf(outputFile, loc, call, refb, altb, Mu, R, N):
+def write_vcf(outputFile, loc, call, refb, altb, Mu, R, N, attributes):
     '''
         Write high confidence variant calls from one sample test to VCF 4.2 file.
     '''
@@ -677,7 +706,8 @@ def write_vcf(outputFile, loc, call, refb, altb, Mu, R, N):
     print("##fileDate=%0.4d%0.2d%0.2d" % (today.year, today.month, today.day), file=vcfF)
 
     print("##source=rvd2", file=vcfF)
-
+    print('##rvd2 model esimation attributes: Gibbs sampling size=%d; Metropolis-Hastings sampling size=%d; burnin=%f; thin=%d' 
+        %(attributes['ngibbs'], attributes['nmh'], attributes['burnin'], attributes['thin']), file=vcfF)
     print('##Posterior test in a single sample.', file=vcfF)
 
     # print("##Posterior difference threshold = %0.2f" %tau, file=vcfF)
