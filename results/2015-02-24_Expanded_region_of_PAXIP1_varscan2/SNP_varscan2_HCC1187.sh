@@ -1,8 +1,8 @@
 #!/bin/sh
-FASTAFILE=../../../../../freeze/HCC1187/hg19/Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta/genome.fa
+FASTAFILE=../../../../../freeze/hg19/Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta/genome.fa
 BAMCONTROL=../../../../../freeze/HCC1187/HCC1187BL_S1.bam
 BAMCASE=../../../../../freeze/HCC1187/HCC1187C_S1.bam
-VARSCAN2=VarScan.v2.3.4.jar
+VARSCAN2=../../bin/VarScan.v2.3.4.jar
 
 echo -------------------------
 echo extract PAXIP1 section of bam files
