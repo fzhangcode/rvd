@@ -24,3 +24,10 @@ and memory consumption of all utilized methods, preferably in a more realistic s
 more specifically, a whole genome analysis.
 
 The memory consumption and computational time for the algorithm is an important consideration. We intentionally focused on the accuracy of the methodology here and so chose Metropolis-Hastings sampling as our inference algorithm. Metropolis-Hastings is known to converge to sampling from the true posterior distribution in the limit. As such, presently the algorithm is not as computationally fast as it could be. To improve the speed of the algorithm, we have implemented a multi-threaded version to take advantage of a multi-core computational configuration. We provide computational speed results in Section X.X and discuss avenues for improvement that we are currently pursuing.
+
+
+Reviewer 2:
+
+3. On figure 6 panel A; at position index 35, 36, 37 and position 50; please check that the symbols shown for miscall versus mutant calls are as you intend them.. looks like two are reversed.
+
+We are unable to identify what symbols are reversed. The RVD2 germline and somatic calls in Figure 6 do correspond to the same calls in Figure 5. Figure 5 and Figure 6 do use different symbols to denote their data, but the data is consistent.
