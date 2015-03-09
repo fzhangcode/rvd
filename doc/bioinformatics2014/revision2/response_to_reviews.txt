@@ -28,6 +28,10 @@ The memory consumption and computational time for the algorithm is an important 
 
 Reviewer 2:
 
+1. page 4 line 22; check the signs of the threshold boundary conditions in your hypothesis tests.. looks like one should be less than minus Tau..
+
+Thank you for this observant correction. Indeed, the equation on page 4 line 22 should be minus tau. We have corrected the equation in the main text as well as the same equation in the supplementary information in the caption for Figure S6.
+
 2. on preprocessing methods (4.1); please check what you mean by the C50 option of BWA.. That should be something else.
 
 Thank you for catching this important detail in the description of our methodology. We 

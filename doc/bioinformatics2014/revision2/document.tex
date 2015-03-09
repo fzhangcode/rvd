@@ -252,7 +252,7 @@ While we are able to compute the optimal $\tau$ threshold for a test data set, i
 
 \subsubsection*{Posterior Somatic Test.}
 
-We use a two-sided posterior difference test with control and case paired samples to identify somatic mutations. We consider scenarios when the case(tumor) error rate is lower than the control(germline) error rate (e.g. loss-of-heterozygosity) as well as scenarios when the case(tumor) error rate is higher than the control(germline) error rate (e.g. homozygous somatic mutation). The two hypothesis tests are then $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} > \tau ) > 1-\alpha$ and $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} < \tau ) > 1-\alpha$. We typically set the threshold $ \tau $ to zero.
+We use a two-sided posterior difference test with control and case paired samples to identify somatic mutations. We consider scenarios when the case(tumor) error rate is lower than the control(germline) error rate (e.g. loss-of-heterozygosity) as well as scenarios when the case(tumor) error rate is higher than the control(germline) error rate (e.g. homozygous somatic mutation). The two hypothesis tests are then $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} > \tau ) > 1-\alpha$ and $\Pr( \mu_j^{\text{case}} - \mu_j^{\text{control}} < -\tau ) > 1-\alpha$. We typically set the threshold $ \tau $ to zero.
 
 \subsubsection*{Posterior Germline Test.}
 
