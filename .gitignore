@@ -8,14 +8,15 @@ tmp*
 *.pileup
 *.xlsx
 *.jpg
-
+*.txt
 *.bam
 *.pileup
 *.dc
+*.complete
 Thumbs.db
 *.eps
 .DS_Store
-
+*.vcf
 *.fa
 *.fai
 *.bcf
@@ -31,7 +32,7 @@ Thumbs.db
 *.blg
 *.fig
 *.bbl
-*.pdf
+
 *.vsdx
 *.docx
 *.pptx
