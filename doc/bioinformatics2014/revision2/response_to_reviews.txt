@@ -28,6 +28,12 @@ The memory consumption and computational time for the algorithm is an important 
 
 Reviewer 2:
 
+2. on preprocessing methods (4.1); please check what you mean by the C50 option of BWA.. That should be something else.
+
+Thank you for catching this important detail in the description of our methodology. We 
+used the aligned bam files described previously, and ran samtools mmpileup with the -C50 flag to filter for high quality reads. The -C50 options is recommended in the samtools manual: http://samtools.sourceforge.net/mpileup.shtml. We have corrected the manuscript to reflect this.
+
+
 3. On figure 6 panel A; at position index 35, 36, 37 and position 50; please check that the symbols shown for miscall versus mutant calls are as you intend them.. looks like two are reversed.
 
 We are unable to identify what symbols are reversed. The RVD2 germline and somatic calls in Figure 6 do correspond to the same calls in Figure 5. Figure 5 and Figure 6 do use different symbols to denote their data, but the data is consistent.
