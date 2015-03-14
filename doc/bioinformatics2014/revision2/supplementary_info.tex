@@ -150,7 +150,7 @@ Since configuration and Analysis for Strelka and muTect is standardized and no p
 Samtools mpileup and GATK can accept multiple tumor replicates for variant calling, so we fed six bam files from each case replicate group to mpileup. VarScan2-mpileup takes multiple tumor-normal pair replicates so we passed six pair replicates to each algorithm. Varscan2-somatic, strelka and muTect do not accept replicate data for the normal or tumor bam files so we used a single bam file from each replicate group with a read depth that most closely matched the overall median depth of the replicates.
 
 
-\section{histogram of $ \hat{\mu}_j $ for somatic mutations called by rvd2 in the 44kbp paxip1 gene from chr7:154738059 to chr7:154782774 in hcc1187 dataset}
+\section{Histogram of $ \hat{\mu}_j $ for somatic mutations called by rvd2 in the 44kbp paxip1 gene from chr7:154738059 to chr7:154782774 in hcc1187 dataset}
 \begin{figure}[H]
 \begin{center}
 \includegraphics[height=1\textheight]{pdf_figs/HCC1187_histogram_pos.pdf}
@@ -172,6 +172,16 @@ Samtools mpileup and GATK can accept multiple tumor replicates for variant calli
 
 
 \includepdf[pages={1-},scale=1]{pdf_figs/position_lookup_chart_all.pdf}
+
+
+\section{Timing Results}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.7\textwidth]{pdf_figs/timing.pdf}
+\caption{Computational timing measurements for RVD2 on 400bp synthetic DNA data.}
+\end{center}
+\end{figure}
 
 \bibliographystyle{natbib}
 \bibliography{bioinfo}
