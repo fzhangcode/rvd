@@ -36,7 +36,7 @@ $^{2}$Department of Mathematics and Statistics, University of Massachusetts, Amh
 
 \section{Motivation:}Next-generation sequencing technology is increasingly being used for clinical diagnostic tests. Clinical samples are often genomically heterogeneous due to low sample purity or the presence of genetic subpopulations. Therefore, a variant calling algorithm for calling low-frequency polymorphisms in heterogeneous samples is needed.
 
-\section{Results:}We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over a wide range of median read depth and minor allele frequency. We apply our model and identify fifteen mutated loci in the PAXP1 gene in a matched clinical breast ductal carcinoma tumor sample; two of which are loss-of-heterozygosity events.
+\section{Results:}We present a novel variant calling algorithm that uses a hierarchical Bayesian model to estimate allele frequency and call variants in heterogeneous samples. We show that our algorithm improves upon current classifiers and has higher sensitivity and specificity over a wide range of median read depth and minor allele frequency. We apply our model and identify fifteen mutated loci in the PAXP1 gene in a matched clinical breast ductal carcinoma tumor sample; two of which are likely loss-of-heterozygosity events.
 
 
 \section{Availability:}
@@ -280,7 +280,7 @@ We use a two-sided posterior difference test with control and case paired sample
 We use a one-sided posterior distribution test with a single control sample to identify germline mutations. We call a germline mutation if $ \mu_j^{\text{control}} \geq \tau$ with high confidence,
 
 \begin{equation}\label{eqn:germ_test}
-	\Pr(\mu_j^{\text{control}}  \geq \tau ) \approx \frac{1}{N_{\text{MH}}} \sum_{k=1}^{N_{\text{MH}}} \mathbbm{1}_{\tilde{\mu}_{jk}^{\text{control}} \geq \tau } > 1-\alpha.
+	\Pr(\mu_j^{\text{control}}  \geq \tau ) \approx \frac{1}{N_{\text{MwG}}} \sum_{k=1}^{N_{\text{MwG}}} \mathbbm{1}_{\tilde{\mu}_{jk}^{\text{control}} \geq \tau } > 1-\alpha.
 \end{equation}
 
 %%%%%%%%%%%%%%%%%%
@@ -300,7 +300,7 @@ where $r_{ji}^{(k)}$ is the observed frequency for non-reference base $k$ at pos
 We control for multiple hypothesis testing in two ways. We use Fisher's combined probability test \citep{fisher1970statistical} to combine the p-values for $N$ replicates into a single p-value at position $j$,
 
 \begin{equation}\label{eqn:fisher_combined}
-	X_j^2 = -2 \sum_{i=1}^N \ln(p_{ji}).
+	\chi_j^2 = -2 \sum_{i=1}^N \ln(p_{ji}).
 \end{equation}
 
 Equation~\eqref{eqn:fisher_combined} gives a test statistic that follows a $\chi^2$ distribution with $2N$ degrees of freedom when the null hypothesis is true. If the sample average depth is higher than 500, we use the Benjamini-Hochberg method to control the family-wise error rate (FWER) over positions that have been called by the posterior distribution test \citep{benjamini1995controlling, efron2010large}. The average depth threshold is set because Benjamini-Hochberg method is a highly conservative method and will reject many true calls when the read depth is not high enough.
@@ -366,14 +366,14 @@ Figures~\ref{fig:ROC}B-C show a similar relationship between coverage depth and 
 We measured the computational time for RVD2 varying the number of Gibbs sampling steps and the median read depth for the 400bp synthetic data data set. 
 Briefly, on a 2.4GHz processor it took $\sim$13 min per 1000 Gibbs samples to fit the model. 
 The computational time is independent of the median read depth due to the model structure; the same performance was observed for a median read depth of 130 and 40,000. 
-As stated previously, due to the independence structure of the model, we are able to perform some of the sampling steps in parallel greatly decreasing the computational time.
+As stated previously, due to the independence structure of the model, we are able to perform the sampling step for each location in parallel greatly decreasing the computational time.
 The memory requirement is roughly the size of the gene sequence times the number of Gibbs samples.
-Complete timing results are shown in Supplementary Section 8.   
+Complete timing results without parallelization are shown in Supplementary Section 8.   
 
 \subsection{Empirical performance compared with other algorithms}\label{sec:comparison}
 
 We compare the empirical performance of RVD2 to other variant calling algorithms using the synthetic DNA data set by the false discovery rate and sensitivity/specificity. 
-Among these algorithms, Samtools and GATK are optimized for homogeneous samples, while RVD, VarScan2-somatic, Strelka and muTect are have good performance to call variants in heterogeneous samples. 
+Among these algorithms, Samtools and GATK are optimized for homogeneous samples, while RVD, VarScan2-somatic, Strelka and muTect have good performance to call variants in heterogeneous samples. 
 In research applications, the false discovery rate is a more relevant performance metric because the aim is generally to identify interesting variants for followup. 
 The sensitivity/specificity metric is more relevant in clinical applications where one is more interested in correctly calling all of the positive variants and none of the negatives. 
 GATK, Varscan2, Strelka and muTect are only able to make use of one case and one control sample, so we provide results of RVD2 with the same data set ($N=1$) for comparison.
@@ -562,7 +562,7 @@ Such accurate algorithms are a step towards greater access to genomics for clini
 
 \vspace{-5pt}
 \section*{Acknowledgements}
-P.F. and Y.H. were supported by seed funding from Worcester Polytechnic Institute. Y.H. was supported by PhRMA Foundation Informatics Grant 2013080079.
+P.F. was supported by seed funding from Worcester Polytechnic Institute. Y.H. and F.Z. were supported by PhRMA Foundation Informatics Grant 2013080079.
 
 \bibliographystyle{natbib}
 \bibliography{bioinfo}
