@@ -37,19 +37,18 @@ def main():
     n.fill(1000)
     
     phi = {'M0':100, 'mu0':0.1, 'M':[1000]*J}
-    (r, theta, mu) = generate_sample(phi, N, J, n, seedint=19891129)
+    (r, theta, mu) = generate_sample(phi, N, J, n, seedint=20150928)
 
     ## model optimization  
-    (phiHat, qHat) = ELBO_opt(r, n, seed = 19891129, pool = 40)
+    (phiHat, qHat) = ELBO_opt(r, n, seed = 20150928, pool = 60)
 
     ## save the parameters.
     save_model('case_model.hdf5', r, n, phiHat, qHat)
 
-
-    (r, theta, mu) = generate_sample(phi, N, J, n, seedint=19900906)
+    (r, theta, mu) = generate_sample(phi, N, J, n, seedint=20150928)
 
     ## model optimization  
-    (phiHat, qHat) = ELBO_opt(r, n, seed = 19900906, pool = 40)
+    (phiHat, qHat) = ELBO_opt(r, n, seed = 20150928, pool = 60)
     save_model('control_model.hdf5', r, n, phiHat, qHat)
 
     test('case_model.hdf5','control_model.hdf5')
@@ -64,28 +63,29 @@ def test(caseHDF5Name, controlHDF5Name, alpha=0.05, tau=0, chi2=False, outputFil
 
     (N,J) = np.shape(caseR)[0:2]
 
-    # bayescall = beta_exact_test(casegam, controlgam, alpha)
-    bayescall = []
+    def beta_mean(p):
+        return p[0]*1.0/np.sum(p)    
+
+    def beta_var(p):
+        s = np.sum(p)
+        return p[0]*p[1]/(s**2*(s+1))
+    
+    # pdb.set_trace()
+    bayescall = []    
     for j in xrange(J):
-        t11=time.time()
+        mu = (beta_mean(casegam[j,:]) - casephi['mu0'])- (beta_mean(controlgam[j,:])-controlphi['mu0'])
+        sigma = np.sqrt(beta_var(casegam[j,:]) + beta_var(controlgam[j,:]))
+        z = (tau - mu)/sigma
+        p = ss.norm.cdf(z)
         # pdb.set_trace()
-        if (np.min([casegam[j,:], controlgam[j,:]])>=10) or \
-        (np.min([casegam[j,:], controlgam[j,:]])>=6 and \
-            abs(casegam[j,1]-casegam[j,2])<0.1 and \
-            abs(controlgam[j,1]-controlgam[j,2])<0.1):
-        
-            bayescall.append(gaussian_approx_test(casegam[j,:], controlgam[j,:], alpha))
-        else:
-            bayescall.append(beta_exact_test(casegam[j,:], controlgam[j,:], alpha))
-        t22 = time.time()
-        logging.debug('The hypothesis testing process took %0.2f seconds' %(t22-t11))
+        bayescall.append(p[0]<alpha)
+
     ## combine the chi2 goodness of fit test
     if chi2:
         chi2call, chi2P = chi2combinetest(caseR, caseN, bayescall)
         call = np.logical_and(bayescall,chi2call)
     else:
         call = bayescall
-    # pdb.set_trace()
 
     if outputFile is not None:
 
@@ -114,32 +114,8 @@ def test(caseHDF5Name, controlHDF5Name, alpha=0.05, tau=0, chi2=False, outputFil
         h5file.create_dataset('bayescall', data=bayescall)
         h5file.close()
 
-def beta_exact_test(gam1, gam2, alpha):
-    ## compute p(x1>=x2), where x1~Beta(gam1), x2~Beta(gam2)
-    def den_fun(x,a,b): return ss.beta.pdf(x,a[0], a[1])*ss.beta.cdf(x,b[0], b[1]) 
-    p=integrate.quad(den_fun, 0, 1,args=(gam1,gam2))
 
-    return p[0]>=1-alpha
-
-def gaussian_approx_test(gam1, gam2, alpha):
-
-    def beta_mean(x): return x[0]*1.0/np.sum(x)    
-
-    def beta_var(x):
-        s = np.sum(x)
-        return x[0]*x[1]/(s**2*(s+1))
-
-    mu = beta_mean(gam1)- beta_mean(gam2)
-    # mu = (beta_mean(gam1) - casephi['mu0'])- (beta_mean(gam2)-controlphi['mu0'])
-
-    sigma = beta_var(gam1) + beta_var(gam2)
-    z = (tau - mu)/sigma
-    p = ss.norm.cdf(z)
-
-    return p[0]<alpha
-
-
-    ########## output the results
+    ## output the results
 def write_dualvcf(outputFile, loc, call, refb, controlR=None, controlN=None, caseR=None, caseN=None):
 
     controlR = np.median(controlR,0)
@@ -186,34 +162,7 @@ def write_dualvcf(outputFile, loc, call, refb, controlR=None, controlN=None, cas
     print("##FORMAT=<ID=GU,Number=1,Type=Integer,Description=\"Number of 'G' alleles\">", file=vcfF)
     print("##FORMAT=<ID=TU,Number=1,Type=Integer,Description=\"Number of 'T' alleles\">", file=vcfF)
     
-    # print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
-
-    # for i in xrange(J):
-    #     # pdb.set_trace()
-    #     if call[i]:           
-    #         # restore R
-    #         actg = ['A','C','G','T']
-
-    #         idx = actg.index(refb[i])
-    #         caseR4 = np.zeros(4)
-    #         controlR4 = np.zeros(4)
-    #         caseR4[idx] = np.median(caseN[:,i])-np.sum(caseR[i,:])
-    #         controlR4[idx] = np.median(controlN[:,i])-np.sum(controlR[i,:])
-    #         for d in xrange(idx):
-    #             caseR4[d] = caseR[i,d]
-    #             controlR4[d] = controlR[i,d]
-    #         for d in xrange(3-idx):
-    #             caseR4[d+idx+1] = caseR[i,d+idx]
-    #             controlR4[d+idx+1] = controlR[i,d+idx]
-
-    #         print ("chr%s\t%d\t.\t%s\t.\t.\tPASS\t.\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
-    #                % (chrom[i], pos[i], refb[i],\
-    #                   controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
-    #                   caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
-                
-    # vcfF.close()
-
-    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT", file=vcfF)
+    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tNormal\tCase", file=vcfF)
 
     for i in xrange(J):
         # pdb.set_trace()
@@ -227,15 +176,20 @@ def write_dualvcf(outputFile, loc, call, refb, controlR=None, controlN=None, cas
             caseR4[idx] = np.median(caseN[:,i])-np.sum(caseR[i,:])
             controlR4[idx] = np.median(controlN[:,i])-np.sum(controlR[i,:])
             for d in xrange(idx):
-                caseR4[d] = caseR[i,d]
-                controlR4[d] = controlR[i,d]
+               caseR4[d] = caseR[i,d]
+               controlR4[d] = controlR[i,d]
             for d in xrange(3-idx):
-                caseR4[d+idx+1] = caseR[i,d+idx]
-                controlR4[d+idx+1] = controlR[i,d+idx]
+               caseR4[d+idx+1] = caseR[i,d+idx]
+               controlR4[d+idx+1] = controlR[i,d+idx]
 
-            print ("chr%s\t%d\t.\t%s\t.\t.\tPASS\t.\tAU:CU:GU:TU" % (chrom[i], pos[i], refb[i]), file=vcfF)
+            print ("chr%s\t%d\t.\t%s\t.\t.\tPASS\t.\tAU:CU:GU:TU\t%d:%d:%d:%d\t%d:%d:%d:%d" \
+                 % (chrom[i], pos[i], refb[i],\
+                    controlR4[0], controlR4[1], controlR4[2], controlR4[3],\
+                    caseR4[0], caseR4[1], caseR4[2], caseR4[3]), file=vcfF)
                 
     vcfF.close()
+
+
 def chi2combinetest(R, N, bayescall = 1, pvalue = 0.05):
 
     nRep = R.shape[0]
@@ -253,7 +207,8 @@ def chi2combinetest(R, N, bayescall = 1, pvalue = 0.05):
     if nbayescall < 1:
         nbayescall = 1
 
-    if np.median(N) > 500: #Benjamini-Hochberg method FWER control
+	#Benjamini-Hochberg method FWER control
+    if np.median(N) > 500: 
         chi2call = chi2P < pvalue/nbayescall
     else:
         chi2call = chi2P < pvalue
@@ -332,15 +287,6 @@ def Eqlog1_Theta(delta):
 def EqMu(gam):
     return gam[0] / (np.sum(gam)) # eps?
 
-    # with warnings.catch_warnings():
-    #     warnings.filterwarnings('error')
-    #     # pdb.set_trace()
-    #     try:
-    #         x = gam[0] / (np.sum(gam)) # eps?
-    #     except RuntimeWarning: 
-    #         # print 'Raised!'
-    #         pdb.set_trace()
-
 
 def EqlogMu(gam):
     if gam[0] < np.finfo(float).eps:
@@ -356,8 +302,17 @@ def EqlogGamma(gam, M):
     logGamma = integrate.quad(kernel, 1e-3, 1-1e-3, args=(gam, M), full_output=1)
     return logGamma[0]
 
-def kernel(mu, gam, M): ## minus sign here in the kernel?
+def kernel(mu, gam, M): 
     return -ss.beta.pdf(mu, gam[0], gam[1])*betaln(mu*M, (1-mu)*M)
+    
+'''
+def kernel(mu, gam, M): 
+    a1 = mu*M
+    a2 = (1-mu)*M
+    # Use Normal distribution to approximate the Beta distribution when a1 and a2 are sufficiently large. 
+    # beta (a1, a2)=normal(a1/(a1+a2), (a1*a2/((a1+a2)**2*(a1+a2+1)))**(0.5))
+    #return ss.beta.pdf(mu, gam[0], gam[1]) * ss.norm.pdf(a1/(a1+a2), (a1*a2/((a1+a2)**2*(a1+a2+1)))**(0.5)) 
+    return ss.norm.pdf(a1/(a1+a2), (a1*a2/((a1+a2)**2*(a1+a2+1)))**(0.5))     '''
 
 ## compute entropy
 def BetaEntropy(x):
@@ -418,7 +373,7 @@ def ELBO(r, n, M, mu0, M0, delta, gam):
         EqlogQmu -= BetaEntropy(gam[j,:])
 
     return EqlogPr + EqlogPtheta + EqlogPmu - EqlogQtheta - EqlogQmu
-    # return EqlogPr + EqlogPtheta + EqlogPmu
+
 
 def ELBO_delta_ij(r, n, M, delta, gam):
     ## partial ELBO from replicate i position j
@@ -430,9 +385,7 @@ def ELBO_delta_ij(r, n, M, delta, gam):
     log1_Theta = Eqlog1_Theta(delta)
 
     # EqlogPr = -betaln(r+1, n-r+1) -np.log(n+1) + r*logTheta + (n - r)*log1_Theta
-
     # EqlogPtheta = EqlogGamma(gam, M) + (M*Mu - 1)*logTheta + (M*(1-Mu)-1)*log1_Theta
-
     # EqlogQtheta = BetaEntropy(delta)
 
     EqlogPr = r*logTheta + (n - r)*log1_Theta
@@ -451,8 +404,10 @@ def opt_delta_ij(args):
     # pdb.set_trace()
     r, n, M, delta, gam = args
     # pdb.set_trace()
-    bnds = [[-7, 7]]*2# limit delta to [0.0001, 10000]
-    # bnds = [[0, 7]]*2# limit delta to [0.0001, 10000]
+    # limit delta to [0.001, 1000], np.log(delta) is [-6.9, 6.9]
+    #bnds = [[-7, 7]]*2 
+    # limit delta to [0.0001, 10000], np.log(delta) is [-10, 10]
+    bnds = [[-10, 10]]*2 
     args=(gam, r, n, M)
 
     # logging.debug(bnds)
@@ -468,11 +423,9 @@ def opt_delta(r, n, M, delta, gam, pool = None):
     if np.ndim(r) == 1: N, J = (1, np.shape(r)[0])
     elif np.ndim(r) == 2: N, J = np.shape(r)
 
-    # pdb.set_trace()
     st = time.time()
     if pool is not None:
         for i in xrange(N):
-            # pdb.set_trace()
             args = zip (r[i,:], n[i,:], M, delta[i,:], gam)
             temp  = pool.map(opt_delta_ij, args)
             delta[i,:] = np.array(temp)
@@ -483,7 +436,8 @@ def opt_delta(r, n, M, delta, gam, pool = None):
                 logging.debug('Optimizing position %d of %d and replicate %d of %d' % (j,J,i,N))
                 args = (r[i,j], n[i,j], M[j], delta[i,j,:], gam[j,:])
                 delta[i,j,:] = opt_delta_ij(args)
-                # logging.debug(delta[i,j,:])
+
+    logging.debug('Delta update elapsed time is %0.3f sec for %d samples %d replicates.' % (time.time() - st, J, N))
     return delta
 
 def ELBO_gam_j( M, mu0, M0, delta, gam):
@@ -521,8 +475,10 @@ def neg_ELBO_gam_j(loggam, delta, M, mu0, M0):
 def opt_gam_j(args):
     M, mu0, M0, delta, gam = args
     # pdb.set_trace()
-    # bnds = [[-7, 7]]*2# limit gam to [0.0001, 10000]
-    bnds = [[-6, 6]]*2# limit gam to [0.0001, 10000]
+    # limit gam to [0.001, 1000], np.log(gam) is [-6.9, 6.9]
+    #bnds = [[-7, 7]]*2 
+    # limit gam to [0.0001, 10000], np.log(gam) is [-10, 10]
+    bnds = [[-10, 10]]*2 
     args = (delta, M, mu0, M0)
 
     # def opt_par(func, x, args, bnds, parlabel):
@@ -576,7 +532,8 @@ def neg_ELBO_mu0(mu0, M0, gam):
 
 def opt_mu0(mu0, M0, gam):
     logging.debug("Optimizing mu0")
-    bnds = np.array([[0.01,0.99]])
+    #bnds = np.array([[0.01,0.99]])
+    bnds = np.array([[0.0,1.0]])
     args=(M0, gam)
     mu0 = opt_par(neg_ELBO_mu0, mu0, args, bnds, 'mu0' )
 
@@ -587,8 +544,10 @@ def neg_ELBO_M0(logM0, mu0, gam):
     
 def opt_M0(mu0, M0, gam):
     logging.debug("Optimizing M0")
-
-    bnds = np.array([[-7,7]])
+    
+    #bnds = np.array([[-7,7]])    
+    bnds = np.array([[-10,10]])    
+    
     args = (mu0, gam)
     logM0 = opt_par(neg_ELBO_M0, np.log(M0), args, bnds, 'M0' )
     M0 = np.exp(logM0)
@@ -622,7 +581,9 @@ def neg_ELBO_M_j(logM, delta, gam):
 def opt_M_j(args):
 
     (M, delta, gam) = args
-    bnds = np.array([[-1, 11]]) # limit delta to [0.0001, 10000]
+    # bnds = np.array([[-1, 11]]) # limit delta to [0.0001, 10000]
+    # limit delta to [0.0001, 10000], np.log(delta) is [-9.21, 9.21]
+    bnds = np.array([[-10, 10]]) 
     M = np.array(M)
     args = (delta, gam)
 
@@ -660,7 +621,6 @@ def opt_par(func, x, args, bnds, parlabel):
     #     args=args, bounds=bnds, 
     #     method='Newton-CG') 
 
-
     # logging.debug("Inside of optimize function. got res")
     # Nelder-Mead is the simplest way to minimize a fairly well-behaved function. 
     # Good for simple minimization problems.
@@ -671,29 +631,32 @@ def opt_par(func, x, args, bnds, parlabel):
     #         args=args, bounds=bnds, method='Nelder-Mead')
     # pdb.set_trace()
 
-    res = so.minimize(func, x, 
+    '''res = so.minimize(func, x, 
         args=args, bounds=bnds, 
-        method='L-BFGS-B' ) # limited memory BFGS method
+        method='L-BFGS-B' ) # limited memory BFGS method'''
 
-    if res.success == False:
-        logging.debug(3)  
-        res = so.minimize(func, x, 
+    #if res.success == False:
+    #    logging.debug(3)  
+    res = so.minimize(func, x, 
             args=args, bounds=bnds, method='SLSQP') #Sequential Least SQuares Programming to minimize 
         # a function of several variables with any combination of bounds, equality and inequality constraints
 
     if res.success == False and parlabel != 'M': 
-        logging.debug(2)  
+        logging.debug(1)  
         res = so.minimize(func, x, 
         args=args, bounds=bnds, method='TNC') 
             # truncated Newton algorithm to minimize a function with variables subject to bounds.
 
+    if res.success == False:
+        logging.debug(2)
+        res = so.minimize(func, x, args=args, bounds=bnds, method='L-BFGS-B' ) # limited memory BFGS method
 
     # use the gradient of the objective function, which can be given by the user. 
-    # if res.success == False:
-    #     logging.debug(4)  
-    #     pdb.set_trace()
-    #     res = so.minimize(func, x, bounds=bnds,\
-    #         args=args, method='BFGS') # quasi-Newton method of Broyden, Fletcher, Goldfarb, and Shanno 
+    if res.success == False:
+        logging.debug(3)  
+        pdb.set_trace()
+        res = so.minimize(func, x, bounds=bnds,\
+            args=args, method='BFGS') # quasi-Newton method of Broyden, Fletcher, Goldfarb, and Shanno 
 
     if res.success == False or np.any ( np.isnan(res.x) ) or np.any(np.isinf(res.x)):
         logging.warning("Could not optimize %s or %s is NaN." %(parlabel, parlabel))
@@ -702,12 +665,15 @@ def opt_par(func, x, args, bnds, parlabel):
         
     return res.x
 
-def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
+def beta_mean(p):
+    return p[0]*1.0/np.sum(p)
+
+def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None, vaf = None):
 
     if pool is not None:
         pool = mp.Pool(processes=pool)
     # t = str(datetime.now)
-    f = open('ELBO.txt','w')
+    f = open('ELBO%s.txt' % str(vaf).replace(".", "_", 1),'w')
     t = time.time()
 
     # print("ELBO optimization trace starting from %s: \n" %t, file=f)
@@ -724,11 +690,13 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
 
     h5file = tempfile.NamedTemporaryFile(suffix='.hdf5')
     logging.info('Storing model updates in %s' % h5file.name)   
+    #temp = "tmp.hdf5"
+    #logging.info('Storing model updates in %s' % temp)  
 
     ## Define optimization stopping criterion
-    MAXITER = 15
-    ELBOTOLPCT = 0.01*100    
-    MAXVARITER = 5
+    MAXITER = 80
+    ELBOTOLPCT = 0.001 *100
+    MAXVARITER = 80     
     NORMTOL = 0.1
 
     ## Initialize model parameters
@@ -741,10 +709,12 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
     M = phi['M']
 
     ## Initialize the variational parameters
-   
     if q is None:
-        delta = np.random.uniform(low = 0.1, high = 100, size = (N,J,2))
-        gam = np.random.uniform(low=0.1, high=100, size = (J,2))
+        #delta = np.random.uniform(low = 0.1, high = 100, size = (N,J,2))
+        #gam = np.random.uniform(low=0.1, high=100, size = (J,2))
+        delta = np.random.uniform(low = 0.0001, high = 10000, size = (N,J,2))
+        gam = np.random.uniform(low=0.0001, high=10000, size = (J,2))
+        
     else:
         delta = q['delta']
         gam = q['gam']
@@ -753,11 +723,15 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
     q = {'delta':delta, 'gam':gam}
     #save_model('initial_value.hdf5', r, n, phi, q)  
 
-    ## Initialize ELBO
+    '''# Look at the initial random value of \mu_j
+    logging.info("Initial gam: %s" % gam[344,:])
+    logging.info("Initial $\mu$: %s" % beta_mean(gam[344,:]))'''
+    ## Initialize ELBO    
+
     elbo = [ELBO(r, n, M, mu0, M0, delta, gam)]
     logging.info("Initial ELBO: %0.2f" % elbo[-1])
 
-    print("M-iteration\tE-iteration\tELBO\tIncrease Percentage\tdelta-deltaprev\tgam-gamprev\tt-gam\tt-beta\tt-mu0\tt-M0\tt-M", file=f)
+    print("M-iteration\tE-iteration\tELBO\tIncrease Percentage\tdelta-deltaprev\tgam-gamprev\tt-gam\tt-delta\tt-mu0\tt-M0\tt-M", file=f)
 
     print("%d\t%d\t%0.2f\t%0.3f%%\t\t\t\t\t\t\t" %(0, 0, elbo[-1], 0), file=f)
 
@@ -785,16 +759,16 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
             #Update the variational distribution
             # pdb.set_trace()
             t0=time.time()
-            gam = opt_gam( M, mu0, M0, delta, gam, pool = pool)
+            gam = opt_gam( M, mu0, M0, delta, gam, pool = pool) # mu~Beta(gam)
             t1=time.time()           
-            delta = opt_delta(r, n, M, delta, gam, pool = pool)
+            delta = opt_delta(r, n, M, delta, gam, pool = pool)  # theta~Beta(delta)
             t2=time.time()                        
 
             #Test for convergence
             var_elbo.append(ELBO(r, n, M, mu0, M0, delta, gam))
             delta_varelbo_pct = 100.0*(var_elbo[-1] - var_elbo[-2])/abs(var_elbo[-2])
             logging.info("********Variational Iteration %d of %d********" % (variter+1, MAXVARITER))
-            logging.info("Variational Step ELBO: %0.2f; Percent Change: %0.3f%%" % (var_elbo[-1], delta_varelbo_pct))
+            logging.info("ELBO: %0.2f; Percent Change: %0.3f%%" % (var_elbo[-1], delta_varelbo_pct))
             # print("Variational \tELBO: \t%0.2f \tPercent Change: \t%0.3f%%" % (var_elbo[-1], delta_varelbo_pct), file = f)
            
 
@@ -829,20 +803,18 @@ def ELBO_opt(r, n, phi = None, q = None, seed = None, pool = None):
         logging.info("ELBO: %0.2f; Percent Change: %0.3f%%" \
                     % (elbo[-1], delta_elbo_pct))
         
-# print("M-iteration\tE-iteration\tELBO\tIncrease Percentage\tdelta-deltaprev\tgam-gamprev\tt-gam\tt-beta\tt-mu0\tt-M0\tt-M")        
-# print("Iteration %d of %d.\tELBO: \t%0.2f \tPercent Change:\t %0.3f%%" % (moditer, MAXITER, elbo[-1], delta_elbo_pct), file = f)
+        # print("M-iteration\tE-iteration\tELBO\tIncrease Percentage\tdelta-deltaprev\tgam-gamprev\tt-gam\tt-beta\tt-mu0\tt-M0\tt-M")        
+        # print("Iteration %d of %d.\tELBO: \t%0.2f \tPercent Change:\t %0.3f%%" % (moditer, MAXITER, elbo[-1], delta_elbo_pct), file = f)
         print("%d\t%d\t%0.2f\t%0.3f%%\t\t\t\t\t%0.2f\t%0.2f\t%0.2f" %(moditer,0, elbo[-1],delta_elbo_pct, t1-t0,t2-t1,t3-t2), file=f)
 
         logging.info("M0 = %0.2e" % M0)
         logging.info("mu0 = %0.2f" % mu0)
 
-        # Store the model for viewing
+        '''# Store the model for viewing
         phi = {'mu0':mu0, 'M0':M0, 'M':M}
         q = {'delta':delta, 'gam':gam}
-        save_model(h5file.name, r, n, phi, q)
-
-        phi = {'mu0':mu0, 'M0':M0, 'M':M}
-        q = {'delta':delta, 'gam':gam}
+        save_model(h5file.name, r, n, phi, q)'''
+        
     print("Total elapsed time is %0.3f seconds." %(time.time()-t), file=f)
     
     f.close()
