@@ -11,4 +11,10 @@ where n_{ij} is the total counts at position j in replicate i.
 
 The error read count at position j in replicate i is modeled by the binomial random variable r_{ij}. The probability of an error at position j in replicate i is \theta_{ij}. The error probability has a prior beta distribution with position-specific rate parameter \mu_j and precision M_j. The position error rate, \mu_j, has as a Beta prior distribution  with parameters \mu_0 and M_0. This is to ensure that that error rate is between 0 and 1. The precision parameter M_j has an improper prior. This is useful for situations when there is a significant minor allele.
 
+Citation:
+
+He, Y., Zhang, F., and Flaherty, P. RVD2: an ultra-sensitive variant detection model for low-depth heterogeneous next-generation sequencing data. Bioinformatics, 31(17), 2785-2793, 2015
+
+
+
 
